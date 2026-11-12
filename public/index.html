@@ -5,103 +5,308 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>봉인의 제단</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f0d16; --panel: #1a1724; --line: #2f2a3d; --text: #ece6d8; --dim: #9a91a8;
-    --gold: #d9b45a; --crimson: #b8323f;
+    --text: #f3ecd6; --dim: #b9b39c; --gold: #f0cf7a; --glow: #ffe6a0; --crimson: #e0505e;
+    --glass: #0b1714cc; --line: #f0cf7a40;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
-    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
-    font-family: 'Gowun Batang', serif; color: var(--text); background: var(--bg);
-    background-image:
-      radial-gradient(circle at 20% 0%, #3a2a1255, transparent 50%),
-      radial-gradient(circle at 80% 100%, #4a101a66, transparent 50%);
+    margin: 0; overflow: hidden; color: var(--text); background: #06100e;
+    font-family: 'Gowun Batang', serif;
   }
-  main { width: 100%; max-width: 420px; }
-  h1 { text-align: center; font-size: 2.2rem; margin: 0; letter-spacing: .1em; color: var(--gold);
-       text-shadow: 0 0 18px #d9b45a55; }
-  .sub { text-align: center; color: var(--dim); margin: 6px 0 28px; }
-  .sub b { color: var(--gold); font-weight: 400; } .sub i { color: var(--crimson); font-style: normal; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
-  label { display: block; font-size: .85rem; color: var(--dim); margin-bottom: 6px; }
+
+  /* ---------- 배경 장면 ---------- */
+  .scene, .scene > * { position: fixed; inset: 0; width: 100%; height: 100%; }
+  .scene svg { display: block; }
+  .rays {
+    background:
+      linear-gradient(115deg, transparent 18%, #fff3c226 22%, transparent 27%),
+      linear-gradient(110deg, transparent 28%, #fff3c240 31%, transparent 36%),
+      linear-gradient(120deg, transparent 38%, #fff3c220 41%, transparent 47%);
+    mix-blend-mode: screen; filter: blur(6px);
+    animation: breathe 9s ease-in-out infinite alternate;
+  }
+  @keyframes breathe { from { opacity: .55 } to { opacity: 1 } }
+  .vignette { background: radial-gradient(ellipse at 50% 45%, transparent 35%, #000a 100%); }
+  .seal { transform-origin: 800px 470px; animation: spin 90s linear infinite; }
+  .seal.rev { animation-direction: reverse; animation-duration: 140s; }
+  @keyframes spin { to { transform: rotate(360deg) } }
+  .pulse { animation: pulse 5s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .35 } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+
+  /* ---------- 전경 UI ---------- */
+  main {
+    position: relative; height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 16px; gap: 6vh;
+  }
+  .title { text-align: center; }
+  .title h1 {
+    margin: 0; font-family: 'Nanum Myeongjo', serif; font-weight: 800;
+    font-size: clamp(2.6rem, 9vw, 5.2rem); letter-spacing: .14em; padding-left: .14em; color: #fff8e4;
+    text-shadow: 0 0 12px #ffe6a0aa, 0 0 40px #f0cf7a66, 0 2px 0 #0008;
+  }
+  .ornament { display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--gold); }
+  .ornament::before, .ornament::after {
+    content: ''; height: 1px; width: min(26vw, 160px);
+    background: linear-gradient(90deg, transparent, var(--gold));
+  }
+  .ornament::after { transform: scaleX(-1); }
+  .tagline { margin: 10px 0 0; color: var(--dim); letter-spacing: .2em; font-size: clamp(.8rem, 2.6vw, 1rem); }
+  .tagline b { color: var(--gold); font-weight: 400; } .tagline i { color: var(--crimson); font-style: normal; }
+
+  nav { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .item {
+    position: relative; background: none; border: 0; cursor: pointer; font: inherit;
+    font-size: clamp(1.15rem, 4vw, 1.45rem); letter-spacing: .25em; padding: 10px 44px;
+    color: var(--dim); transition: color .2s, text-shadow .2s;
+  }
+  .item::before, .item::after {
+    content: '◆'; position: absolute; top: 50%; translate: 0 -50%; font-size: .55em;
+    color: var(--gold); opacity: 0; transition: opacity .2s, translate .2s;
+  }
+  .item::before { left: 12px; translate: 8px -50%; }
+  .item::after { right: 12px; translate: -8px -50%; }
+  .item:hover, .item:focus-visible { color: #fff8e4; text-shadow: 0 0 14px var(--glow); outline: none; }
+  .item:hover::before, .item:focus-visible::before,
+  .item:hover::after, .item:focus-visible::after { opacity: 1; translate: 0 -50%; }
+
+  .foot {
+    position: fixed; bottom: 12px; left: 16px; right: 16px; display: flex; justify-content: space-between;
+    font-size: .75rem; color: #b9b39c99; letter-spacing: .1em; pointer-events: none;
+  }
+
+  /* ---------- 창 (대화상자 / 대기실) ---------- */
+  .glass {
+    width: min(100%, 380px); padding: 24px; border-radius: 14px; color: var(--text);
+    background: var(--glass); border: 1px solid var(--line);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 20px 60px #000a, inset 0 0 30px #f0cf7a0d;
+  }
+  dialog { margin: auto; }
+  dialog::backdrop { background: #0006; backdrop-filter: blur(2px); }
+  .glass h2 { margin: 0 0 18px; text-align: center; font-size: 1.1rem; letter-spacing: .3em; color: var(--gold); font-weight: 400; }
+  label { display: block; font-size: .8rem; color: var(--dim); margin: 0 0 6px; letter-spacing: .1em; }
   input {
-    width: 100%; padding: 12px; font: inherit; font-size: 1rem; color: var(--text);
-    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+    width: 100%; padding: 12px; margin-bottom: 14px; font: inherit; font-size: 1rem; color: var(--text);
+    background: #0008; border: 1px solid var(--line); border-radius: 8px;
   }
-  input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
-  button {
-    width: 100%; padding: 12px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
-    border-radius: 8px; border: 1px solid var(--gold); background: var(--gold); color: #1a1408;
+  input:focus { outline: 1px solid var(--gold); border-color: var(--gold); }
+  .btn {
+    width: 100%; padding: 12px; font: inherit; font-size: 1rem; letter-spacing: .2em; cursor: pointer;
+    border-radius: 8px; border: 1px solid var(--gold); color: #1d1606;
+    background: linear-gradient(#f6dc93, #d9b45a); box-shadow: 0 0 18px #f0cf7a44;
   }
-  button.ghost { background: transparent; color: var(--gold); }
-  button:disabled { opacity: .4; cursor: default; }
-  .row { display: flex; gap: 8px; } .row > * { flex: 1; }
-  .gap { height: 14px; }
-  .or { text-align: center; color: var(--dim); margin: 16px 0; font-size: .85rem; }
-  .err { color: #ff7b86; min-height: 1.4em; text-align: center; margin-top: 10px; font-size: .9rem; }
-  .code { text-align: center; font-size: 2.4rem; letter-spacing: .3em; color: var(--gold); margin: 4px 0 14px; }
-  ul { list-style: none; padding: 0; margin: 0; }
-  li { padding: 10px 12px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
-  li:last-child { border: 0; }
-  .tag { font-size: .8rem; color: var(--gold); }
-  .me { color: var(--dim); font-size: .8rem; }
+  .btn.ghost { background: transparent; color: var(--gold); box-shadow: none; }
+  .btns { display: flex; gap: 8px; margin-top: 4px; } .btns > * { flex: 1; }
+  .err { color: #ff8f98; min-height: 1.3em; margin: 8px 0 0; text-align: center; font-size: .85rem; }
+
+  .code { text-align: center; font-size: 2.3rem; letter-spacing: .35em; padding-left: .35em; color: var(--glow);
+          text-shadow: 0 0 16px #f0cf7a88; margin: 0 0 16px; }
+  ul { list-style: none; padding: 0; margin: 0 0 16px; border-top: 1px solid var(--line); }
+  li { padding: 10px 4px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
+  .tag { font-size: .8rem; color: var(--gold); } .me { color: var(--dim); font-size: .8rem; }
   [hidden] { display: none !important; }
 </style>
 </head>
 <body>
-<main>
-  <h1>봉인의 제단</h1>
-  <p class="sub"><b>용사 파티</b> 와 <i>마왕군</i>, 누가 누구인가</p>
 
-  <!-- 홈 -->
-  <section id="home" class="card">
-    <label for="name">닉네임</label>
-    <input id="name" maxlength="12" autocomplete="nickname" placeholder="모험가 이름">
-    <div class="gap"></div>
-    <button id="create">방 만들기</button>
-    <div class="or">또는 초대 코드로 입장</div>
-    <div class="row">
-      <input id="code" maxlength="5" placeholder="코드 5자리" aria-label="초대 코드" style="text-transform:uppercase">
-      <button id="join" class="ghost" style="flex:0 0 96px">입장</button>
-    </div>
-  </section>
+<!-- 배경: 빛이 드는 숲 속 봉인의 제단 -->
+<div class="scene" aria-hidden="true">
+  <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#1d4a3f"/><stop offset=".55" stop-color="#0f2b26"/><stop offset="1" stop-color="#050d0b"/>
+      </linearGradient>
+      <radialGradient id="sun" cx=".22" cy=".05" r=".55">
+        <stop offset="0" stop-color="#fff1b8" stop-opacity=".55"/><stop offset="1" stop-color="#fff1b8" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="halo" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#ffe6a0" stop-opacity=".5"/><stop offset=".6" stop-color="#e0505e" stop-opacity=".12"/>
+        <stop offset="1" stop-color="#e0505e" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="mist"><feGaussianBlur stdDeviation="6"/></filter>
+      <filter id="soft"><feGaussianBlur stdDeviation="2"/></filter>
+    </defs>
+
+    <rect width="1600" height="900" fill="url(#sky)"/>
+    <rect width="1600" height="900" fill="url(#sun)"/>
+
+    <!-- 먼 나무 (안개 속) -->
+    <g fill="#163a33" filter="url(#mist)" opacity=".8">
+      <rect x="120" y="0" width="38" height="900"/><rect x="330" y="0" width="22" height="900"/>
+      <rect x="520" y="0" width="30" height="900"/><rect x="1080" y="0" width="26" height="900"/>
+      <rect x="1260" y="0" width="44" height="900"/><rect x="1440" y="0" width="24" height="900"/>
+    </g>
+    <g fill="#0f2a25" filter="url(#soft)">
+      <rect x="230" y="0" width="54" height="900"/><rect x="430" y="0" width="34" height="900"/>
+      <rect x="1150" y="0" width="40" height="900"/><rect x="1350" y="0" width="60" height="900"/>
+    </g>
+
+    <!-- 제단과 봉인진 -->
+    <circle cx="800" cy="470" r="330" fill="url(#halo)" class="pulse"/>
+    <g fill="none" stroke="#f0cf7a" stroke-opacity=".55">
+      <g class="seal">
+        <circle cx="800" cy="470" r="250" stroke-width="1.5"/>
+        <circle cx="800" cy="470" r="232" stroke-width=".8" stroke-dasharray="4 10"/>
+        <polygon points="800,220 1016,595 584,595" stroke-width="1"/>
+        <polygon points="800,720 584,345 1016,345" stroke-width="1"/>
+      </g>
+      <g class="seal rev">
+        <circle cx="800" cy="470" r="170" stroke-width="1" stroke-dasharray="30 6 2 6"/>
+        <circle cx="800" cy="470" r="150" stroke-width=".6"/>
+      </g>
+    </g>
+    <g fill="#0a1d19">
+      <path d="M690 900 V560 Q690 520 730 520 H870 Q910 520 910 560 V900 Z"/>
+      <rect x="650" y="500" width="300" height="34" rx="4"/>
+      <rect x="670" y="486" width="260" height="18" rx="3"/>
+    </g>
+
+    <!-- 가까운 나무와 덩굴 -->
+    <g fill="#040a09">
+      <path d="M0 0 H150 Q130 300 160 620 Q190 760 280 900 H0 Z"/>
+      <path d="M1600 0 H1440 Q1470 320 1430 640 Q1400 780 1300 900 H1600 Z"/>
+    </g>
+    <g fill="none" stroke="#040a09" stroke-width="5" stroke-linecap="round">
+      <path d="M150 0 Q240 120 210 260"/><path d="M200 0 Q300 80 330 190"/>
+      <path d="M1450 0 Q1360 140 1390 300"/><path d="M1400 0 Q1300 60 1270 160"/>
+    </g>
+
+    <!-- 땅, 풀, 빛나는 꽃 -->
+    <path d="M0 900 V790 Q400 730 800 770 T1600 760 V900 Z" fill="#050d0b"/>
+    <path id="grass" fill="#050d0b"/>
+    <g id="flowers"></g>
+  </svg>
+  <div class="rays"></div>
+  <canvas id="motes"></canvas>
+  <div class="vignette"></div>
+</div>
+
+<main>
+  <header class="title">
+    <h1>봉인의 제단</h1>
+    <div class="ornament">✦</div>
+    <p class="tagline"><b>용사 파티</b> 와 <i>마왕군</i> — 누가 누구인가</p>
+  </header>
+
+  <nav id="menu">
+    <button class="item" data-open="create">방 만들기</button>
+    <button class="item" data-open="join">코드로 입장</button>
+  </nav>
 
   <!-- 대기실 -->
-  <section id="lobby" class="card" hidden>
+  <section id="lobby" class="glass" hidden>
+    <h2>대기실</h2>
     <label>초대 코드</label>
     <div class="code" id="roomCode"></div>
-    <div class="row">
-      <button id="invite">초대 링크 보내기</button>
-    </div>
-    <div class="gap"></div>
     <label id="count"></label>
     <ul id="players"></ul>
-    <div class="gap"></div>
-    <button id="leave" class="ghost">나가기</button>
+    <div class="btns">
+      <button id="leave" class="btn ghost">나가기</button>
+      <button id="invite" class="btn">초대하기</button>
+    </div>
   </section>
-
-  <p class="err" id="err" role="alert"></p>
 </main>
+
+<div class="foot"><span>v0.1 프로토타입</span><span>가제</span></div>
+
+<!-- 방 만들기 / 입장 창 -->
+<dialog id="dlg" class="glass">
+  <form id="form" method="dialog">
+    <h2 id="dlgTitle"></h2>
+    <label for="name">닉네임</label>
+    <input id="name" maxlength="12" autocomplete="nickname" placeholder="모험가 이름" required>
+    <div id="codeRow">
+      <label for="code">초대 코드</label>
+      <input id="code" maxlength="5" placeholder="5자리" style="text-transform:uppercase">
+    </div>
+    <div class="btns">
+      <button type="button" class="btn ghost" id="cancel">취소</button>
+      <button class="btn" id="ok">확인</button>
+    </div>
+    <p class="err" id="err" role="alert"></p>
+  </form>
+</dialog>
 
 <script>
 const $ = id => document.getElementById(id);
+
+/* ---------- 배경: 풀/꽃 생성, 빛 입자 ---------- */
+{
+  let d = 'M0 900';
+  for (let x = 0; x <= 1600; x += 9) {
+    const base = 770 + Math.sin(x / 140) * 18, h = 30 + Math.random() * 55;
+    d += ` L${x} ${base} Q${x + 3} ${base - h} ${x + 4 + Math.random() * 8} ${base - h - 6} Q${x + 6} ${base - h / 2} ${x + 9} ${base}`;
+  }
+  $('grass').setAttribute('d', d + ' L1600 900 Z');
+  const colors = ['#ffe6a0', '#9fe8d4', '#c9a7ff', '#ff9fb0'];
+  $('flowers').innerHTML = Array.from({ length: 40 }, () => {
+    const x = Math.random() * 1600, y = 790 + Math.random() * 90, c = colors[Math.random() * 4 | 0];
+    return `<circle cx="${x}" cy="${y}" r="${2 + Math.random() * 3}" fill="${c}" opacity=".9" filter="url(#soft)"/>`;
+  }).join('');
+}
+{
+  const cv = $('motes'), g = cv.getContext('2d');
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W, H, motes;
+  const resize = () => {
+    W = cv.width = innerWidth; H = cv.height = innerHeight;
+    motes = Array.from({ length: Math.round(W * H / 18000) }, () => ({
+      x: Math.random() * W, y: Math.random() * H, r: .6 + Math.random() * 2.2,
+      vy: -.15 - Math.random() * .35, p: Math.random() * 6.28, red: Math.random() < .12,
+    }));
+  };
+  const draw = () => {
+    g.clearRect(0, 0, W, H);
+    for (const m of motes) {
+      m.p += .02; m.y += m.vy; m.x += Math.sin(m.p) * .3;
+      if (m.y < -10) { m.y = H + 10; m.x = Math.random() * W; }
+      g.globalAlpha = .45 + Math.sin(m.p * 1.7) * .35;
+      g.fillStyle = m.red ? '#ff7a86' : '#ffe6a0';
+      g.shadowColor = g.fillStyle; g.shadowBlur = 8;
+      g.beginPath(); g.arc(m.x, m.y, m.r, 0, 6.28); g.fill();
+    }
+    if (!still) requestAnimationFrame(draw);
+  };
+  addEventListener('resize', resize); resize(); draw();
+}
+
+/* ---------- 메뉴: 방향키 이동 ---------- */
+addEventListener('keydown', e => {
+  if (!['ArrowUp', 'ArrowDown'].includes(e.key) || $('menu').hidden || $('dlg').open) return;
+  const items = [...document.querySelectorAll('.item')];
+  const i = items.indexOf(document.activeElement);
+  items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus();
+  e.preventDefault();
+});
+
+/* ---------- 서버 연결 ---------- */
 const ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
 const send = msg => ws.send(JSON.stringify({ ...msg, name: $('name').value }));
-let roomCode = null;
+let mode = null, roomCode = null;
 
 try { $('name').value = localStorage.getItem('name') || ''; } catch {}
-$('code').value = new URLSearchParams(location.search).get('room') || '';
 
-function go(type) {
+function open(m) {
+  mode = m;
+  $('dlgTitle').textContent = m === 'create' ? '방 만들기' : '코드로 입장';
+  $('codeRow').hidden = m === 'create';
+  $('code').required = m === 'join';
+  $('err').textContent = '';
+  $('dlg').showModal();
+}
+document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => open(b.dataset.open));
+$('cancel').onclick = () => $('dlg').close();
+$('form').onsubmit = e => {
+  e.preventDefault(); // 서버 응답이 오면 닫는다
   try { localStorage.setItem('name', $('name').value); } catch {}
   $('err').textContent = '';
-  send({ type, code: $('code').value });
-}
-$('create').onclick = () => go('create');
-$('join').onclick = () => go('join');
-$('code').onkeydown = e => e.key === 'Enter' && go('join');
+  send({ type: mode, code: $('code').value });
+};
 $('leave').onclick = () => send({ type: 'leave' });
 
 $('invite').onclick = async () => {
@@ -109,21 +314,26 @@ $('invite').onclick = async () => {
   const text = `봉인의 제단에 초대합니다! 코드: ${roomCode}`;
   if (navigator.share) return navigator.share({ title: '봉인의 제단', text, url }).catch(() => {});
   await navigator.clipboard.writeText(`${text}\n${url}`);
-  $('invite').textContent = '링크 복사됨!';
-  setTimeout(() => $('invite').textContent = '초대 링크 보내기', 1500);
+  $('invite').textContent = '복사됨!';
+  setTimeout(() => $('invite').textContent = '초대하기', 1500);
 };
 
 function show(lobby) {
-  $('home').hidden = lobby;
+  $('menu').hidden = lobby;
   $('lobby').hidden = !lobby;
   history.replaceState(null, '', lobby ? `/?room=${roomCode}` : '/');
 }
+
+// 초대 링크로 들어오면 바로 입장 창
+const invited = new URLSearchParams(location.search).get('room');
+if (invited) { $('code').value = invited; open('join'); }
 
 ws.onmessage = e => {
   const msg = JSON.parse(e.data);
   if (msg.type === 'error') $('err').textContent = msg.message;
   if (msg.type === 'left') { roomCode = null; show(false); }
   if (msg.type === 'room') {
+    $('dlg').close();
     roomCode = msg.code;
     $('roomCode').textContent = msg.code;
     $('count').textContent = `참가자 ${msg.players.length}명`;
@@ -138,7 +348,10 @@ ws.onmessage = e => {
     show(true);
   }
 };
-ws.onclose = () => $('err').textContent = '서버와 연결이 끊어졌습니다. 새로고침 해주세요.';
+ws.onclose = () => {
+  $('err').textContent = '서버와 연결이 끊어졌습니다. 새로고침 해주세요.';
+  if (!$('dlg').open) alert($('err').textContent);
+};
 </script>
 </body>
 </html>
