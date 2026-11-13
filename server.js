@@ -6,6 +6,7 @@ import { WebSocketServer } from 'ws';
 import { JOBS } from './jobs.js';
 import * as profiles from './profiles.js';
 import { CARDS } from './cards.js';
+import * as G from './game.js';
 const CARDS_JSON = JSON.stringify(CARDS);
 
 const PORT = process.env.PORT || 3000;
@@ -71,6 +72,39 @@ function broadcast(room) {
     send(p, { type: 'room', code: room.code, players: list, you: p.id, minPlayers: MIN_PLAYERS, maxPlayers: JOBS.length,
       canStart: canStart(room), started: room.started, role: p.role, jobs });
   }
+  pushGame(room); // 게임 중이면 게임 화면도 (재접속한 사람이 바로 이어서 볼 수 있게)
+}
+
+/* ---------- 게임 진행: 규칙은 game.js, 여기서는 시간 제한과 전달만 ---------- */
+// 각자에게 자기 시점의 게임 정보 + 연출(fx)을 보낸다
+function pushGame(room, fx = []) {
+  const g = room.game;
+  if (!g) return;
+  const turnLeft = Math.max(0, room.turnEndsAt - Date.now());
+  for (const p of room.players) send(p, { type: 'game', view: { ...G.viewFor(g, p.id), turnLeft }, fx });
+}
+// 시간 제한: 공격받은 사람이 10초 안에 답하지 않으면 맞은 것으로, 차례가 60초를 넘기면 자동으로 넘긴다
+function schedule(room) {
+  const g = room.game;
+  clearTimeout(room.timer);
+  if (!g || g.over) return;
+  if (g.pending) {
+    room.timer = setTimeout(() => apply(room, () => G.react(g, g.pending.target, null)), Math.max(0, g.pending.endsAt - Date.now()));
+  } else {
+    room.timer = setTimeout(() => apply(room, () => G.endTurn(g, g.seats[g.turn].id)), Math.max(0, room.turnEndsAt - Date.now()));
+  }
+}
+// 게임 동작 하나를 적용하고 결과를 모두에게 알린다
+function apply(room, action, who) {
+  const g = room.game, before = g.turn;
+  const res = action();
+  if (res.error) return who && err(who, res.error);
+  const fx = res.fx || [];
+  // 내 차례에 내가 쓰러졌으면 (양날도끼 반동 등) 다음 사람에게
+  if (!g.over && !g.pending && !g.seats[g.turn].alive) fx.push(...(G.endTurn(g, g.seats[g.turn].id).fx || []));
+  if (g.turn !== before || fx.some(f => f.kind === 'turn')) room.turnEndsAt = Date.now() + G.TURN_MS;
+  pushGame(room, fx);
+  schedule(room);
 }
 
 // 방에서 완전히 내보낸다 (직접 나가기, 또는 끊긴 채로 GRACE_MS가 지났을 때)
@@ -80,7 +114,7 @@ function remove(p) {
   p.room = null; p.ready = false;
   if (!room) return;
   room.players = room.players.filter(x => x !== p);
-  if (!room.players.length) return rooms.delete(room.code);
+  if (!room.players.length) { clearTimeout(room.timer); return rooms.delete(room.code); }
   if (room.host === p) room.host = room.players.find(x => x.ws) || room.players[0]; // 접속 중인 사람에게 방장을 넘긴다
   broadcast(room);
 }
@@ -175,7 +209,22 @@ new WebSocketServer({ server: http }).on('connection', ws => {
       const jobs = shuffle(JOBS.map(j => j.name));
       const demons = new Set(shuffle([...room.players]).slice(0, demonCount(room.players.length)));
       room.players.forEach((p, i) => { p.job = jobs[i]; p.role = demons.has(p) ? 'demon' : 'hero'; });
+      room.game = G.newGame(room.players.map(p => ({ id: p.id, name: p.name, role: p.role })), shuffle);
+      room.turnEndsAt = Date.now() + G.TURN_MS + 6000; // 시작 연출·운명 공개를 보는 시간만큼 더
       for (const p of room.players) send(p, { type: 'start' }); // 먼저 보내야 클라이언트가 로딩부터 띄운다
+      broadcast(room);
+      schedule(room);
+    } else if (msg.type === 'use' || msg.type === 'react' || msg.type === 'end') {
+      if (!room?.game) return;
+      const g = room.game;
+      apply(room, () => msg.type === 'use' ? G.useCard(g, me.id, Number(msg.index), msg.target)
+        : msg.type === 'react' ? G.react(g, me.id, msg.index === null ? null : Number(msg.index))
+        : G.endTurn(g, me.id), me);
+    } else if (msg.type === 'backToLobby') { // 게임이 끝나면 같은 방 대기실로
+      if (!room?.game?.over) return;
+      clearTimeout(room.timer);
+      room.game = null; room.started = false;
+      for (const p of room.players) { p.ready = false; p.job = null; p.role = null; }
       broadcast(room);
     } else if (msg.type === 'leave') {
       remove(me);

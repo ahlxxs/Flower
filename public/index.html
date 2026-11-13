@@ -219,6 +219,55 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
 .gd-close { position: absolute; top: .4rem; right: .5rem; width: 1.8rem; height: 1.8rem; border: 0; background: none; color: var(--dim); font-size: 1.3rem; cursor: pointer; }
 .gd-close:hover { color: var(--amber); }
 .g-turn, .g-bar .btn, .g-phase b { white-space: nowrap; }
+/* ---------- 카드 사용 연출 ---------- */
+/* 떨림은 바깥 틀에 준다 (게임 화면 자체에는 등장 애니메이션이 있어서, 거기에 주면 끝날 때 등장 효과가 다시 재생됨) */
+#frame.shake { animation: shake .38s cubic-bezier(.36, .07, .19, .97); }
+#frame.shake-hard { animation: shake .5s cubic-bezier(.36, .07, .19, .97); --amp: 6px; }
+@keyframes shake { 10%, 90% { translate: calc(var(--amp, 3px) * -.5) 0; } 20%, 80% { translate: var(--amp, 3px) 1px; } 30%, 50%, 70% { translate: calc(var(--amp, 3px) * -1) -1px; } 40%, 60% { translate: var(--amp, 3px) 0; } }
+.opp, .me-info { position: relative; }
+.me-info.dead { opacity: .55; filter: grayscale(.8); }
+.fx-hit { animation: fxHit .7s ease-out; }
+.fx-block { animation: fxBlock .8s ease-out; }
+.fx-heal { animation: fxHeal .8s ease-out; }
+.fx-aim { box-shadow: 0 0 0 2px #e8576a, 0 0 1.4rem #e8576a88 !important; border-color: #e8576a !important; }
+@keyframes fxHit { 0% { background: #e8576a99; box-shadow: 0 0 0 2px #e8576a, 0 0 2rem #e8576a; } 100% { } }
+@keyframes fxBlock { 0% { background: #e8c27a66; box-shadow: 0 0 0 2px var(--amber), 0 0 2rem var(--amber); } 100% { } }
+@keyframes fxHeal { 0% { background: #7fc8a866; box-shadow: 0 0 0 2px #7fc8a8, 0 0 2rem #7fc8a8; } 100% { } }
+.float { position: absolute; left: 50%; top: -.2rem; translate: -50% 0; z-index: 3; pointer-events: none; font-weight: 500; font-size: 1.1rem; white-space: nowrap;
+  text-shadow: 0 0 .6rem #000, 0 0 .2rem #000; animation: floatUp 1.3s ease-out forwards; }
+.float.hit { color: #ff7a86; } .float.block { color: var(--amber); } .float.heal { color: #8fe0bd; } .float.death { color: #fff; font-size: .9rem; }
+@keyframes floatUp { from { opacity: 0; translate: -50% .4rem; } 15% { opacity: 1; } to { opacity: 0; translate: -50% -2.2rem; } }
+.fx-card { position: fixed; z-index: 30; left: 50%; top: 42%; translate: -50% -50%; pointer-events: none; opacity: 0; }
+.fx-card .ac { --cw: clamp(9rem, 14vw, 13rem); box-shadow: 0 0 3rem #e8c27a55, 0 1rem 3rem #000c; }
+.fx-card.show { animation: cardShow 1.25s cubic-bezier(.2, .8, .2, 1) forwards; }
+@keyframes cardShow { 0% { opacity: 0; transform: scale(.6) rotate(-6deg); } 18% { opacity: 1; transform: scale(1.04) rotate(0); } 25% { transform: scale(1); }
+  70% { opacity: 1; transform: translate(0, 0) scale(1); } 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(.35); } }
+.fx-vignette { position: fixed; inset: 0; z-index: 29; pointer-events: none; opacity: 0; box-shadow: inset 0 0 12vmin 2vmin #e8576acc; }
+.fx-vignette.on { animation: vig .8s ease-out; }
+.fx-vignette.aim { opacity: .55; animation: vigPulse 1.2s ease-in-out infinite; }
+@keyframes vig { 0% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes vigPulse { 50% { opacity: .2; } }
+body.targeting .opp:not(.dead), body.targeting.target-self #meSeat { cursor: crosshair; outline: 1px dashed #e8576a99; outline-offset: 3px; }
+body.targeting .opp:not(.dead):hover, body.targeting.target-self #meSeat:hover { box-shadow: 0 0 0 2px #e8576a, 0 0 1.2rem #e8576a77; }
+body.targeting.heal-mode .opp:not(.dead), body.targeting.heal-mode #meSeat { outline-color: #7fc8a8aa; }
+body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat:hover { box-shadow: 0 0 0 2px #7fc8a8, 0 0 1.2rem #7fc8a877; }
+.g-note.hint { color: var(--amber); font-size: .82rem; }
+.react-bar { position: absolute; z-index: 8; left: 50%; bottom: 13.5rem; translate: -50% 0; width: min(30rem, calc(100% - 2rem)); padding: 1rem 1.2rem; text-align: center;
+  background: #2a0f12f2; border: 1px solid #e8576a; border-radius: .6rem; box-shadow: 0 0 2rem #e8576a66, 0 1rem 2rem #000b; animation: gdIn .25s ease both; }
+.react-bar p { margin: 0 0 .8rem; color: #ffe2e5; line-height: 1.6; }
+.react-bar b { color: #fff; }
+.react-btns { display: flex; gap: .6rem; justify-content: center; }
+.react-btns .btn.ghost { color: #ffd6da; border-color: #ffd6da88; }
+.over { position: fixed; inset: 0; z-index: 35; display: grid; place-items: center; padding: 1rem; background: #000b; animation: rise .5s ease both; }
+.over .glass { width: min(100%, 26rem); text-align: center; }
+.over-eyebrow { margin: 0; font-family: var(--didone); letter-spacing: .5em; font-size: .78rem; color: var(--amber); }
+.over h2 { font-size: 1.6rem; margin: .4rem 0 .2rem; }
+.over-me { margin: 0 0 .4rem; color: var(--fog); }
+.over-list { list-style: none; margin: 0 0 1.2rem; padding: 0; display: grid; gap: .35rem; text-align: left; }
+.over-list li { display: flex; justify-content: space-between; gap: .6rem; padding: .45rem .3rem; border-bottom: 1px solid #e8c27a22; font-size: .9rem; }
+.over-list .x { opacity: .55; }
+@media (prefers-reduced-motion: reduce) { .fx-card.show { animation-duration: .01s; } }
+@media (max-width: 760px) { .react-bar { position: fixed; bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px)); } }
 @media (max-width: 760px) { .g-bar { gap: .5rem; } .g-bar .brand { display: none; } }
 @media (max-width: 760px) { /* 휴대폰: 아래에서 올라오는 패널 */
   .g-detail { position: fixed; left: 8px; right: 8px; top: auto; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); width: auto; max-height: 52vh;
@@ -684,13 +733,28 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
       </div>
       <ol class="log" id="gLog" aria-label="최근 기록"></ol>
     </div>
+    <div class="react-bar" id="reactBar" hidden role="alertdialog" aria-live="assertive">
+      <p id="reactText"></p>
+      <div class="react-btns"><button class="btn" id="blockBtn" type="button">방어 카드로 막기</button><button class="btn ghost" id="takeBtn" type="button">맞기</button></div>
+    </div>
+    <div class="fx-card" id="fxCard" aria-hidden="true"></div>
+    <div class="fx-vignette" id="fxVignette" aria-hidden="true"></div>
+    <div class="over" id="overBox" hidden role="dialog" aria-modal="true" aria-label="게임 결과">
+      <div class="glass ornate">
+        <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
+        <p class="over-eyebrow">GAME OVER</p><h2 id="overTitle"></h2><p class="over-me" id="overMe"></p>
+        <svg class="divider"><use href="#divider"/></svg>
+        <ul class="over-list" id="overList"></ul>
+        <button class="btn" id="overBtn" type="button">대기실로 돌아가기</button>
+      </div>
+    </div>
     <aside class="g-detail" id="gDetail" hidden aria-live="polite" aria-label="고른 카드 설명">
       <button class="gd-close" type="button" id="gdClose" aria-label="닫기">×</button>
       <div id="gdCard"></div>
       <div class="gd-info"><h3 id="gdName"></h3><p class="gd-meta" id="gdMeta"></p><p class="gd-text" id="gdText"></p></div>
     </aside>
     <div class="g-me">
-      <div class="me-info ornate">
+      <div class="me-info ornate" id="meSeat">
         <svg class="cn tl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
         <div class="me-row"><span class="nm" id="gMe"></span><button type="button" class="job" id="gJob"></button></div>
         <span class="hp" id="gHp"></span>
@@ -699,8 +763,8 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
       <ul class="hand" id="hand" aria-label="내 손패"></ul>
       <div class="me-act">
         <button class="btn" id="useCard" type="button" disabled>카드 사용</button>
-        <button class="btn ghost" data-soon type="button">거래 제안</button>
-        <button class="btn ghost" data-soon type="button">턴 종료</button>
+        <button class="btn ghost" id="tradeBtn" type="button" title="거래는 준비 중입니다">거래 제안</button>
+        <button class="btn ghost" id="endTurnBtn" type="button">턴 종료</button>
       </div>
     </div>
     <p class="g-note" id="gNote">레이아웃 미리보기 · 손패는 실제 카드에서 무작위로 뽑은 예시입니다 · 카드를 누르면 왼쪽에 설명이 나옵니다</p>
@@ -1011,6 +1075,7 @@ function playLogo() {
   }, LOGO_LOOP_MS);
 }
 function view(name) {
+  if (name !== 'game') { $('overBox').hidden = $('reactBar').hidden = $('gDetail').hidden = true; $('fxVignette').className = 'fx-vignette'; cancelTargeting?.(); }
   if (name === 'home' && $('frame').dataset.view !== 'home') playLogo();
   $('frame').dataset.view = name;
   syncBgm();
@@ -1105,14 +1170,14 @@ function renderGame(g) {
   $('gTurn').textContent = mine ? '내 차례' : `${g.players.find(p => p.id === g.turn).name}의 차례`;
   $('gTurn').classList.toggle('mine', mine);
   $('opps').innerHTML = g.players.slice(1).map(p => {
-    const dead = p.hand === 0;
-    return `<li class="opp${p.id === g.turn ? ' turn' : ''}${dead ? ' dead' : ''}${p.online ? '' : ' off'}" data-name="${esc(p.name)}" data-profile="${p.profile ? '1' : ''}">
+    const dead = p.alive === false || (!g.live && p.hand === 0);
+    return `<li class="opp${p.id === g.turn ? ' turn' : ''}${dead ? ' dead' : ''}${p.online ? '' : ' off'}${g.pending?.target === p.id ? ' fx-aim' : ''}" data-id="${p.id}" data-name="${esc(p.name)}" data-profile="${p.profile ? '1' : ''}">
       <span class="avatar">${esc(p.name[0])}</span><span class="nm">${esc(p.name)}${p.online ? '' : ' <span class="off-tag">연결 끊김</span>'}</span>
       <span class="sub"><button type="button" class="job" data-job="${esc(p.job)}">${esc(p.job)}</button>${dead ? `<span class="role ${p.role}">${p.role === 'demon' ? '마왕군' : '용사 파티'}</span>` : `<span class="hp" aria-label="손패 ${p.hand}장">${hearts(p.hand)}</span>`}</span>
     </li>`;
   }).join('');
   $('gDeck').textContent = g.deck; $('gDown').textContent = g.down;
-  $('gUp').innerHTML = cardHTML(g.up);
+  $('gUp').innerHTML = g.up ? cardHTML(g.up) : '<div class="ac" style="border:1px dashed #e8c27a44;box-shadow:none"></div>';
   $('gSeal').textContent = `${g.seal[0]} / ${g.seal[1]}`;
   $('slots').innerHTML = Array.from({ length: g.seal[1] }, (_, i) => {
     const a = -90 + i * 360 / g.seal[1];
@@ -1120,12 +1185,25 @@ function renderGame(g) {
   }).join('');
   $('gLog').innerHTML = g.log.map(l => `<li>${esc(l)}</li>`).join('');
   $('gMe').textContent = me.name + ' (나)'; $('gJob').textContent = me.job; $('gJob').dataset.job = me.job;
+  $('meSeat').dataset.id = me.id; $('meSeat').classList.toggle('dead', me.alive === false);
   $('gHp').innerHTML = hearts(g.hand.length);
   const mid = (g.hand.length - 1) / 2;
   $('hand').innerHTML = g.hand.map((c, i) => `<li><button type="button" aria-pressed="false" aria-label="${acEsc(c.name)}: ${acEsc(c.text)}"
     style="--rot:${(i - mid) * 4}deg;--dy:${Math.abs(i - mid) * .3}rem">${cardHTML(c)}</button></li>`).join('');
-  $('useCard').disabled = true;
+  $('useCard').disabled = true; $('useCard').textContent = '카드 사용';
+  $('endTurnBtn').disabled = g.live && (!mine || !!g.pending || !!g.over);
+  if (g.live) {
+    $('gTurn').dataset.base = $('gTurn').textContent; tickTimers();
+    $('gNote').classList.remove('hint');
+    $('gNote').textContent = g.over ? '게임이 끝났습니다.' : mine ? `내 차례 · 카드 ${g.actions}/${g.actionsMax}장 사용 가능${g.attacked ? ' · 이번 차례 공격 완료' : ''}` : '다른 사람의 차례입니다. 카드를 눌러 설명을 볼 수 있습니다.';
+    // 다시 그려도 고르던 카드는 유지
+    const keep = keepPick !== null && g.handIds[keepPick] === keepPickId && $('hand').children[keepPick]?.querySelector('button');
+    if (keep) selectBtn(keep, true);
+    renderReact(); renderOver();
+  }
+  keepPick = keepPickId = null;
 }
+let keepPick = null, keepPickId = null;
 // 게임 시작 연출 (약 3.2초). 끝나면 then()으로 게임 화면과 운명 공개를 띄우고 연출을 걷어 낸다
 function startCinematic(then) {
   const el = $('intro'), dur = still ? 600 : 3200;
@@ -1258,6 +1336,12 @@ const SFX = {
     tone(130.8, { peak: .22, decay: 1.6, glideTo: 261.6 }); tone(196, { type: 'triangle', peak: .08, decay: 1.6, glideTo: 392 });
     [523.3, 659.3, 784, 1046.5].forEach((f, i) => tone(f, { at: 1.45 + i * .06, peak: .12, decay: 1.6 }));
   },
+  play() { tone(660, { type: 'triangle', peak: .09, decay: .16, glideTo: 990 }); },                 // 카드 내기: 슉
+  attack() { tone(220, { type: 'sawtooth', peak: .07, decay: .2, glideTo: 90 }); tone(900, { type: 'triangle', peak: .05, decay: .12, glideTo: 300 }); },
+  hit() { tone(150, { type: 'square', peak: .09, decay: .28, glideTo: 55 }); tone(80, { peak: .2, decay: .35 }); },  // 맞음: 쿵
+  block() { tone(1250, { type: 'triangle', peak: .12, decay: .3 }); tone(1870, { at: .015, type: 'triangle', peak: .07, decay: .35 }); }, // 막음: 챙
+  heal() { [784, 988, 1175].forEach((f, i) => tone(f, { at: i * .07, peak: .08, decay: .5 })); },     // 회복: 반짝
+  death() { tone(196, { peak: .18, decay: 1.2, glideTo: 65 }); },
   chime() { tone(1046.5, { peak: .16, decay: .45 }); tone(1568, { at: .045, peak: .11, decay: .5 }); }, // 주요 버튼: 딩
   tick() { tone(1500, { type: 'triangle', peak: .09, decay: .07, glideTo: 750 }); },                 // 그 외: 틱
 };
@@ -1275,16 +1359,33 @@ document.querySelectorAll('.fs').forEach(b => {
   b.hidden = !document.fullscreenEnabled;
   b.onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {});
 });
-const esc = s => s.replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
-$('hand').onclick = e => {
-  const b = e.target.closest('button'); if (!b) return;
-  const on = b.getAttribute('aria-pressed') !== 'true';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
+$('hand').onclick = e => { const b = e.target.closest('button'); if (b) selectBtn(b); };
+function selectBtn(b, on = b.getAttribute('aria-pressed') !== 'true') { // 손패 카드 고르기/풀기
   $('hand').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
   b.setAttribute('aria-pressed', on);
   picked = on ? b : null;
-  showDetail(picked && game.hand[[...$('hand').children].indexOf(b.parentElement)]);
-  $('useCard').disabled = !picked || game.turn !== game.you;
+  showDetail(pickedCard());
+  cancelTargeting();
+  $('useCard').disabled = !!usableReason();
+  if (game.live && picked) { const why = usableReason(); $('gNote').textContent = why || '카드 사용을 누르세요.'; $('gNote').classList.toggle('hint', !!why); }
 };
+const pickedIndex = () => picked ? [...$('hand').children].indexOf(picked.parentElement) : -1;
+const pickedCard = () => picked && game.hand[pickedIndex()];
+const cardNeedsTarget = c => c.tags.includes('공격') || c.name === '성경';
+function usableReason() { // 지금 고른 카드를 쓸 수 없는 이유 (쓸 수 있으면 '')
+  const c = pickedCard();
+  if (!c) return '카드를 고르세요.';
+  if (!game.live) return '';
+  if (game.over) return '게임이 끝났습니다.';
+  if (game.turn !== game.you) return '내 차례가 아닙니다.';
+  if (game.pending) return '공격에 대한 응답을 기다리는 중입니다.';
+  if (game.actions <= 0) return `이번 차례에는 더 쓸 수 없습니다. 턴 종료를 누르세요.`;
+  if (['악마의 서', '어둠의 서'].includes(c.name)) return `${c.name}은(는) 사용할 수 없는 카드입니다.`;
+  if (c.tags.includes('방어')) return '방어 카드는 공격을 받을 때 씁니다.';
+  if (c.tags.includes('공격') && game.attacked) return '공격은 한 차례에 한 번만 할 수 있습니다.';
+  return '';
+}
 function showDetail(card) { // 고른 카드를 왼쪽 패널에 크게. card가 없으면 닫는다
   $('gDetail').hidden = !card;
   if (!card) return;
@@ -1301,8 +1402,129 @@ $('roleBtn').onclick = () => {
   b.style.color = hero ? 'var(--amber)' : '#e0505e';
   clearTimeout(roleT); roleT = setTimeout(() => { b.textContent = '진영 확인'; b.style.color = ''; }, 2500);
 };
-document.querySelectorAll('[data-soon]').forEach(b => b.onclick = () => { $('gTurn').textContent = '규칙이 구현되면 동작합니다'; setTimeout(() => renderGame(game), 1600); });
-$('useCard').onclick = () => $('useCard').textContent = '규칙 구현 후 동작';
+/* ---------- 카드 사용 ---------- */
+let targeting = null; // { index, card }
+$('useCard').onclick = () => {
+  if (targeting) return cancelTargeting();
+  const c = pickedCard(), i = pickedIndex();
+  if (!c || usableReason()) return;
+  if (cardNeedsTarget(c)) { // 대상 고르기 모드
+    targeting = { index: i, card: c };
+    const heal = !c.tags.includes('공격');
+    document.body.classList.add('targeting'); document.body.classList.toggle('heal-mode', heal); document.body.classList.toggle('target-self', heal);
+    $('useCard').textContent = '취소';
+    $('gNote').textContent = heal ? `${c.name}: 회복시킬 사람을 누르세요 (나도 가능). Esc로 취소` : `${c.name}: 공격할 상대를 누르세요. Esc로 취소`;
+    $('gNote').classList.add('hint');
+    return;
+  }
+  playCard(i, c);
+};
+function cancelTargeting() {
+  if (!targeting) return;
+  targeting = null; document.body.classList.remove('targeting', 'heal-mode', 'target-self');
+  $('useCard').textContent = '카드 사용'; $('gNote').classList.remove('hint');
+}
+addEventListener('keydown', e => { if (e.key === 'Escape') cancelTargeting(); });
+function chooseTarget(el) { // 대상 고르기 모드에서 사람을 눌렀을 때
+  if (!targeting || !el || el.classList.contains('dead')) return false;
+  const isSelf = el.id === 'meSeat';
+  if (isSelf && !document.body.classList.contains('target-self')) return false;
+  const { index, card } = targeting; cancelTargeting();
+  playCard(index, card, el.dataset.id);
+  return true;
+}
+$('meSeat').addEventListener('click', e => { if (targeting && !e.target.closest('button')) chooseTarget($('meSeat')); });
+function playCard(index, card, target) {
+  if (game.live) return send({ type: 'use', index, target });
+  // #preview: 서버 없이 화면에서만 흉내 낸다
+  const me = game.players[0];
+  game.hand.splice(index, 1); game.hand.push(pickCard()); game.up = card;
+  const fx = [{ kind: 'use', by: me.id, card: card.id, target }];
+  if (card.tags.includes('공격')) {
+    const t = game.players.find(p => p.id === target); t.hand = Math.max(0, t.hand - 1);
+    fx.push({ kind: 'attack', by: me.id, target }, { kind: 'hit', target, amount: 1 });
+  } else if (card.name === '성경') fx.push({ kind: 'heal', target, amount: 1 });
+  else if (card.name === '치유 물약') fx.push({ kind: 'heal', target: me.id, amount: 2 });
+  renderGame(game); playFx(fx);
+}
+$('endTurnBtn').onclick = () => game.live ? send({ type: 'end' }) : ($('gNote').textContent = '미리보기에서는 차례가 넘어가지 않습니다.');
+$('tradeBtn').onclick = () => { $('gNote').textContent = '거래는 다음 단계에서 만들어집니다.'; $('gNote').classList.add('hint'); };
+
+/* ---------- 공격받았을 때: 방어하기 / 맞기 ---------- */
+function myDefenseIndex() { return game.hand.findIndex(c => c.tags.includes('방어')); }
+function renderReact() {
+  const p = game.pending, mine = p && p.target === game.you;
+  $('reactBar').hidden = !mine;
+  $('fxVignette').classList.toggle('aim', !!mine);
+  if (!mine) return;
+  const a = game.players.find(x => x.id === p.attacker), di = myDefenseIndex();
+  $('reactText').innerHTML = `<b>${esc(a?.name || '누군가')}</b>이(가) <b>${esc(CARD_DB[p.card].name)}</b>(으)로 당신을 공격합니다! <span id="reactLeft"></span><br>`
+    + (di >= 0 ? `<b>${esc(game.hand[di].name)}</b>로 막을 수 있습니다.` : '막을 방어 카드가 없습니다.');
+  $('blockBtn').hidden = di < 0;
+  if (di >= 0) $('blockBtn').textContent = `${game.hand[di].name}(으)로 막기`;
+  tickTimers();
+}
+$('blockBtn').onclick = () => send({ type: 'react', index: myDefenseIndex() });
+$('takeBtn').onclick = () => send({ type: 'react', index: null });
+
+/* ---------- 남은 시간 ---------- */
+let turnDeadline = 0, reactDeadline = 0;
+function tickTimers() {
+  if (!game?.live) return;
+  const sec = d => Math.max(0, Math.ceil((d - Date.now()) / 1000));
+  if (!game.over && $('gTurn').dataset.base) $('gTurn').textContent = `${$('gTurn').dataset.base} · ${sec(turnDeadline)}초`;
+  if ($('reactLeft')) $('reactLeft').textContent = `(${sec(reactDeadline)}초)`;
+}
+setInterval(tickTimers, 500);
+
+/* ---------- 게임 결과 ---------- */
+function renderOver() {
+  const o = game.over;
+  $('overBox').hidden = !o;
+  if (!o) return;
+  const meP = game.players[0], win = (o.winner === 'hero') === (game.role !== 'demon');
+  $('overTitle').textContent = o.winner === 'hero' ? '용사 파티 승리!' : '마왕군 승리!';
+  $('overTitle').style.color = o.winner === 'hero' ? 'var(--amber)' : '#ff7a86';
+  $('overMe').textContent = win ? '당신의 진영이 이겼습니다.' : '당신의 진영이 졌습니다.';
+  $('overList').innerHTML = game.players.map(p => `<li class="${p.alive === false ? 'x' : ''}"><span>${esc(p.name)}${p.id === meP.id ? ' (나)' : ''} · ${esc(p.job || '')}</span>
+    <span class="role ${p.role}">${p.role === 'demon' ? '마왕군' : '용사 파티'}</span></li>`).join('');
+}
+$('overBtn').onclick = () => send({ type: 'backToLobby' });
+
+/* ---------- 연출: 카드 공개, 화면 떨림, 맞음/막음/회복 색 ---------- */
+const seatEl = id => id === game?.you ? $('meSeat') : $('opps').querySelector(`[data-id="${id}"]`);
+function flash(id, cls, text) {
+  const el = seatEl(id); if (!el) return;
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), 900);
+  if (text) { const f = document.createElement('span'); f.className = 'float ' + cls.slice(3); f.textContent = text; el.append(f); setTimeout(() => f.remove(), 1400); }
+}
+function shake(hard) {
+  if (still) return;
+  const g = $('frame'); g.classList.remove('shake', 'shake-hard'); void g.offsetWidth; g.classList.add(hard ? 'shake-hard' : 'shake');
+  setTimeout(() => g.classList.remove('shake', 'shake-hard'), 520);
+}
+function showPlayed(cardId) { // 쓴 카드를 가운데 크게 보여 주고 공개 버림 더미로 날려 보낸다
+  const el = $('fxCard'), to = $('gUp').getBoundingClientRect();
+  el.innerHTML = cardHTML(CARD_DB[cardId]);
+  el.style.setProperty('--tx', `${to.left + to.width / 2 - innerWidth / 2}px`);
+  el.style.setProperty('--ty', `${to.top + to.height / 2 - innerHeight * .42}px`);
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+}
+let fxQueue = Promise.resolve();
+function playFx(list = []) {
+  for (const f of list) fxQueue = fxQueue.then(() => new Promise(done => {
+    const me = f.target === game?.you;
+    if (f.kind === 'use') { showPlayed(f.card); sfx('play'); return setTimeout(done, 650); }
+    if (f.kind === 'attack') { shake(false); sfx('attack'); if (me) $('fxVignette').classList.add('on'); }
+    if (f.kind === 'hit') { shake(me); sfx('hit'); flash(f.target, 'fx-hit', `-${f.amount}`); if (me) { $('fxVignette').classList.remove('on'); void $('fxVignette').offsetWidth; $('fxVignette').classList.add('on'); } }
+    if (f.kind === 'block') { sfx('block'); flash(f.target, 'fx-block', '방어!'); }
+    if (f.kind === 'heal') { sfx('heal'); flash(f.target, 'fx-heal', `+${f.amount}`); }
+    if (f.kind === 'death') { sfx('death'); flash(f.target, 'fx-hit', '쓰러짐'); }
+    if (f.kind === 'turn' && me) sfx('chime');
+    setTimeout(() => { $('fxVignette').classList.remove('on'); done(); }, 380);
+  }));
+}
 
 /* ---------- 방 만들기 / 입장 ---------- */
 const send = msg => ws.readyState === WebSocket.OPEN ? ws.send(JSON.stringify({ ...msg, name: $('name').value })) : net('연결이 끊겨 다시 연결하는 중…');
@@ -1373,10 +1595,33 @@ function renderLobby() {
 }
 
 // 방 상태에 맞는 화면으로 (재접속했을 때 게임이 이미 시작됐을 수도 있다)
+let gview = null; // 서버가 보낸 내 시점의 게임 정보
+function fromServer() { // 서버 게임 정보 + 방 정보 → renderGame이 쓰는 모양
+  const v = gview, meIdx = Math.max(0, v.players.findIndex(p => p.id === room.you));
+  const seated = [...v.players.slice(meIdx), ...v.players.slice(0, meIdx)];
+  return {
+    live: true, round: v.round, turn: v.turn, deck: v.deck, down: v.down, up: v.up === null ? null : CARD_DB[v.up], seal: [0, 5],
+    phase: v.pending ? '공격 응답 대기' : '행동 페이즈', you: room.you, role: room.role,
+    // 방을 나간 사람도 게임 자리는 남는다 (그 사람은 방 정보가 없으니 기본값으로)
+    players: seated.map(p => { const rp = room.players.find(x => x.id === p.id); return { ...p, job: rp?.job || '-', profile: rp?.profile, online: !!rp && rp.online !== false }; }),
+    hand: v.hand.map(i => CARD_DB[i]), handIds: v.hand, log: v.log, actions: v.actions, actionsMax: v.actionsMax, attacked: v.attacked,
+    pending: v.pending, over: v.over,
+  };
+}
+function onGame(msg) {
+  gview = msg.view;
+  turnDeadline = Date.now() + (gview.turnLeft || 0);
+  if (gview.pending) reactDeadline = Date.now() + gview.pending.left;
+  if ($('frame').dataset.view !== 'game') return; // 시작 연출 중: 저장만 해 두고, 게임 화면이 열릴 때 그린다
+  keepPick = picked ? pickedIndex() : null; keepPickId = picked ? game.handIds?.[keepPick] : null;
+  if (msg.fx.some(f => f.kind === 'use' && f.by === room.you)) keepPick = keepPickId = null; // 내가 쓴 카드는 선택 해제
+  renderGame(fromServer());
+  playFx(msg.fx);
+}
 function syncView() {
   const want = room.started ? 'game' : 'lobby';
   if ($('frame').dataset.view === want) return;
-  if (want === 'game') renderGame(mockGame(room.players, room.you));
+  if (want === 'game') renderGame(gview ? fromServer() : mockGame(room.players, room.you));
   view(want);
 }
 
@@ -1470,7 +1715,11 @@ function viewPlayer(el) {
   else { $('pviewBody').innerHTML = guestCard(el.dataset.name); $('pview').showModal(); }
 }
 $('seats').addEventListener('click', e => viewPlayer(e.target.closest('.seat')));
-$('opps').addEventListener('click', e => { if (!e.target.closest('[data-job]')) viewPlayer(e.target.closest('.opp')); });
+$('opps').addEventListener('click', e => {
+  if (e.target.closest('[data-job]')) return;
+  if (targeting) return chooseTarget(e.target.closest('.opp'));
+  viewPlayer(e.target.closest('.opp'));
+});
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dataset.close).close());
 ['profile', 'pview'].forEach(id => $(id).addEventListener('click', e => { // 바깥 누르면 닫기
   const r = $(id).getBoundingClientRect();
@@ -1522,6 +1771,8 @@ function onMessage(e) {
     if (entering && pending) { const p = pending; pending = null; p.done(syncView); }
     else if (!pending) syncView();
   }
+  if (msg.type === 'game') onGame(msg);
+  if (msg.type === 'room' && !msg.started) gview = null; // 대기실로 돌아오면 게임 정보 비우기
   if (msg.type === 'start') {
     room.started = true;
     pending = { cancel() {} }; // 연출 중엔 room 메시지가 화면을 바꾸지 않게
