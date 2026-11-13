@@ -953,6 +953,7 @@ const bootFail = setTimeout(() => pending?.fail('서버에 연결하지 못했�
 const cardsLoaded = fetch('/cards.json').then(r => r.json()).then(d => CARD_DB = d).catch(() => {}); // 카드 목록
 Promise.all([firstWelcome, document.fonts.ready, cardsLoaded]).then(() => pending.done(() => {
   pending = null; booting = false; clearTimeout(bootFail); syncBgm();
+  setTimeout(unlockAudio, 1000); // 홈이 보이고 1초 뒤 배경 음악 (브라우저가 막으면 첫 터치 때)
   if (still) $('logo').querySelectorAll('animateTransform').forEach(a => a.remove()); // 움직임 줄이기: 광택 끔
   if (room) syncView();
   else if (preview) { // 혼자서 게임 화면을 보는 미리보기: 주소 끝에 #preview
@@ -1182,12 +1183,17 @@ let actx, gain, pauseT;
 const bgmLevel = () => settings.mute ? 0 : settings.bgm / 100;
 const bgmWanted = () => !booting && ['home', 'lobby'].includes($('frame').dataset.view) && !$('frame').classList.contains('starting')
   && document.visibilityState === 'visible' && bgmLevel() > 0;
-function unlockAudio() {
-  if (actx) return;
-  actx = new (window.AudioContext || window.webkitAudioContext)();
-  gain = actx.createGain(); gain.gain.value = 0;
-  actx.createMediaElementSource(bgm).connect(gain).connect(actx.destination);
-  removeEventListener('pointerdown', unlockAudio); removeEventListener('keydown', unlockAudio);
+function unlockAudio() { // 첫 로딩 1초 뒤 자동으로 한 번, 막히면 첫 터치/키 입력 때 다시
+  if (!actx) {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    gain = actx.createGain(); gain.gain.value = 0;
+    actx.createMediaElementSource(bgm).connect(gain).connect(actx.destination);
+  }
+  actx.resume().then(() => {
+    if (actx.state !== 'running') return; // 브라우저가 아직 소리를 막고 있음
+    removeEventListener('pointerdown', unlockAudio); removeEventListener('keydown', unlockAudio);
+    syncBgm();
+  }, () => {});
   syncBgm();
 }
 addEventListener('pointerdown', unlockAudio); addEventListener('keydown', unlockAudio);
@@ -1196,11 +1202,10 @@ function syncBgm() { // 지금 화면과 설정에 맞춰 서서히 켜거나 �
   const t = actx.currentTime, g = gain.gain;
   g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
   clearTimeout(pauseT);
-  if (bgmWanted()) {
-    actx.resume();
+  if (bgmWanted() && actx.state === 'running') {
     const fromSilence = bgm.paused || g.value < .02;
     if (bgm.paused) bgm.play().catch(() => {});
-    g.linearRampToValueAtTime(bgmLevel(), t + (fromSilence ? 4 : 1.2)); // 처음 들어올 땐 4초에 걸쳐 서서히
+    g.linearRampToValueAtTime(bgmLevel(), t + (fromSilence ? .3 : 1.2)); // 처음엔 바로 (0.3초는 '툭' 소리 방지)
   } else {
     g.linearRampToValueAtTime(0, t + .8);
     pauseT = setTimeout(() => bgmWanted() || bgm.pause(), 900);
