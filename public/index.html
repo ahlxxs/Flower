@@ -875,12 +875,14 @@ Promise.all([firstWelcome, document.fonts.ready]).then(() => pending.done(() => 
   pending = null; booting = false; clearTimeout(bootFail);
   if (still) $('logo').querySelectorAll('animateTransform').forEach(a => a.remove()); // 움직임 줄이기: 광택 끔
   if (room) syncView();
-  else if (!preview) setTimeout(playLogo, 450); // 로딩 화면이 걷히는 동안 기다렸다가
   else if (preview) { // 혼자서 게임 화면을 보는 미리보기: 주소 끝에 #preview
     const names = ['아린', '리아', '도윤', '하람', '세린', '무진'];
     room = { code: 'DEMO', you: 'p0', players: names.map((name, i) => ({ id: 'p' + i, name })) };
     renderGame(mockGame(room.players, room.you)); view('game');
-  } else if (invited) { $('code').value = invited; open('join'); }
+  } else {
+    setTimeout(playLogo, 450); // 로딩 화면이 걷히는 동안 기다렸다가
+    if (invited) { $('code').value = invited; open('join'); } // 초대 링크로 왔으면 바로 참가 창
+  }
 }));
 
 /* ---------- 화면 ---------- */
