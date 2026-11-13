@@ -80,6 +80,9 @@ header nav { display: flex; gap: clamp(0.875rem, 3vw, 2.25rem); }
 .foot { display: flex; align-items: end; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap; padding: 1.375rem clamp(1.125rem, 4vw, 2.75rem) 1.625rem; }
 .cta { border: 1px solid var(--amber); background: var(--amber); color: #1b1407; border-radius: 1.875rem; padding: 0.6875rem 1.625rem; font-weight: 500; letter-spacing: .1em; cursor: pointer; }
 .cta.mi::after { display: none; } .cta:hover, .cta:focus-visible { box-shadow: 0 0 1.5rem #e8c27a88; }
+.ctas { display: grid; gap: .7rem; justify-items: stretch; }
+.cta.join { background: #9fd1bd; border-color: #9fd1bd; color: #0c1f17; } /* 방 참가하기: 옥빛 */
+.cta.join:hover, .cta.join:focus-visible { box-shadow: 0 0 1.5rem #9fd1bd88; }
 .facts { display: flex; gap: clamp(0.875rem, 3vw, 2.125rem); margin: 0; padding: 0; list-style: none; }
 .facts li { display: flex; align-items: center; gap: 0.5625rem; font-size: .72rem; line-height: 1.25; letter-spacing: .06em; }
 .facts svg { width: 1.875rem; height: 1.875rem; flex: none; fill: none; stroke: var(--text); stroke-width: 1.4; }
@@ -550,7 +553,10 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
   </section>
 
   <div class="foot">
-    <button class="cta mi" data-open="create">방 만들기 →</button>
+    <div class="ctas">
+      <button class="cta mi" data-open="create">방 만들기 →</button>
+      <button class="cta mi join" data-open="join">방 참가하기 →</button>
+    </div>
     <ul class="facts">
       <li><svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="13"/><circle cx="15" cy="12" r="4"/><path d="M8 23c2-4 12-4 14 0"/></svg>히든 롤<br>진영 비공개</li>
       <li><svg viewBox="0 0 30 30"><rect x="8" y="4" width="14" height="22" rx="2"/><path d="M15 19l-3.5-3.5a2.2 2.2 0 0 1 3.5-2.6 2.2 2.2 0 0 1 3.5 2.6Z"/></svg>손패가 곧<br>생명</li>
@@ -957,7 +963,7 @@ try { $('name').value = localStorage.getItem('name') || ''; } catch {}
 
 function open(m) {
   mode = m;
-  $('dlgTitle').textContent = m === 'create' ? '방 만들기' : '코드로 입장';
+  $('dlgTitle').textContent = m === 'create' ? '방 만들기' : '방 참가하기';
   $('codeRow').hidden = m === 'create';
   $('code').required = m === 'join';
   $('dlg').showModal();
