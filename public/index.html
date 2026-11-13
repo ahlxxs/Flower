@@ -1168,8 +1168,16 @@ $('settings').addEventListener('click', e => { // 창 바깥(배경)을 누르�
 /* ---------- 배경 음악: 홈과 대기실에서 ----------
    브라우저는 사용자가 화면을 한 번 누르기 전엔 소리를 막으므로, 첫 터치/키 입력에 맞춰 시작한다.
    볼륨은 Web Audio로 조절한다 (아이폰은 audio.volume 을 바꿀 수 없음). */
-const bgm = new Audio('/audio/home.mp3');
-bgm.loop = true; bgm.preload = 'none';
+// 재생 순서: RPG OST 플레이리스트(15분) → 기존 곡(Lavender) → 다시 처음부터
+const BGM_TRACKS = ['/audio/lobby.mp3', '/audio/home.mp3'];
+let bgmTrack = 0;
+const bgm = new Audio(BGM_TRACKS[0]);
+bgm.preload = 'none';
+bgm.addEventListener('ended', () => { // 한 곡이 끝나면 다음 곡으로 이어서
+  bgmTrack = (bgmTrack + 1) % BGM_TRACKS.length;
+  bgm.src = BGM_TRACKS[bgmTrack];
+  if (bgmWanted()) bgm.play().catch(() => {});
+});
 let actx, gain, pauseT;
 const bgmLevel = () => settings.mute ? 0 : settings.bgm / 100;
 const bgmWanted = () => !booting && ['home', 'lobby'].includes($('frame').dataset.view) && !$('frame').classList.contains('starting')
@@ -1190,8 +1198,9 @@ function syncBgm() { // 지금 화면과 설정에 맞춰 서서히 켜거나 �
   clearTimeout(pauseT);
   if (bgmWanted()) {
     actx.resume();
+    const fromSilence = bgm.paused || g.value < .02;
     if (bgm.paused) bgm.play().catch(() => {});
-    g.linearRampToValueAtTime(bgmLevel(), t + 1.2);
+    g.linearRampToValueAtTime(bgmLevel(), t + (fromSilence ? 4 : 1.2)); // 처음 들어올 땐 4초에 걸쳐 서서히
   } else {
     g.linearRampToValueAtTime(0, t + .8);
     pauseT = setTimeout(() => bgmWanted() || bgm.pause(), 900);
