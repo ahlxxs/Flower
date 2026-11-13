@@ -174,7 +174,8 @@ body:has(#frame[data-view="game"]) .under, .frame[data-view="game"] header { dis
   grid-row: 1 / 4; display: grid; grid-template-rows: auto auto 1fr auto auto; gap: 10px; overflow: hidden;
   padding: 10px clamp(12px, 2.5vw, 28px) 6px; background: radial-gradient(ellipse at 50% 55%, #0a141080, #040806eb 75%);
 }
-#game > *, .me > *, .table > * { min-width: 0; }
+#game > *, .g-me > *, .table > * { min-width: 0; }
+.frame[data-view="game"] > svg :is(.seal, .pulse) { display: none; } /* 게임 중엔 제단과 겹치지 않게 배경 마법진을 숨김 */
 .g-bar { display: flex; align-items: center; gap: 16px; }
 .g-bar .brand { font-size: .95rem; }
 .g-phase { display: flex; gap: 10px; align-items: baseline; font-size: .85rem; color: var(--fog); }
@@ -241,7 +242,7 @@ body:has(#frame[data-view="game"]) .under, .frame[data-view="game"] header { dis
 .t-attack { --tone: #b8323f; } .t-defend { --tone: #2a7d86; } .t-seal { --tone: #9a7a2e; }
 .t-seal svg { fill: var(--tone); }
 
-.me { display: grid; grid-template-columns: 220px 1fr 220px; gap: 16px; align-items: end; }
+.g-me { display: grid; grid-template-columns: 220px 1fr 220px; gap: 16px; align-items: end; }
 .me-info { padding: 18px 18px 16px; border-radius: 8px; background: #0a1410d9; border: 1px solid #e8c27a33; display: grid; gap: 8px; }
 .me-info .cn { width: 30px; height: 30px; }
 .me-info .nm { font-weight: 500; }
@@ -273,7 +274,7 @@ body:has(#frame[data-view="game"]) .under, .frame[data-view="game"] header { dis
   .table .cardback, .table .cardface { width: 46px; }
   .cardface.sm .cn-name { font-size: .72rem; }
   .piles-r { gap: 10px; }
-  .me { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .g-me { grid-template-columns: 1fr 1fr; gap: 8px; }
   .hand { grid-column: 1 / -1; grid-row: 1; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; padding: 30px 8px 16px; scrollbar-width: none; }
   .pile { font-size: .66rem; }
   .me-act .btn { white-space: nowrap; font-size: .85rem; }
@@ -422,7 +423,7 @@ body:has(#frame[data-view="game"]) .under, .frame[data-view="game"] header { dis
       </div>
       <ol class="log" id="gLog" aria-label="최근 기록"></ol>
     </div>
-    <div class="me">
+    <div class="g-me">
       <div class="me-info ornate">
         <svg class="cn tl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
         <div class="me-row"><span class="nm" id="gMe"></span><span class="job" id="gJob"></span></div>
