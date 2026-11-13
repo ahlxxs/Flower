@@ -6,84 +6,122 @@ import { WebSocketServer } from 'ws';
 const PORT = process.env.PORT || 3000;
 const MAX_NAME = 12;
 const MIN_PLAYERS = 2; // ponytail: 테스트용 최소 인원. 규칙이 정해지면 올린다.
-// ponytail: rooms live in memory only — a restart drops every room. Move to Redis/DB if that matters.
-const rooms = new Map(); // code -> { host: ws, players: Set<ws>, started: bool }
+const GRACE_MS = Number(process.env.GRACE_MS) || 10 * 60 * 1000; // 연결이 끊긴 자리를 지켜 주는 시간
+// ponytail: 방과 플레이어는 메모리에만 있다. 서버가 재시작되면 모두 사라진다. 필요해지면 Redis/DB로.
+const rooms = new Map();   // code -> { code, host, players: [player], started }
+const players = new Map(); // token -> { id, token, name, room, ready, ws, timer }
 
 const http = createServer(async (req, res) => {
-  // Single-page app: every path gets index.html (invite links look like /?room=ABCDE).
+  // 한 페이지짜리 앱: 모든 경로에 index.html (초대 링크는 /?room=ABCDE)
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
   res.end(await readFile(new URL('./public/index.html', import.meta.url)));
 });
 
+const id = n => randomBytes(n).toString('hex');
 function newCode() {
-  const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I confusion
+  const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 0/O, 1/I 혼동 없는 글자만
   let code;
   do code = [...randomBytes(5)].map(b => abc[b % abc.length]).join('');
   while (rooms.has(code));
   return code;
 }
 
-function broadcast(code) {
-  const room = rooms.get(code);
-  if (!room) return;
-  const players = [...room.players].map(p => ({ id: p.id, name: p.name, host: p === room.host, ready: p.ready }));
-  for (const p of room.players) p.send(JSON.stringify({ type: 'room', code, players, you: p.id, minPlayers: MIN_PLAYERS, canStart: canStart(room) }));
-}
+const send = (p, msg) => p.ws?.readyState === 1 && p.ws.send(JSON.stringify(msg));
+const err = (p, message) => send(p, { type: 'error', message });
 
 // 방장을 뺀 전원이 준비하고, 최소 인원이 모이면 시작할 수 있다
-function canStart(room) {
-  return room.players.size >= MIN_PLAYERS && [...room.players].every(p => p === room.host || p.ready);
+const canStart = room => room.players.length >= MIN_PLAYERS && room.players.every(p => p === room.host || p.ready);
+
+function broadcast(room) {
+  const list = room.players.map(p => ({ id: p.id, name: p.name, host: p === room.host, ready: p.ready, online: !!p.ws }));
+  for (const p of room.players) {
+    send(p, { type: 'room', code: room.code, players: list, you: p.id, minPlayers: MIN_PLAYERS, canStart: canStart(room), started: room.started });
+  }
 }
 
-function leave(ws) {
-  const code = ws.room;
-  const room = rooms.get(code);
+// 방에서 완전히 내보낸다 (직접 나가기, 또는 끊긴 채로 GRACE_MS가 지났을 때)
+function remove(p) {
+  clearTimeout(p.timer);
+  const room = rooms.get(p.room);
+  p.room = null; p.ready = false;
   if (!room) return;
-  room.players.delete(ws);
-  ws.room = null;
-  if (room.players.size === 0) return rooms.delete(code);
-  if (room.host === ws) room.host = room.players.values().next().value; // pass host to the oldest player
-  broadcast(code);
+  room.players = room.players.filter(x => x !== p);
+  if (!room.players.length) return rooms.delete(room.code);
+  if (room.host === p) room.host = room.players.find(x => x.ws) || room.players[0]; // 접속 중인 사람에게 방장을 넘긴다
+  broadcast(room);
 }
-
-const err = (ws, message) => ws.send(JSON.stringify({ type: 'error', message }));
 
 new WebSocketServer({ server: http }).on('connection', ws => {
-  ws.id = randomBytes(4).toString('hex');
-  ws.on('close', () => leave(ws));
+  let me = null;
+
+  ws.on('close', () => {
+    if (!me || me.ws !== ws) return; // 이미 새 연결로 바뀐 경우
+    me.ws = null;
+    if (!me.room) return players.delete(me.token);
+    broadcast(rooms.get(me.room));
+    const p = me;
+    p.timer = setTimeout(() => { remove(p); players.delete(p.token); }, GRACE_MS);
+  });
+
   ws.on('message', raw => {
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
-    const name = String(msg.name ?? '').trim().slice(0, MAX_NAME);
+
+    // 첫 메시지: 저장해 둔 토큰이 있으면 그 자리로 돌아간다
+    if (msg.type === 'hello') {
+      if (me) return;
+      me = players.get(String(msg.token ?? ''));
+      if (me) {
+        clearTimeout(me.timer);
+        if (me.ws) { send(me, { type: 'replaced' }); me.ws.close(); } // 같은 자리를 다른 탭이 가져감
+      } else {
+        me = { id: id(4), token: id(16), name: '', room: null, ready: false, ws: null, timer: null };
+        players.set(me.token, me);
+      }
+      me.ws = ws;
+      send(me, { type: 'welcome', token: me.token, inRoom: !!me.room });
+      if (me.room) broadcast(rooms.get(me.room));
+      return;
+    }
+    if (!me) return;
+    const room = rooms.get(me.room);
 
     if (msg.type === 'create' || msg.type === 'join') {
-      if (!name) return err(ws, '닉네임을 입력하세요.');
+      const name = String(msg.name ?? '').trim().slice(0, MAX_NAME);
+      if (!name) return err(me, '닉네임을 입력하세요.');
       const code = msg.type === 'create' ? newCode() : String(msg.code ?? '').trim().toUpperCase();
-      if (msg.type === 'create') rooms.set(code, { host: ws, players: new Set(), started: false });
-      const room = rooms.get(code);
-      if (!room) return err(ws, '존재하지 않는 방입니다.');
-      if (room.started) return err(ws, '이미 게임이 시작된 방입니다.');
-      if ([...room.players].some(p => p.name === name)) return err(ws, '이미 같은 닉네임이 방에 있습니다.');
-      leave(ws);
-      ws.name = name;
-      ws.room = code;
-      ws.ready = false;
-      room.players.add(ws);
-      broadcast(code);
+      const target = msg.type === 'create' ? { code, host: me, players: [], started: false } : rooms.get(code);
+      if (!target) return err(me, '존재하지 않는 방입니다.');
+      if (target === room) return broadcast(room);
+      // 같은 이름의 자리가 끊겨 있으면 그 자리를 이어받는다 (탭을 닫았다가 다시 들어온 경우)
+      const seat = target.players.find(p => p.name === name);
+      if (seat?.ws) return err(me, '이미 같은 닉네임이 방에 있습니다.');
+      if (target.started && !seat) return err(me, '이미 게임이 시작된 방입니다.');
+      if (room) remove(me);
+      if (msg.type === 'create') rooms.set(code, target);
+      me.name = name; me.room = code;
+      if (seat) {
+        clearTimeout(seat.timer); players.delete(seat.token);
+        me.ready = seat.ready;
+        target.players[target.players.indexOf(seat)] = me;
+        if (target.host === seat) target.host = me;
+      } else {
+        me.ready = false;
+        target.players.push(me);
+      }
+      broadcast(target); // started 값으로 클라이언트가 게임 화면으로 바로 간다
     } else if (msg.type === 'ready') {
-      const room = rooms.get(ws.room);
       if (!room || room.started) return;
-      ws.ready = !!msg.ready;
-      broadcast(ws.room);
+      me.ready = !!msg.ready;
+      broadcast(room);
     } else if (msg.type === 'start') {
-      const room = rooms.get(ws.room);
-      if (!room || room.host !== ws || room.started) return;
-      if (!canStart(room)) return err(ws, '모두 준비해야 시작할 수 있습니다.');
+      if (!room || room.host !== me || room.started) return;
+      if (!canStart(room)) return err(me, '모두 준비해야 시작할 수 있습니다.');
       room.started = true;
-      for (const p of room.players) p.send(JSON.stringify({ type: 'start' }));
+      for (const p of room.players) send(p, { type: 'start' });
     } else if (msg.type === 'leave') {
-      leave(ws);
-      ws.send(JSON.stringify({ type: 'left' }));
+      remove(me);
+      send(me, { type: 'left' });
     }
   });
 });

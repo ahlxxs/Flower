@@ -159,6 +159,8 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 6px; l
 .seat.ready { border-color: var(--amber); box-shadow: 0 0 22px #e8c27a40, inset 0 0 0 4px #070d0b, inset 0 0 0 5px #e8c27a55; }
 .seat.ready svg.heart { fill: var(--amber); stroke: var(--amber); filter: drop-shadow(0 0 6px #e8c27a); }
 .seat.ready .st { color: var(--amber); }
+.seat.off { opacity: .45; filter: grayscale(.7); }
+.seat.off .st { color: #e86a76; }
 .seat.empty { cursor: pointer; border-style: dashed; color: var(--dim); align-content: center; grid-template-rows: none; font-size: .85rem; }
 .seat.empty:hover { color: var(--amber); border-color: var(--amber); }
 .lobby-foot { display: flex; justify-content: center; }
@@ -196,7 +198,8 @@ body:has(#frame[data-view="game"]) .under, .frame[data-view="game"] header { dis
           mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M16 29 2.6 15.6A8 8 0 0 1 16 4.3 8 8 0 0 1 29.4 15.6Z'/%3E%3C/svg%3E") center / contain no-repeat; }
 .opp.turn { border-color: var(--amber); box-shadow: 0 0 20px #e8c27a40; }
 .opp.turn::after { content: '차례'; position: absolute; top: -8px; right: 10px; font-size: .62rem; padding: 1px 7px; border-radius: 8px; background: var(--amber); color: #1b1407; }
-.opp.dead { opacity: .55; filter: grayscale(.8); }
+.opp.dead, .opp.off { opacity: .55; filter: grayscale(.8); }
+.off-tag { font-size: .66rem; color: #e86a76; }
 .role { font-size: .68rem; padding: 1px 7px; border-radius: 10px; }
 .role.demon { background: #e0505e; color: #fff; } .role.hero { background: var(--amber); color: #1b1407; }
 
@@ -255,6 +258,10 @@ body:has(#frame[data-view="game"]) .under, .frame[data-view="game"] header { dis
 .g-note { margin: 0; text-align: center; font-size: .68rem; color: var(--dim); letter-spacing: .08em; }
 
 @media (max-width: 1100px) { .log { display: none; } }
+.net {
+  position: fixed; z-index: 60; top: calc(10px + env(safe-area-inset-top, 0px)); left: 50%; translate: -50% 0; max-width: calc(100% - 32px);
+  padding: 8px 16px; border-radius: 20px; font-size: .8rem; text-align: center; background: #2a0f12f0; color: #ffd6da; border: 1px solid #e0505e88;
+}
 @media (max-width: 760px) {
   #game { gap: 8px; padding-inline: 10px; }
   .g-phase span { display: none; }
@@ -462,6 +469,7 @@ body:has(#frame[data-view="game"]) .under, .frame[data-view="game"] header { dis
   </form>
 </dialog>
 
+<div class="net" id="net" role="status" hidden></div>
 <div class="ld" id="loader" role="status" aria-live="polite">
   <div class="ld-center">
     <div class="ld-card" aria-hidden="true"><svg viewBox="0 0 32 29"><path d="M16 29 2.6 15.6A8 8 0 0 1 16 4.3 8 8 0 0 1 29.4 15.6Z"/></svg></div>
@@ -544,19 +552,40 @@ function loading(stages, minMs) {
 }
 
 const invited = new URLSearchParams(location.search).get('room');
-const ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
+
+/* ---------- 서버 연결 + 재접속 ----------
+   탭마다 받은 토큰을 sessionStorage에 둔다. 새로고침하거나 다른 앱에 다녀와도
+   같은 탭이면 토큰으로 원래 자리에 돌아간다. 서버는 끊긴 자리를 10분 동안 지켜 준다. */
+let ws, booting = true, retry = 0, replaced = false, welcomed;
+const getToken = () => { try { return sessionStorage.getItem('arcana-token') || ''; } catch { return ''; } };
+const firstWelcome = new Promise(ok => welcomed = ok);
+function connect() {
+  ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
+  ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', token: getToken() }));
+  ws.onmessage = onMessage;
+  ws.onclose = () => {
+    if (replaced) return net('다른 탭에서 이 자리로 접속했습니다. 이 탭은 연결이 끊겼습니다.');
+    net('연결이 끊겨 다시 연결하는 중…');
+    setTimeout(connect, Math.min(8000, 500 * 2 ** retry++));
+  };
+}
+function net(msg) { $('net').textContent = msg; $('net').hidden = !msg; }
+document.addEventListener('visibilitychange', () => { // 다른 앱에서 돌아오면 바로 재연결
+  if (document.visibilityState === 'visible' && ws.readyState === WebSocket.CLOSED && !replaced) { retry = 0; connect(); }
+});
+connect();
+
 let pending = loading(STAGES, 2800); // 처음 접속
-Promise.all([
-  new Promise((ok, fail) => { ws.addEventListener('open', ok); ws.addEventListener('error', fail); }),
-  document.fonts.ready,
-]).then(() => pending.done(() => {
-  pending = null;
-  if (preview) { // 혼자서 게임 화면을 보는 미리보기: 주소 끝에 #preview
+const bootFail = setTimeout(() => pending?.fail('서버에 연결하지 못했습니다. 잠시 후 새로고침 해주세요.'), 20000);
+Promise.all([firstWelcome, document.fonts.ready]).then(() => pending.done(() => {
+  pending = null; booting = false; clearTimeout(bootFail);
+  if (room) syncView();
+  else if (preview) { // 혼자서 게임 화면을 보는 미리보기: 주소 끝에 #preview
     const names = ['아린', '리아', '도윤', '하람', '세린', '무진'];
     room = { code: 'DEMO', you: 'p0', players: names.map((name, i) => ({ id: 'p' + i, name })) };
     renderGame(mockGame(room.players, room.you)); view('game');
   } else if (invited) { $('code').value = invited; open('join'); }
-}), () => pending.fail('서버에 연결하지 못했습니다. 새로고침 해주세요.'));
+}));
 
 /* ---------- 화면 ---------- */
 function view(name) {
@@ -590,7 +619,7 @@ function mockGame(players, you) {
   return {
     round: 1, phase: '행동 페이즈', turn: players[0].id, deck: 38, down: 3, up: 'attack', seal: [2, 5], // 방장부터 시작
     you, role: 'hero',
-    players: seated.map((p, i) => ({ id: p.id, name: p.name, job: JOBS[i % JOBS.length], hand: i === 3 ? 0 : [5, 4, 5, 3, 4, 2][i % 6], role: i === 3 ? 'demon' : null })),
+    players: seated.map((p, i) => ({ id: p.id, name: p.name, online: p.online !== false, job: JOBS[i % JOBS.length], hand: i === 3 ? 0 : [5, 4, 5, 3, 4, 2][i % 6], role: i === 3 ? 'demon' : null })),
     hand: ['attack', 'defend', 'seal', 'attack', 'defend'],
     log: ['라운드 1이 시작되었습니다.', '제단에 봉인 카드 2장이 남았습니다.', '당신의 차례입니다.'],
   };
@@ -606,8 +635,8 @@ function renderGame(g) {
   $('gTurn').classList.toggle('mine', mine);
   $('opps').innerHTML = g.players.slice(1).map(p => {
     const dead = p.hand === 0;
-    return `<li class="opp${p.id === g.turn ? ' turn' : ''}${dead ? ' dead' : ''}">
-      <span class="avatar">${esc(p.name[0])}</span><span class="nm">${esc(p.name)}</span>
+    return `<li class="opp${p.id === g.turn ? ' turn' : ''}${dead ? ' dead' : ''}${p.online ? '' : ' off'}">
+      <span class="avatar">${esc(p.name[0])}</span><span class="nm">${esc(p.name)}${p.online ? '' : ' <span class="off-tag">연결 끊김</span>'}</span>
       <span class="sub"><span class="job">${p.job}</span>${dead ? `<span class="role ${p.role}">${p.role === 'demon' ? '마왕군' : '용사 파티'}</span>` : `<span class="hp" aria-label="손패 ${p.hand}장">${hearts(p.hand)}</span>`}</span>
     </li>`;
   }).join('');
@@ -646,7 +675,7 @@ document.querySelectorAll('[data-soon]').forEach(b => b.onclick = () => { $('gTu
 $('useCard').onclick = () => $('useCard').textContent = '규칙 구현 후 동작';
 
 /* ---------- 방 만들기 / 입장 ---------- */
-const send = msg => ws.send(JSON.stringify({ ...msg, name: $('name').value }));
+const send = msg => ws.readyState === WebSocket.OPEN ? ws.send(JSON.stringify({ ...msg, name: $('name').value })) : net('연결이 끊겨 다시 연결하는 중…');
 let mode = null, room = null;
 try { $('name').value = localStorage.getItem('name') || ''; } catch {}
 
@@ -691,11 +720,11 @@ function renderLobby() {
   $('roomCode').textContent = room.code;
   $('seats').replaceChildren(...room.players.map(p => {
     const li = document.createElement('li');
-    li.className = 'seat' + (p.ready || p.host ? ' ready' : '') + (p.id === room.you ? ' me' : '');
+    li.className = 'seat' + (p.ready || p.host ? ' ready' : '') + (p.id === room.you ? ' me' : '') + (p.online ? '' : ' off');
     li.append($('heart').content.cloneNode(true));
     if (p.host) li.insertAdjacentHTML('beforeend', '<span class="badge">방장</span>');
     const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = p.name + (p.id === room.you ? ' (나)' : '');
-    const st = document.createElement('span'); st.className = 'st'; st.textContent = p.host ? '방장' : p.ready ? '준비 완료' : '대기 중';
+    const st = document.createElement('span'); st.className = 'st'; st.textContent = !p.online ? '연결 끊김' : p.host ? '방장' : p.ready ? '준비 완료' : '대기 중';
     li.append(nm, st);
     return li;
   }), Object.assign(document.createElement('li'), { className: 'seat empty', textContent: '+ 친구 초대', onclick: invite }));
@@ -709,8 +738,23 @@ function renderLobby() {
   $('action').classList.toggle('ghost', !me.host && me.ready);
 }
 
-ws.onmessage = e => {
+// 방 상태에 맞는 화면으로 (재접속했을 때 게임이 이미 시작됐을 수도 있다)
+function syncView() {
+  const want = room.started ? 'game' : 'lobby';
+  if ($('frame').dataset.view === want) return;
+  if (want === 'game') renderGame(mockGame(room.players, room.you));
+  view(want);
+}
+
+function onMessage(e) {
   const msg = JSON.parse(e.data);
+  if (msg.type === 'welcome') {
+    try { sessionStorage.setItem('arcana-token', msg.token); } catch {}
+    retry = 0; net('');
+    if (!msg.inRoom && room && !booting && !preview) { room = null; view('home'); $('err').textContent = '자리를 비운 사이 방이 사라졌습니다.'; open('join'); }
+    welcomed();
+  }
+  if (msg.type === 'replaced') replaced = true;
   if (msg.type === 'error') {
     if (pending) { pending.cancel(); pending = null; open(mode); }
     $('err').textContent = msg.message;
@@ -721,18 +765,16 @@ ws.onmessage = e => {
     const entering = !room;
     room = msg;
     renderLobby();
-    if (entering && pending) { const p = pending; pending = null; p.done(() => view('lobby')); }
-    else if (entering) view('lobby');
+    if (booting) return; // 첫 로딩이 끝나면 syncView가 화면을 고른다
+    if (entering && pending) { const p = pending; pending = null; p.done(syncView); }
+    else if (!pending) syncView();
   }
   if (msg.type === 'start') {
     pending = loading(['게임판을 펼치는 중', '카드를 나누는 중', '진영을 정하는 중'], 3200);
-    const p = pending; pending = null; p.done(() => { renderGame(mockGame(room.players, room.you)); view('game'); });
+    room.started = true;
+    const p = pending; pending = null; p.done(syncView);
   }
-};
-ws.onclose = () => {
-  $('err').textContent = '서버와 연결이 끊어졌습니다. 새로고침 해주세요.';
-  if (room) $('status').textContent = $('err').textContent;
-};
+}
 
 /* ---------- 배경 빛 입자 ---------- */
 function canvasLoop(cv, setup, frame) {
