@@ -6,7 +6,8 @@
     "start": "node server.js",
     "test:reconnect": "node test/reconnect.cjs",
     "test:profiles": "node test/profiles.cjs",
-    "test:game": "node test/game.test.mjs"
+    "test:game": "node test/game.test.mjs",
+    "test:cards": "node test/cards.cjs"
   },
   "dependencies": {
     "pg": "^8.16.3",

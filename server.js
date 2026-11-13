@@ -7,7 +7,8 @@ import { JOBS } from './jobs.js';
 import * as profiles from './profiles.js';
 import { CARDS } from './cards.js';
 import * as G from './game.js';
-const CARDS_JSON = JSON.stringify(CARDS);
+// 카드 목록 + 대상 규칙(누구를 고르는지)과 사용 불가 이유
+const CARDS_JSON = JSON.stringify(CARDS.map(c => ({ ...c, target: G.targetOf(c), unusable: G.UNUSABLE[c.name] || null })));
 
 const PORT = process.env.PORT || 3000;
 const MAX_NAME = 12;
@@ -81,15 +82,18 @@ function pushGame(room, fx = []) {
   const g = room.game;
   if (!g) return;
   const turnLeft = Math.max(0, room.turnEndsAt - Date.now());
-  for (const p of room.players) send(p, { type: 'game', view: { ...G.viewFor(g, p.id), turnLeft }, fx });
+  // fx 중 to가 있는 것(예: 관심법으로 본 손패)은 그 사람에게만
+  for (const p of room.players) send(p, { type: 'game', view: { ...G.viewFor(g, p.id), turnLeft }, fx: fx.filter(f => !f.to || f.to === p.id) });
 }
 // 시간 제한: 공격받은 사람이 10초 안에 답하지 않으면 맞은 것으로, 차례가 60초를 넘기면 자동으로 넘긴다
 function schedule(room) {
   const g = room.game;
   clearTimeout(room.timer);
   if (!g || g.over) return;
-  if (g.pending) {
-    room.timer = setTimeout(() => apply(room, () => G.react(g, g.pending.target, null)), Math.max(0, g.pending.endsAt - Date.now()));
+  const p = g.pending;
+  if (p) { // 기다리는 일마다 시간이 지나면: 공격은 맞은 것으로, 거절 대기는 효과 적용, 고르기는 무작위로
+    const act = p.kind === 'attack' ? () => G.react(g, p.target, null) : p.kind === 'counter' ? () => G.resolveCounter(g) : () => G.choose(g, p.who, {}, true);
+    room.timer = setTimeout(() => apply(room, act), Math.max(0, p.endsAt - Date.now()));
   } else {
     room.timer = setTimeout(() => apply(room, () => G.endTurn(g, g.seats[g.turn].id)), Math.max(0, room.turnEndsAt - Date.now()));
   }
@@ -100,8 +104,8 @@ function apply(room, action, who) {
   const res = action();
   if (res.error) return who && err(who, res.error);
   const fx = res.fx || [];
-  // 내 차례에 내가 쓰러졌으면 (양날도끼 반동 등) 다음 사람에게
-  if (!g.over && !g.pending && !g.seats[g.turn].alive) fx.push(...(G.endTurn(g, g.seats[g.turn].id).fx || []));
+  // 내 차례에 내가 쓰러졌거나(양날도끼 반동 등) 악마의 숲을 썼으면 다음 사람에게
+  if (!g.over && !g.pending && (!g.seats[g.turn].alive || g.forceEnd)) fx.push(...(G.endTurn(g, g.seats[g.turn].id).fx || []));
   if (g.turn !== before || fx.some(f => f.kind === 'turn')) room.turnEndsAt = Date.now() + G.TURN_MS;
   pushGame(room, fx);
   schedule(room);
@@ -209,17 +213,23 @@ new WebSocketServer({ server: http }).on('connection', ws => {
       const jobs = shuffle(JOBS.map(j => j.name));
       const demons = new Set(shuffle([...room.players]).slice(0, demonCount(room.players.length)));
       room.players.forEach((p, i) => { p.job = jobs[i]; p.role = demons.has(p) ? 'demon' : 'hero'; });
-      room.game = G.newGame(room.players.map(p => ({ id: p.id, name: p.name, role: p.role })), shuffle);
+      room.game = G.newGame(room.players.map(p => ({ id: p.id, name: p.name, role: p.role, job: p.job })), shuffle);
       room.turnEndsAt = Date.now() + G.TURN_MS + 6000; // 시작 연출·운명 공개를 보는 시간만큼 더
       for (const p of room.players) send(p, { type: 'start' }); // 먼저 보내야 클라이언트가 로딩부터 띄운다
       broadcast(room);
       schedule(room);
-    } else if (msg.type === 'use' || msg.type === 'react' || msg.type === 'end') {
+    } else if (['use', 'react', 'counter', 'choose', 'end'].includes(msg.type)) {
       if (!room?.game) return;
-      const g = room.game;
-      apply(room, () => msg.type === 'use' ? G.useCard(g, me.id, Number(msg.index), msg.target)
-        : msg.type === 'react' ? G.react(g, me.id, msg.index === null ? null : Number(msg.index))
+      const g = room.game, num = v => (v === null || v === undefined ? null : Number(v));
+      apply(room, () => msg.type === 'use' ? G.useCard(g, me.id, num(msg.index), { target: msg.target, target2: msg.target2, give: num(msg.give) })
+        : msg.type === 'react' ? G.react(g, me.id, num(msg.index))
+        : msg.type === 'counter' ? G.counter(g, me.id, num(msg.index))
+        : msg.type === 'choose' ? G.choose(g, me.id, msg.data || {})
         : G.endTurn(g, me.id), me);
+    } else if (msg.type === 'debugHand' && process.env.ARCANA_TEST && room?.game) { // 테스트 전용: 손패 지정 (실제 서버에서는 꺼져 있음)
+      const st = room.game.seats.find(x => x.id === me.id);
+      st.hand = msg.names.map(n => CARDS.find(c => c.name === n).id);
+      pushGame(room);
     } else if (msg.type === 'backToLobby') { // 게임이 끝나면 같은 방 대기실로
       if (!room?.game?.over) return;
       clearTimeout(room.timer);

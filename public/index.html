@@ -252,7 +252,35 @@ body.targeting .opp:not(.dead):hover, body.targeting.target-self #meSeat:hover {
 body.targeting.heal-mode .opp:not(.dead), body.targeting.heal-mode #meSeat { outline-color: #7fc8a8aa; }
 body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat:hover { box-shadow: 0 0 0 2px #7fc8a8, 0 0 1.2rem #7fc8a877; }
 .g-note.hint { color: var(--amber); font-size: .82rem; }
-.react-bar { position: absolute; z-index: 8; left: 50%; bottom: 13.5rem; translate: -50% 0; width: min(30rem, calc(100% - 2rem)); padding: 1rem 1.2rem; text-align: center;
+/* 소울하트, 앞에 놓인 카드, 상태 표시 */
+.soul { display: inline-flex; align-items: center; gap: 2px; color: #b6a6ff; font-variant-numeric: tabular-nums; }
+.soul i { width: 11px; height: 10px; background: currentColor; -webkit-mask: var(--heart) center / contain no-repeat; mask: var(--heart) center / contain no-repeat; }
+:root { --heart: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M16 29 2.6 15.6A8 8 0 0 1 16 4.3 8 8 0 0 1 29.4 15.6Z'/%3E%3C/svg%3E"); }
+.field { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.field span { font-size: .62rem; padding: 0 .4rem; border-radius: .6rem; background: #e8c27a1f; border: 1px solid #e8c27a44; color: var(--amber); white-space: nowrap; }
+.tags { display: inline-flex; gap: 3px; } .tags span { font-size: .62rem; padding: 0 .35rem; border-radius: .5rem; border: 1px solid; white-space: nowrap; }
+.tag-charm { color: #d3b8ff; border-color: #b6a6ff88; } .tag-wall { color: #a9d8ff; border-color: #8cc3ff88; }
+.role.eater { background: #b6a6ff; color: #120d24; }
+.turn-banner { position: fixed; z-index: 28; left: 50%; top: 36%; translate: -50% -50%; pointer-events: none; opacity: 0; white-space: nowrap;
+  padding: .8rem 2.4rem; border-radius: 3rem; background: #050907d9; border: 1px solid #e8c27a66; font-size: clamp(1.1rem, 2.4vw, 1.6rem); letter-spacing: .1em; color: var(--amber); box-shadow: 0 0 2rem #000c; }
+.turn-banner.mine { background: #e8c27a; color: #1b1407; }
+.turn-banner.show { animation: banner 1.6s ease forwards; }
+@keyframes banner { 0% { opacity: 0; transform: scale(.9); } 15%, 75% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.pick { position: fixed; inset: 0; z-index: 33; display: grid; place-items: center; padding: 1rem; background: #000a; animation: rise .3s ease both; }
+.pick .glass { width: min(100%, 46rem); max-height: 90vh; overflow-y: auto; text-align: center; }
+.pick-sub { margin: 0 0 1rem; color: var(--fog); font-size: .9rem; }
+.pick-row { margin: .4rem 0 1rem; }
+.pick-row h3 { margin: 0 0 .5rem; font-size: .8rem; letter-spacing: .15em; color: var(--amber); font-weight: 500; }
+.pick-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; }
+.pick-cards button { border: 0; padding: 0; background: none; cursor: pointer; border-radius: .4rem; transition: transform .15s; }
+.pick-cards .ac { --cw: clamp(6.5rem, 10vw, 8.5rem); }
+.pick-cards button:hover { transform: translateY(-4px); }
+.pick-cards button[aria-pressed="true"] .ac { box-shadow: 0 0 0 .15rem var(--amber), 0 0 1.4rem #e8c27a99; }
+.pick-cards.read button { cursor: default; } .pick-cards.read button:hover { transform: none; }
+.pick-players { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
+.pick-players button { padding: .6rem 1.2rem; border-radius: 2rem; border: 1px solid #e8c27a55; background: #0a1410; color: var(--text); cursor: pointer; }
+.pick-players button[aria-pressed="true"] { background: var(--amber); color: #1b1407; }
+.react-bar { position: absolute; z-index: 31; /* 가운데에 뜨는 카드보다 위 */ left: 50%; bottom: 13.5rem; translate: -50% 0; width: min(30rem, calc(100% - 2rem)); padding: 1rem 1.2rem; text-align: center;
   background: #2a0f12f2; border: 1px solid #e8576a; border-radius: .6rem; box-shadow: 0 0 2rem #e8576a66, 0 1rem 2rem #000b; animation: gdIn .25s ease both; }
 .react-bar p { margin: 0 0 .8rem; color: #ffe2e5; line-height: 1.6; }
 .react-bar b { color: #fff; }
@@ -738,6 +766,15 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
       <div class="react-btns"><button class="btn" id="blockBtn" type="button">방어 카드로 막기</button><button class="btn ghost" id="takeBtn" type="button">맞기</button></div>
     </div>
     <div class="fx-card" id="fxCard" aria-hidden="true"></div>
+    <div class="turn-banner" id="turnBanner" aria-live="polite"></div>
+    <div class="pick" id="pickBox" hidden role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+      <div class="glass ornate">
+        <svg class="cn tl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
+        <h2 id="pickTitle"></h2><p class="pick-sub" id="pickSub"></p>
+        <div id="pickBody"></div>
+        <div class="btns"><button class="btn" id="pickOk" type="button">확인</button></div>
+      </div>
+    </div>
     <div class="fx-vignette" id="fxVignette" aria-hidden="true"></div>
     <div class="over" id="overBox" hidden role="dialog" aria-modal="true" aria-label="게임 결과">
       <div class="glass ornate">
@@ -764,7 +801,7 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
       <div class="me-act">
         <button class="btn" id="useCard" type="button" disabled>카드 사용</button>
         <button class="btn ghost" id="tradeBtn" type="button" title="거래는 준비 중입니다">거래 제안</button>
-        <button class="btn ghost" id="endTurnBtn" type="button">턴 종료</button>
+        <button class="btn ghost" id="endTurnBtn" type="button">차례 끝내기</button>
       </div>
     </div>
     <p class="g-note" id="gNote">레이아웃 미리보기 · 손패는 실제 카드에서 무작위로 뽑은 예시입니다 · 카드를 누르면 왼쪽에 설명이 나옵니다</p>
@@ -1161,6 +1198,10 @@ function mockGame(players, you) {
   };
 }
 const hearts = n => '<i></i>'.repeat(Math.min(n, 6)) + ` ${n}`;
+const ROLE_LABEL = { hero: '용사 파티', demon: '마왕군', eater: '별을 먹는 괴물' };
+const roleChip = role => `<span class="role ${role}">${ROLE_LABEL[role]}</span>`;
+const statusTags = p => (p.charmed || p.walled) ? `<span class="tags">${p.charmed ? '<span class="tag-charm" title="매혹됨">매혹</span>' : ''}${p.walled ? '<span class="tag-wall" title="방벽">방벽</span>' : ''}</span>` : '';
+const fieldChips = p => p.field?.length ? `<span class="field">${p.field.map(f => `<span title="${acEsc(CARD_DB[f.card].text)}">${acEsc(CARD_DB[f.card].name)} · ${f.left}바퀴</span>`).join('')}</span>` : '';
 let game = null, picked = null;
 function renderGame(g) {
   game = g; picked = null; showDetail(null);
@@ -1173,7 +1214,8 @@ function renderGame(g) {
     const dead = p.alive === false || (!g.live && p.hand === 0);
     return `<li class="opp${p.id === g.turn ? ' turn' : ''}${dead ? ' dead' : ''}${p.online ? '' : ' off'}${g.pending?.target === p.id ? ' fx-aim' : ''}" data-id="${p.id}" data-name="${esc(p.name)}" data-profile="${p.profile ? '1' : ''}">
       <span class="avatar">${esc(p.name[0])}</span><span class="nm">${esc(p.name)}${p.online ? '' : ' <span class="off-tag">연결 끊김</span>'}</span>
-      <span class="sub"><button type="button" class="job" data-job="${esc(p.job)}">${esc(p.job)}</button>${dead ? `<span class="role ${p.role}">${p.role === 'demon' ? '마왕군' : '용사 파티'}</span>` : `<span class="hp" aria-label="손패 ${p.hand}장">${hearts(p.hand)}</span>`}</span>
+      <span class="sub"><button type="button" class="job" data-job="${esc(p.job)}">${esc(p.job)}</button>${dead ? '' : `<span class="hp" aria-label="손패 ${p.hand}장">${hearts(p.hand)}</span>`}${p.soul ? `<span class="soul" aria-label="소울하트 ${p.soul}개"><i></i>${p.soul}</span>` : ''}${p.role ? roleChip(p.role) : ''}${statusTags(p)}</span>
+      ${fieldChips(p)}
     </li>`;
   }).join('');
   $('gDeck').textContent = g.deck; $('gDown').textContent = g.down;
@@ -1186,7 +1228,7 @@ function renderGame(g) {
   $('gLog').innerHTML = g.log.map(l => `<li>${esc(l)}</li>`).join('');
   $('gMe').textContent = me.name + ' (나)'; $('gJob').textContent = me.job; $('gJob').dataset.job = me.job;
   $('meSeat').dataset.id = me.id; $('meSeat').classList.toggle('dead', me.alive === false);
-  $('gHp').innerHTML = hearts(g.hand.length);
+  $('gHp').innerHTML = hearts(g.hand.length) + (me.soul ? ` <span class="soul" title="소울하트"><i></i>${me.soul}</span>` : '') + (me.field?.length ? fieldChips(me) : '') + (g.live && me.role && me.role !== room.role ? ' ' + roleChip(me.role) : '');
   const mid = (g.hand.length - 1) / 2;
   $('hand').innerHTML = g.hand.map((c, i) => `<li><button type="button" aria-pressed="false" aria-label="${acEsc(c.name)}: ${acEsc(c.text)}"
     style="--rot:${(i - mid) * 4}deg;--dy:${Math.abs(i - mid) * .3}rem">${cardHTML(c)}</button></li>`).join('');
@@ -1195,7 +1237,7 @@ function renderGame(g) {
   if (g.live) {
     $('gTurn').dataset.base = $('gTurn').textContent; tickTimers();
     $('gNote').classList.remove('hint');
-    $('gNote').textContent = g.over ? '게임이 끝났습니다.' : mine ? `내 차례 · 카드 ${g.actions}/${g.actionsMax}장 사용 가능${g.attacked ? ' · 이번 차례 공격 완료' : ''}` : '다른 사람의 차례입니다. 카드를 눌러 설명을 볼 수 있습니다.';
+    $('gNote').textContent = g.over ? '게임이 끝났습니다.' : mine ? `내 차례 · 카드 ${g.actions}/${g.actionsMax}장 더 쓸 수 있습니다` : '다른 사람의 차례입니다. 카드를 눌러 설명을 볼 수 있습니다.';
     // 다시 그려도 고르던 카드는 유지
     const keep = keepPick !== null && g.handIds[keepPick] === keepPickId && $('hand').children[keepPick]?.querySelector('button');
     if (keep) selectBtn(keep, true);
@@ -1360,7 +1402,15 @@ document.querySelectorAll('.fs').forEach(b => {
   b.onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {});
 });
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
-$('hand').onclick = e => { const b = e.target.closest('button'); if (b) selectBtn(b); };
+$('hand').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (targeting?.step === 'gift') { // 기부할 카드를 고르는 중
+    const gi = [...$('hand').children].indexOf(b.parentElement);
+    if (gi === targeting.index) return;
+    const tg = targeting; cancelTargeting(); return playCard(tg.index, tg.card, tg.picks[0], undefined, gi);
+  }
+  selectBtn(b);
+};
 function selectBtn(b, on = b.getAttribute('aria-pressed') !== 'true') { // 손패 카드 고르기/풀기
   $('hand').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
   b.setAttribute('aria-pressed', on);
@@ -1372,18 +1422,18 @@ function selectBtn(b, on = b.getAttribute('aria-pressed') !== 'true') { // 손�
 };
 const pickedIndex = () => picked ? [...$('hand').children].indexOf(picked.parentElement) : -1;
 const pickedCard = () => picked && game.hand[pickedIndex()];
-const cardNeedsTarget = c => c.tags.includes('공격') || c.name === '성경';
+const cardNeedsTarget = c => !!c.target;
 function usableReason() { // 지금 고른 카드를 쓸 수 없는 이유 (쓸 수 있으면 '')
   const c = pickedCard();
   if (!c) return '카드를 고르세요.';
   if (!game.live) return '';
   if (game.over) return '게임이 끝났습니다.';
   if (game.turn !== game.you) return '내 차례가 아닙니다.';
-  if (game.pending) return '공격에 대한 응답을 기다리는 중입니다.';
-  if (game.actions <= 0) return `이번 차례에는 더 쓸 수 없습니다. 턴 종료를 누르세요.`;
-  if (['악마의 서', '어둠의 서'].includes(c.name)) return `${c.name}은(는) 사용할 수 없는 카드입니다.`;
+  if (game.pending) return '다른 일이 끝나기를 기다리는 중입니다.';
+  if (game.actions <= 0) return `이번 차례에는 더 쓸 수 없습니다. 차례 끝내기를 누르세요.`;
+  if (c.unusable) return c.unusable;
   if (c.tags.includes('방어')) return '방어 카드는 공격을 받을 때 씁니다.';
-  if (c.tags.includes('공격') && game.attacked) return '공격은 한 차례에 한 번만 할 수 있습니다.';
+  if (c.tags.includes('공격') && game.tree) return '세계수가 자라는 동안에는 공격할 수 없습니다.';
   return '';
 }
 function showDetail(card) { // 고른 카드를 왼쪽 패널에 크게. card가 없으면 닫는다
@@ -1409,11 +1459,13 @@ $('useCard').onclick = () => {
   const c = pickedCard(), i = pickedIndex();
   if (!c || usableReason()) return;
   if (cardNeedsTarget(c)) { // 대상 고르기 모드
-    targeting = { index: i, card: c };
-    const heal = !c.tags.includes('공격');
-    document.body.classList.add('targeting'); document.body.classList.toggle('heal-mode', heal); document.body.classList.toggle('target-self', heal);
+    targeting = { index: i, card: c, spec: c.target, picks: [] };
+    const friendly = !c.tags.includes('공격');
+    document.body.classList.add('targeting'); document.body.classList.toggle('heal-mode', friendly); document.body.classList.toggle('target-self', c.target === 'any');
     $('useCard').textContent = '취소';
-    $('gNote').textContent = heal ? `${c.name}: 회복시킬 사람을 누르세요 (나도 가능). Esc로 취소` : `${c.name}: 공격할 상대를 누르세요. Esc로 취소`;
+    $('gNote').textContent = c.target === 'any' ? `${c.name}: 대상을 누르세요 (나도 가능). Esc로 취소`
+      : c.target === 'two' ? `${c.name}: 방벽을 세울 첫 번째 사람을 누르세요. Esc로 취소`
+      : c.tags.includes('공격') ? `${c.name}: 공격할 상대를 누르세요. Esc로 취소` : `${c.name}: 대상을 누르세요. Esc로 취소`;
     $('gNote').classList.add('hint');
     return;
   }
@@ -1422,20 +1474,32 @@ $('useCard').onclick = () => {
 function cancelTargeting() {
   if (!targeting) return;
   targeting = null; document.body.classList.remove('targeting', 'heal-mode', 'target-self');
+  document.querySelectorAll('.opp.fx-aim, #meSeat.fx-aim').forEach(x => game?.pending?.target !== x.dataset.id && x.classList.remove('fx-aim'));
   $('useCard').textContent = '카드 사용'; $('gNote').classList.remove('hint');
 }
 addEventListener('keydown', e => { if (e.key === 'Escape') cancelTargeting(); });
 function chooseTarget(el) { // 대상 고르기 모드에서 사람을 눌렀을 때
   if (!targeting || !el || el.classList.contains('dead')) return false;
   const isSelf = el.id === 'meSeat';
-  if (isSelf && !document.body.classList.contains('target-self')) return false;
-  const { index, card } = targeting; cancelTargeting();
-  playCard(index, card, el.dataset.id);
+  if (isSelf && targeting.spec !== 'any' && targeting.spec !== 'two') return false;
+  if (targeting.step === 'gift') return false;
+  const tg = targeting;
+  if (tg.picks.includes(el.dataset.id)) return false;
+  tg.picks.push(el.dataset.id);
+  if (tg.spec === 'two' && tg.picks.length < 2) { // 방벽: 두 번째 사람
+    document.body.classList.add('target-self');
+    $('gNote').textContent = `${tg.card.name}: 두 번째 사람을 누르세요.`; el.classList.add('fx-aim'); return true;
+  }
+  if (tg.spec === 'give') { // 기부: 건넬 내 카드 고르기
+    tg.step = 'gift'; $('gNote').textContent = `${tg.card.name}: 건넬 카드를 손패에서 누르세요.`; el.classList.add('fx-aim'); return true;
+  }
+  cancelTargeting();
+  playCard(tg.index, tg.card, tg.picks[0], tg.picks[1]);
   return true;
 }
 $('meSeat').addEventListener('click', e => { if (targeting && !e.target.closest('button')) chooseTarget($('meSeat')); });
-function playCard(index, card, target) {
-  if (game.live) return send({ type: 'use', index, target });
+function playCard(index, card, target, target2, give) {
+  if (game.live) return send({ type: 'use', index, target, target2, give });
   // #preview: 서버 없이 화면에서만 흉내 낸다
   const me = game.players[0];
   game.hand.splice(index, 1); game.hand.push(pickCard()); game.up = card;
@@ -1452,20 +1516,81 @@ $('tradeBtn').onclick = () => { $('gNote').textContent = '거래는 다음 단�
 
 /* ---------- 공격받았을 때: 방어하기 / 맞기 ---------- */
 function myDefenseIndex() { return game.hand.findIndex(c => c.tags.includes('방어')); }
+const myRefuseIndex = () => game.hand.findIndex(c => c.name === '거절');
+const nameOf = id => game.players.find(x => x.id === id)?.name || '누군가';
 function renderReact() {
-  const p = game.pending, mine = p && p.target === game.you;
+  const p = game.pending;
+  renderPick();
+  // 다른 사람이 행동 카드를 쓰는 중: 거절 카드가 있으면 낼 수 있다
+  if (p?.kind === 'counter') {
+    const ri = myRefuseIndex(), card = CARD_DB[p.card];
+    $('fxVignette').classList.remove('aim');
+    if (p.by === game.you) { $('reactBar').hidden = true; $('gNote').textContent = `${card.name}: 다른 사람의 거절을 기다리는 중…`; return; }
+    $('reactBar').hidden = ri < 0;
+    $('gNote').textContent = `${nameOf(p.by)}이(가) ${card.name}을(를) 사용하려 합니다.`;
+    if (ri < 0) return;
+    $('reactText').innerHTML = `<b>${esc(nameOf(p.by))}</b>이(가) <b>${esc(card.name)}</b>을(를) 사용하려 합니다${p.target ? ` (대상: ${esc(nameOf(p.target))})` : ''}. <span id="reactLeft"></span><br>거절 카드로 막을 수 있습니다.`;
+    $('blockBtn').hidden = false; $('blockBtn').textContent = '거절하기'; $('blockBtn').dataset.act = 'counter';
+    $('takeBtn').textContent = '넘어가기'; $('takeBtn').dataset.act = 'skip';
+    return tickTimers();
+  }
+  $('blockBtn').dataset.act = 'block'; $('takeBtn').dataset.act = 'take'; $('takeBtn').textContent = '맞기';
+  const mine = p?.kind === 'attack' && p.target === game.you;
   $('reactBar').hidden = !mine;
   $('fxVignette').classList.toggle('aim', !!mine);
   if (!mine) return;
   const a = game.players.find(x => x.id === p.attacker), di = myDefenseIndex();
-  $('reactText').innerHTML = `<b>${esc(a?.name || '누군가')}</b>이(가) <b>${esc(CARD_DB[p.card].name)}</b>(으)로 당신을 공격합니다! <span id="reactLeft"></span><br>`
+  $('reactText').innerHTML = `<b>${esc(a?.name || '누군가')}</b>이(가) <b>${esc(CARD_DB[p.card].name)}</b>(으)로 당신을 공격합니다! (피해 ${p.dmg}) <span id="reactLeft"></span><br>`
     + (di >= 0 ? `<b>${esc(game.hand[di].name)}</b>로 막을 수 있습니다.` : '막을 방어 카드가 없습니다.');
   $('blockBtn').hidden = di < 0;
   if (di >= 0) $('blockBtn').textContent = `${game.hand[di].name}(으)로 막기`;
   tickTimers();
 }
-$('blockBtn').onclick = () => send({ type: 'react', index: myDefenseIndex() });
-$('takeBtn').onclick = () => send({ type: 'react', index: null });
+$('blockBtn').onclick = () => $('blockBtn').dataset.act === 'counter' ? send({ type: 'counter', index: myRefuseIndex() }) : send({ type: 'react', index: myDefenseIndex() });
+$('takeBtn').onclick = () => { if ($('takeBtn').dataset.act === 'skip') $('reactBar').hidden = true; else send({ type: 'react', index: null }); };
+
+/* 고르기 창: 불공정 거래(상대 카드 1 + 내 카드 1), 상점(카드 1), 고블린(사람 1) */
+let pickSel = {};
+function renderPick() {
+  const p = game.pending, mine = p?.kind === 'choice' && p.who === game.you;
+  if (!mine) {
+    if ($('pickBox').dataset.type !== 'view') $('pickBox').hidden = true; // 관심법·공개로 본 손패 창은 직접 닫을 때까지
+    if (p?.kind === 'choice') $('gNote').textContent = p.type === 'shop' ? `상점: ${nameOf(p.who)}이(가) 카드를 고르는 중…` : `${nameOf(p.who)}이(가) 고르는 중…`;
+    return;
+  }
+  if (!$('pickBox').hidden && $('pickBox').dataset.key === JSON.stringify(p.options)) return; // 이미 열려 있음
+  pickSel = {}; $('pickBox').dataset.key = JSON.stringify(p.options); $('pickBox').dataset.type = p.type;
+  const cards = (ids, row) => `<div class="pick-cards" data-row="${row}">${ids.map((id, i) => `<button type="button" data-i="${i}" aria-pressed="false">${cardHTML(CARD_DB[id])}</button>`).join('')}</div>`;
+  if (p.type === 'unfair') {
+    $('pickTitle').textContent = '불공정 거래'; $('pickSub').textContent = `${nameOf(p.target)}의 손패를 보고 가져올 카드 1장과, 대신 건넬 내 카드 1장을 고르세요. 상대는 내 카드를 볼 수 없습니다.`;
+    $('pickBody').innerHTML = `<div class="pick-row"><h3>${esc(nameOf(p.target))}의 손패</h3>${cards(p.options, 'take')}</div><div class="pick-row"><h3>건넬 내 카드</h3>${cards(game.handIds, 'give')}</div>`;
+  } else if (p.type === 'shop') {
+    $('pickTitle').textContent = '상점'; $('pickSub').textContent = '가져갈 카드 1장을 고르세요.';
+    $('pickBody').innerHTML = cards(p.options, 'pick');
+  } else if (p.type === 'goblin') {
+    $('pickTitle').textContent = '고블린'; $('pickSub').textContent = '카드 한 장을 가져올 사람을 고르세요.';
+    $('pickBody').innerHTML = `<div class="pick-players" data-row="target">${p.options.map(id => `<button type="button" data-v="${id}" aria-pressed="false">${esc(nameOf(id))}</button>`).join('')}</div>`;
+  }
+  $('pickOk').disabled = true; $('pickBox').hidden = false;
+}
+$('pickBody').onclick = e => {
+  const b = e.target.closest('button'), row = b?.closest('[data-row]'); if (!b || row.classList.contains('read')) return;
+  row.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  pickSel[row.dataset.row] = b.dataset.v ?? Number(b.dataset.i);
+  const need = { unfair: ['take', 'give'], shop: ['pick'], goblin: ['target'] }[$('pickBox').dataset.type] || [];
+  $('pickOk').disabled = !need.every(k => pickSel[k] !== undefined);
+};
+$('pickOk').onclick = () => {
+  if ($('pickBox').dataset.type === 'view') { $('pickBox').hidden = true; return; }
+  send({ type: 'choose', data: pickSel }); $('pickBox').hidden = true;
+};
+// 관심법·공개로 본 손패 (보기만)
+function showCards(title, sub, ids) {
+  $('pickBox').dataset.type = 'view'; $('pickBox').dataset.key = '';
+  $('pickTitle').textContent = title; $('pickSub').textContent = sub;
+  $('pickBody').innerHTML = `<div class="pick-cards read" data-row="view">${ids.length ? ids.map(id => `<button type="button" tabindex="-1">${cardHTML(CARD_DB[id])}</button>`).join('') : '<p>손패가 없습니다.</p>'}</div>`;
+  $('pickOk').disabled = false; $('pickBox').hidden = false;
+}
 
 /* ---------- 남은 시간 ---------- */
 let turnDeadline = 0, reactDeadline = 0;
@@ -1482,12 +1607,13 @@ function renderOver() {
   const o = game.over;
   $('overBox').hidden = !o;
   if (!o) return;
-  const meP = game.players[0], win = (o.winner === 'hero') === (game.role !== 'demon');
-  $('overTitle').textContent = o.winner === 'hero' ? '용사 파티 승리!' : '마왕군 승리!';
-  $('overTitle').style.color = o.winner === 'hero' ? 'var(--amber)' : '#ff7a86';
+  const meP = game.players[0], myRole = meP.role || game.role;
+  const win = o.winner === 'eater' ? o.id === game.you : myRole !== 'eater' && (o.winner === 'hero') === (myRole !== 'demon');
+  $('overTitle').textContent = o.winner === 'eater' ? `${nameOf(o.id)}, 별을 먹는 괴물의 승리!` : o.winner === 'hero' ? '용사 파티 승리!' : '마왕군 승리!';
+  $('overTitle').style.color = o.winner === 'hero' ? 'var(--amber)' : o.winner === 'eater' ? '#b6a6ff' : '#ff7a86';
   $('overMe').textContent = win ? '당신의 진영이 이겼습니다.' : '당신의 진영이 졌습니다.';
   $('overList').innerHTML = game.players.map(p => `<li class="${p.alive === false ? 'x' : ''}"><span>${esc(p.name)}${p.id === meP.id ? ' (나)' : ''} · ${esc(p.job || '')}</span>
-    <span class="role ${p.role}">${p.role === 'demon' ? '마왕군' : '용사 파티'}</span></li>`).join('');
+    ${roleChip(p.role)}</li>`).join('');
 }
 $('overBtn').onclick = () => send({ type: 'backToLobby' });
 
@@ -1511,6 +1637,12 @@ function showPlayed(cardId) { // 쓴 카드를 가운데 크게 보여 주고 �
   el.style.setProperty('--ty', `${to.top + to.height / 2 - innerHeight * .42}px`);
   el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
 }
+function banner(id, text) { // 화면 가운데 큰 알림 (차례 넘김 등)
+  const el = $('turnBanner'), mine = id === game?.you;
+  el.textContent = text || (mine ? '내 차례입니다' : `${nameOf(id)}의 차례`);
+  el.classList.toggle('mine', mine);
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+}
 let fxQueue = Promise.resolve();
 function playFx(list = []) {
   for (const f of list) fxQueue = fxQueue.then(() => new Promise(done => {
@@ -1521,7 +1653,16 @@ function playFx(list = []) {
     if (f.kind === 'block') { sfx('block'); flash(f.target, 'fx-block', '방어!'); }
     if (f.kind === 'heal') { sfx('heal'); flash(f.target, 'fx-heal', `+${f.amount}`); }
     if (f.kind === 'death') { sfx('death'); flash(f.target, 'fx-hit', '쓰러짐'); }
-    if (f.kind === 'turn' && me) sfx('chime');
+    if (f.kind === 'turn') { banner(f.id); if (f.id === game.you) sfx('chime'); return setTimeout(done, 300); }
+    if (f.kind === 'steal') { sfx('hit'); flash(f.target, 'fx-hit', '-1'); flash(f.by, 'fx-heal', '+1'); }
+    if (f.kind === 'refuse') { sfx('block'); flash(f.by, 'fx-block', '거절!'); }
+    if (f.kind === 'charm') { sfx('heal'); flash(f.target, 'fx-block', f.kind === 'charm' ? '♥' : ''); }
+    if (f.kind === 'break') { shake(false); sfx('hit'); flash(f.target, 'fx-hit', '철거'); }
+    if (f.kind === 'swap' || f.kind === 'rotate') { shake(false); sfx('play'); if (f.a) { flash(f.a, 'fx-block', '⇄'); flash(f.b, 'fx-block', '⇄'); } }
+    if (f.kind === 'reveal-role') { sfx('block'); const p = game.players.find(x => x.id === f.target); flash(f.target, 'fx-block', ROLE_LABEL[p?.role] || '정체 공개'); }
+    if (f.kind === 'peek') { showCards('관심법', `${nameOf(f.target)}의 손패입니다. 나만 볼 수 있습니다.`, f.cards); }
+    if (f.kind === 'reveal') { showCards('공개', `${nameOf(f.target)}의 손패가 모두에게 공개되었습니다.`, f.cards); }
+    if (f.kind === 'eater') { banner(null, '당신은 이제 별을 먹는 괴물입니다. 별을 손에 넣으면 승리합니다!'); }
     setTimeout(() => { $('fxVignette').classList.remove('on'); done(); }, 380);
   }));
 }
@@ -1601,10 +1742,12 @@ function fromServer() { // 서버 게임 정보 + 방 정보 → renderGame이 �
   const seated = [...v.players.slice(meIdx), ...v.players.slice(0, meIdx)];
   return {
     live: true, round: v.round, turn: v.turn, deck: v.deck, down: v.down, up: v.up === null ? null : CARD_DB[v.up], seal: [0, 5],
-    phase: v.pending ? '공격 응답 대기' : '행동 페이즈', you: room.you, role: room.role,
-    // 방을 나간 사람도 게임 자리는 남는다 (그 사람은 방 정보가 없으니 기본값으로)
-    players: seated.map(p => { const rp = room.players.find(x => x.id === p.id); return { ...p, job: rp?.job || '-', profile: rp?.profile, online: !!rp && rp.online !== false }; }),
-    hand: v.hand.map(i => CARD_DB[i]), handIds: v.hand, log: v.log, actions: v.actions, actionsMax: v.actionsMax, attacked: v.attacked,
+    phase: (v.pending?.kind === 'attack' ? '공격 응답 대기' : v.pending?.kind === 'counter' ? '거절 대기' : v.pending ? '고르는 중' : '행동 페이즈')
+      + (v.dir < 0 ? ' · 역방향' : '') + (v.tree ? ' · 세계수' : '') + (v.tavern ? ' · 주점' : ''),
+    you: room.you, role: v.players.find(p => p.id === room.you)?.role || room.role,
+    // 방을 나간 사람도 게임 자리는 남는다 (그 사람은 방 정보가 없으니 기본값으로). 직업은 주점 때문에 게임 정보를 따른다
+    players: seated.map(p => { const rp = room.players.find(x => x.id === p.id); return { ...p, job: p.job || rp?.job || '-', profile: rp?.profile, online: !!rp && rp.online !== false }; }),
+    hand: v.hand.map(i => CARD_DB[i]), handIds: v.hand, log: v.log, actions: v.actions, actionsMax: v.actionsMax, tree: v.tree,
     pending: v.pending, over: v.over,
   };
 }
@@ -1612,6 +1755,7 @@ function onGame(msg) {
   gview = msg.view;
   turnDeadline = Date.now() + (gview.turnLeft || 0);
   if (gview.pending) reactDeadline = Date.now() + gview.pending.left;
+  if (!gview.pending || gview.pending.kind !== 'choice') $('pickBox').dataset.key = '';
   if ($('frame').dataset.view !== 'game') return; // 시작 연출 중: 저장만 해 두고, 게임 화면이 열릴 때 그린다
   keepPick = picked ? pickedIndex() : null; keepPickId = picked ? game.handIds?.[keepPick] : null;
   if (msg.fx.some(f => f.kind === 'use' && f.by === room.you)) keepPick = keepPickId = null; // 내가 쓴 카드는 선택 해제
