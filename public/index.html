@@ -39,7 +39,7 @@ body {
 header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px clamp(18px, 4vw, 44px); }
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--didone); font-weight: 500; font-size: 1.1rem; letter-spacing: .28em; }
 header nav { display: flex; gap: clamp(14px, 3vw, 36px); }
-.mi { border: 0; background: none; cursor: pointer; padding: 6px 0; font-weight: 300; font-size: .95rem; color: var(--text); position: relative; }
+.mi { border: 0; background: none; cursor: pointer; padding: 12px 0; font-weight: 300; font-size: .95rem; color: var(--text); position: relative; }
 .mi::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--amber); scale: 0 1; transition: scale .25s; }
 .mi:hover::after, .mi:focus-visible::after { scale: 1 1; } .mi:focus-visible { outline: none; }
 .hero { align-self: end; padding: 0 clamp(18px, 4vw, 44px); }
@@ -56,7 +56,7 @@ header nav { display: flex; gap: clamp(14px, 3vw, 36px); }
 .facts { display: flex; gap: clamp(14px, 3vw, 34px); margin: 0; padding: 0; list-style: none; }
 .facts li { display: flex; align-items: center; gap: 9px; font-size: .72rem; line-height: 1.25; letter-spacing: .06em; }
 .facts svg { width: 30px; height: 30px; flex: none; fill: none; stroke: var(--text); stroke-width: 1.4; }
-.under { padding: 14px 0 18px; text-align: center; font-size: .72rem; color: var(--dim); line-height: 1.6; letter-spacing: .08em; }
+.under { padding: 14px 0 18px; text-align: center; font-size: .75rem; color: var(--fog); line-height: 1.6; letter-spacing: .08em; }
 .seal { transform-box: view-box; transform-origin: 660px 470px; animation: spin 90s linear infinite; }
 .seal.rev { animation-direction: reverse; animation-duration: 140s; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -164,10 +164,120 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 6px; l
 .lobby-foot { display: flex; justify-content: center; }
 .lobby-foot .btn { min-width: 220px; padding: 13px 30px; font-size: 1.02rem; }
 
-/* 게임 (자리 표시) */
-#game { display: grid; place-items: center; }
-#game .glass { text-align: center; width: min(100%, 440px); }
-#game p { color: var(--fog); font-size: .9rem; line-height: 1.7; margin: 0 0 18px; }
+/* ---------- 게임 화면: 상단 바 / 상대 / 테이블(덱·제단·버림) / 내 자리 ---------- */
+body:has(#frame[data-view="game"]) { padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+body:has(#frame[data-view="game"]) .under, .frame[data-view="game"] header { display: none; }
+.frame[data-view="game"] { width: 100%; height: 100%; border-radius: 0; }
+#game {
+  grid-row: 1 / 4; display: grid; grid-template-rows: auto auto 1fr auto auto; gap: 10px; overflow: hidden;
+  padding: 10px clamp(12px, 2.5vw, 28px) 6px; background: radial-gradient(ellipse at 50% 55%, #0a141080, #040806eb 75%);
+}
+#game > *, .me > *, .table > * { min-width: 0; }
+.g-bar { display: flex; align-items: center; gap: 16px; }
+.g-bar .brand { font-size: .95rem; }
+.g-phase { display: flex; gap: 10px; align-items: baseline; font-size: .85rem; color: var(--fog); }
+.g-phase b { font-family: var(--didone); font-weight: 400; color: var(--amber); letter-spacing: .1em; }
+.g-turn { margin-left: auto; font-size: .85rem; padding: 6px 14px; border-radius: 20px; border: 1px solid #e8c27a55; color: var(--amber); }
+.g-turn.mine { background: var(--amber); color: #1b1407; font-weight: 500; }
+.btn.sm { padding: 6px 14px; font-size: .8rem; }
+
+.opps { list-style: none; margin: 0; padding: 4px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.opp {
+  position: relative; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; min-width: 150px;
+  padding: 9px 14px 9px 9px; border-radius: 10px; background: #0a1410c7; border: 1px solid #e8c27a26; transition: border-color .3s, box-shadow .3s;
+}
+.avatar { grid-row: span 2; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 500; background: #1d3328; border: 1px solid #e8c27a55; color: var(--amber); }
+.opp .nm { font-size: .88rem; font-weight: 500; white-space: nowrap; }
+.opp .sub { display: flex; gap: 8px; align-items: center; font-size: .72rem; color: var(--dim); }
+.job { font-size: .7rem; padding: 1px 7px; border-radius: 10px; border: 1px solid #a9b8ae55; color: var(--fog); white-space: nowrap; }
+.hp { display: inline-flex; align-items: center; gap: 2px; color: #e86a76; font-variant-numeric: tabular-nums; }
+.hp i { width: 11px; height: 10px; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M16 29 2.6 15.6A8 8 0 0 1 16 4.3 8 8 0 0 1 29.4 15.6Z'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M16 29 2.6 15.6A8 8 0 0 1 16 4.3 8 8 0 0 1 29.4 15.6Z'/%3E%3C/svg%3E") center / contain no-repeat; }
+.opp.turn { border-color: var(--amber); box-shadow: 0 0 20px #e8c27a40; }
+.opp.turn::after { content: '차례'; position: absolute; top: -8px; right: 10px; font-size: .62rem; padding: 1px 7px; border-radius: 8px; background: var(--amber); color: #1b1407; }
+.opp.dead { opacity: .55; filter: grayscale(.8); }
+.role { font-size: .68rem; padding: 1px 7px; border-radius: 10px; }
+.role.demon { background: #e0505e; color: #fff; } .role.hero { background: var(--amber); color: #1b1407; }
+
+.table { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: clamp(12px, 3vw, 44px); min-height: 0; position: relative; }
+.pile { display: grid; justify-items: center; gap: 6px; font-size: .75rem; color: var(--dim); white-space: nowrap; }
+.pile b { font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
+.deck { justify-self: end; }
+.piles-r { justify-self: start; display: flex; gap: 18px; }
+.cardback, .cardface { width: clamp(56px, 6.5vw, 84px); aspect-ratio: 5 / 7; border-radius: 7px; }
+.cardback {
+  display: grid; place-items: center; background: #10201a; border: 1px solid var(--amber);
+  box-shadow: inset 0 0 0 4px #10201a, inset 0 0 0 5px #e8c27a66;
+}
+.cardback::before { content: ''; width: 34%; aspect-ratio: 32 / 29; background: var(--amber);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M16 29 2.6 15.6A8 8 0 0 1 16 4.3 8 8 0 0 1 29.4 15.6Z'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M16 29 2.6 15.6A8 8 0 0 1 16 4.3 8 8 0 0 1 29.4 15.6Z'/%3E%3C/svg%3E") center / contain no-repeat; }
+.stack { box-shadow: inset 0 0 0 4px #10201a, inset 0 0 0 5px #e8c27a66, 3px 3px 0 -1px #10201a, 3px 3px 0 0 #e8c27a66, 6px 6px 0 -1px #10201a, 6px 6px 0 0 #e8c27a44; }
+.altar { position: relative; width: clamp(170px, 24vh, 250px); aspect-ratio: 1; display: grid; place-items: center; text-align: center; }
+.altar > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.altar .ring { fill: none; stroke: #f0cf7a; stroke-opacity: .55; }
+.altar .spin { transform-origin: 100px 100px; animation: spin 60s linear infinite; }
+.slot { fill: #0a1410; stroke: #e8c27a66; } .slot.on { fill: var(--amber); stroke: var(--amber); filter: drop-shadow(0 0 5px #e8c27a); }
+.altar-txt { position: relative; display: grid; gap: 2px; }
+.altar-txt small { font-size: .7rem; letter-spacing: .3em; color: var(--dim); }
+.altar-txt b { font-family: var(--didone); font-weight: 400; font-size: clamp(1.6rem, 3.6vh, 2.2rem); color: var(--amber); font-variant-numeric: tabular-nums; }
+.log { position: absolute; right: 0; top: 50%; translate: 0 -50%; width: 230px; margin: 0; padding: 12px 14px 12px 28px; display: grid; gap: 6px;
+  font-size: .75rem; line-height: 1.5; color: var(--fog); background: #0a1410a6; border-left: 1px solid #e8c27a33; }
+.log li::marker { color: var(--amber); }
+
+.cardface {
+  position: relative; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; padding: 8px 6px; text-align: center;
+  background: linear-gradient(170deg, #f4ead2, #dccca4); color: #2a2216; border: 1px solid #b89a5e;
+  box-shadow: inset 0 0 0 3px #f4ead2, inset 0 0 0 4px var(--tone, #b89a5e);
+}
+.cardface svg { width: 34%; margin-top: 6px; fill: none; stroke: var(--tone); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cardface .cn-name { align-self: center; font-weight: 500; font-size: .9rem; letter-spacing: .1em; }
+.cardface .cn-text { font-size: .62rem; line-height: 1.35; color: #5a4c33; }
+.cardface.sm .cn-text { display: none; }
+.t-attack { --tone: #b8323f; } .t-defend { --tone: #2a7d86; } .t-seal { --tone: #9a7a2e; }
+.t-seal svg { fill: var(--tone); }
+
+.me { display: grid; grid-template-columns: 220px 1fr 220px; gap: 16px; align-items: end; }
+.me-info { padding: 18px 18px 16px; border-radius: 8px; background: #0a1410d9; border: 1px solid #e8c27a33; display: grid; gap: 8px; }
+.me-info .cn { width: 30px; height: 30px; }
+.me-info .nm { font-weight: 500; }
+.me-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.role-btn { justify-self: start; border: 1px dashed #e8c27a77; background: none; color: var(--amber); border-radius: 20px; padding: 4px 12px; font-size: .75rem; cursor: pointer; }
+.hand { list-style: none; margin: 0; padding: 26px 0 4px; display: flex; justify-content: center; }
+.hand li + li { margin-left: -10px; }
+.hand button { border: 0; padding: 0; background: none; cursor: pointer; display: block; transition: transform .2s; transform: rotate(var(--rot)) translateY(var(--dy)); transform-origin: 50% 120%; }
+.hand .cardface { width: clamp(78px, 8.4vw, 112px); }
+.hand button:hover, .hand button:focus-visible { transform: rotate(var(--rot)) translateY(calc(var(--dy) - 10px)); outline: none; }
+.hand button[aria-pressed="true"] { transform: rotate(0) translateY(-22px); }
+.hand button[aria-pressed="true"] .cardface { box-shadow: inset 0 0 0 3px #f4ead2, inset 0 0 0 4px var(--tone), 0 0 0 2px var(--amber), 0 0 26px #e8c27a99; }
+.me-act { display: grid; gap: 8px; }
+.g-note { margin: 0; text-align: center; font-size: .68rem; color: var(--dim); letter-spacing: .08em; }
+
+@media (max-width: 1100px) { .log { display: none; } }
+@media (max-width: 760px) {
+  #game { gap: 8px; padding-inline: 10px; }
+  .g-phase span { display: none; }
+  .opps { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; padding: 8px 2px 4px; }
+  .opp { min-width: 132px; flex: none; padding: 7px 10px 7px 7px; }
+  .avatar { width: 30px; height: 30px; font-size: .8rem; }
+  .table { gap: 10px; }
+  .altar { width: 136px; }
+  .table .cardback, .table .cardface { width: 46px; }
+  .cardface.sm .cn-name { font-size: .72rem; }
+  .piles-r { gap: 10px; }
+  .me { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .hand { grid-column: 1 / -1; grid-row: 1; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; padding: 30px 8px 16px; scrollbar-width: none; }
+  .pile { font-size: .66rem; }
+  .me-act .btn { white-space: nowrap; font-size: .85rem; }
+  .hand .cardface { width: 74px; }
+  .hand li + li { margin-left: 6px; }
+  .hand button, .hand button:hover, .hand button:focus-visible { transform: none; }
+  .hand button[aria-pressed="true"] { transform: translateY(-18px); }
+  .me-info { padding: 10px 12px; gap: 6px; } .me-info .cn { display: none; }
+  .me-act { grid-template-columns: 1fr 1fr; align-content: end; } .me-act #useCard { grid-column: 1 / -1; }
+  .btn { padding: 10px 12px; }
+}
 
 @media (max-width: 680px) {
   .lobby-body { grid-template-columns: 1fr; }
@@ -281,13 +391,45 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 6px; l
   </section>
 
   <section id="game" class="screen" hidden aria-label="게임">
-    <div class="glass ornate">
-      <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
-      <h2>게임 시작</h2>
-      <svg class="divider"><use href="#divider"/></svg>
-      <p>모두 자리에 앉았습니다. 게임 화면은 다음 단계에서 만들어질 예정입니다.</p>
-      <button class="btn ghost" type="button" id="leaveGame">나가기</button>
+    <div class="g-bar">
+      <div class="brand">ARCANA</div>
+      <div class="g-phase"><b id="gRound"></b><span id="gPhase"></span></div>
+      <div class="g-turn" id="gTurn" aria-live="polite"></div>
+      <button class="btn ghost sm" type="button" id="leaveGame">나가기</button>
     </div>
+    <ul class="opps" id="opps" aria-label="다른 플레이어"></ul>
+    <div class="table">
+      <div class="pile deck"><div class="cardback stack"></div><span>덱 <b id="gDeck"></b></span></div>
+      <div class="altar" aria-label="제단">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="ring" cx="100" cy="100" r="96" stroke-width="1.2"/>
+          <g class="spin"><circle class="ring" cx="100" cy="100" r="62" stroke-width=".8" stroke-dasharray="3 7"/>
+            <polygon class="ring" points="100,40 152,130 48,130" stroke-width=".7"/><polygon class="ring" points="100,160 48,70 152,70" stroke-width=".7"/></g>
+          <g id="slots"></g>
+        </svg>
+        <div class="altar-txt"><small>봉인</small><b id="gSeal"></b></div>
+      </div>
+      <div class="piles-r">
+        <div class="pile"><div id="gUp"></div><span>공개 버림</span></div>
+        <div class="pile"><div class="cardback stack"></div><span>피해 버림 <b id="gDown"></b></span></div>
+      </div>
+      <ol class="log" id="gLog" aria-label="최근 기록"></ol>
+    </div>
+    <div class="me">
+      <div class="me-info ornate">
+        <svg class="cn tl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
+        <div class="me-row"><span class="nm" id="gMe"></span><span class="job" id="gJob"></span></div>
+        <span class="hp" id="gHp"></span>
+        <button class="role-btn" id="roleBtn" type="button">진영 확인</button>
+      </div>
+      <ul class="hand" id="hand" aria-label="내 손패"></ul>
+      <div class="me-act">
+        <button class="btn" id="useCard" type="button" disabled>카드 사용</button>
+        <button class="btn ghost" data-soon type="button">거래 제안</button>
+        <button class="btn ghost" data-soon type="button">턴 종료</button>
+      </div>
+    </div>
+    <p class="g-note">레이아웃 미리보기 · 직업과 카드, 숫자는 모두 예시입니다</p>
   </section>
 
   <div class="foot">
@@ -409,7 +551,11 @@ Promise.all([
   document.fonts.ready,
 ]).then(() => pending.done(() => {
   pending = null;
-  if (invited) { $('code').value = invited; open('join'); }
+  if (preview) { // 혼자서 게임 화면을 보는 미리보기: 주소 끝에 #preview
+    const names = ['아린', '리아', '도윤', '하람', '세린', '무진'];
+    room = { code: 'DEMO', you: 'p0', players: names.map((name, i) => ({ id: 'p' + i, name })) };
+    renderGame(mockGame(room.players, room.you)); view('game');
+  } else if (invited) { $('code').value = invited; open('join'); }
 }), () => pending.fail('서버에 연결하지 못했습니다. 새로고침 해주세요.'));
 
 /* ---------- 화면 ---------- */
@@ -417,8 +563,87 @@ function view(name) {
   $('frame').dataset.view = name;
   $('lobby').hidden = name !== 'lobby';
   $('game').hidden = name !== 'game';
-  history.replaceState(null, '', name === 'home' ? '/' : `/?room=${room.code}`);
+  if (!preview) history.replaceState(null, '', name === 'home' ? '/' : `/?room=${room.code}`);
 }
+
+/* ---------- 게임 화면 (레이아웃 단계: 예시 데이터로 그린다) ---------- */
+// ponytail: 규칙 엔진 전까지 mockGame이 상태를 만든다. 서버가 같은 모양의 상태를 보내면 renderGame만 남기면 된다.
+const preview = location.hash === '#preview';
+const ICON = {
+  attack: '<svg viewBox="0 0 24 24"><path d="M14.5 4H20v5.5L9 20.5 3.5 15Z"/><path d="M6 12l6 6M3 21l3-3"/></svg>',
+  defend: '<svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.6 8-8 9-4.4-1-8-4-8-9V6Z"/></svg>',
+  seal: '<svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4Z"/></svg>',
+};
+const CARDS = {
+  attack: ['공격', '한 명에게 피해 1'],
+  defend: ['방어', '공격 한 번을 막는다'],
+  seal: ['봉인', '제단에 오르면 봉인 진행'],
+};
+const JOBS = ['기사', '마법사', '성직자', '도적', '궁수', '음유시인', '연금술사', '사냥꾼'];
+function cardFace(type, small) {
+  const [name, text] = CARDS[type];
+  return `<div class="cardface t-${type}${small ? ' sm' : ''}">${ICON[type]}<span class="cn-name">${name}</span><span class="cn-text">${text}</span></div>`;
+}
+function mockGame(players, you) {
+  const meIdx = players.findIndex(p => p.id === you);
+  const seated = [...players.slice(meIdx), ...players.slice(0, meIdx)]; // 나부터 시계 방향
+  return {
+    round: 1, phase: '행동 페이즈', turn: players[0].id, deck: 38, down: 3, up: 'attack', seal: [2, 5], // 방장부터 시작
+    you, role: 'hero',
+    players: seated.map((p, i) => ({ id: p.id, name: p.name, job: JOBS[i % JOBS.length], hand: i === 3 ? 0 : [5, 4, 5, 3, 4, 2][i % 6], role: i === 3 ? 'demon' : null })),
+    hand: ['attack', 'defend', 'seal', 'attack', 'defend'],
+    log: ['라운드 1이 시작되었습니다.', '제단에 봉인 카드 2장이 남았습니다.', '당신의 차례입니다.'],
+  };
+}
+const hearts = n => '<i></i>'.repeat(Math.min(n, 6)) + ` ${n}`;
+let game = null, picked = null;
+function renderGame(g) {
+  game = g; picked = null;
+  const me = g.players[0], mine = g.turn === g.you;
+  $('gRound').textContent = `ROUND ${g.round}`;
+  $('gPhase').textContent = g.phase;
+  $('gTurn').textContent = mine ? '내 차례' : `${g.players.find(p => p.id === g.turn).name}의 차례`;
+  $('gTurn').classList.toggle('mine', mine);
+  $('opps').innerHTML = g.players.slice(1).map(p => {
+    const dead = p.hand === 0;
+    return `<li class="opp${p.id === g.turn ? ' turn' : ''}${dead ? ' dead' : ''}">
+      <span class="avatar">${esc(p.name[0])}</span><span class="nm">${esc(p.name)}</span>
+      <span class="sub"><span class="job">${p.job}</span>${dead ? `<span class="role ${p.role}">${p.role === 'demon' ? '마왕군' : '용사 파티'}</span>` : `<span class="hp" aria-label="손패 ${p.hand}장">${hearts(p.hand)}</span>`}</span>
+    </li>`;
+  }).join('');
+  $('gDeck').textContent = g.deck; $('gDown').textContent = g.down;
+  $('gUp').innerHTML = cardFace(g.up, true);
+  $('gSeal').textContent = `${g.seal[0]} / ${g.seal[1]}`;
+  $('slots').innerHTML = Array.from({ length: g.seal[1] }, (_, i) => {
+    const a = -90 + i * 360 / g.seal[1];
+    return `<rect class="slot${i < g.seal[0] ? ' on' : ''}" x="94" y="-2" width="12" height="16" rx="2" transform="rotate(${a + 90} 100 100) translate(0 0)"/>`;
+  }).join('');
+  $('gLog').innerHTML = g.log.map(l => `<li>${esc(l)}</li>`).join('');
+  $('gMe').textContent = me.name + ' (나)'; $('gJob').textContent = me.job;
+  $('gHp').innerHTML = hearts(g.hand.length);
+  const mid = (g.hand.length - 1) / 2;
+  $('hand').innerHTML = g.hand.map((t, i) => `<li><button type="button" aria-pressed="false" aria-label="${CARDS[t][0]}: ${CARDS[t][1]}"
+    style="--rot:${(i - mid) * 4}deg;--dy:${Math.abs(i - mid) * 5}px">${cardFace(t)}</button></li>`).join('');
+  $('useCard').disabled = true;
+}
+const esc = s => s.replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
+$('hand').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const on = b.getAttribute('aria-pressed') !== 'true';
+  $('hand').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
+  b.setAttribute('aria-pressed', on);
+  picked = on ? b : null;
+  $('useCard').disabled = !picked || game.turn !== game.you;
+};
+let roleT;
+$('roleBtn').onclick = () => {
+  const b = $('roleBtn'), hero = game.role === 'hero';
+  b.textContent = hero ? '나는 용사 파티' : '나는 마왕군';
+  b.style.color = hero ? 'var(--amber)' : '#e0505e';
+  clearTimeout(roleT); roleT = setTimeout(() => { b.textContent = '진영 확인'; b.style.color = ''; }, 2500);
+};
+document.querySelectorAll('[data-soon]').forEach(b => b.onclick = () => { $('gTurn').textContent = '규칙이 구현되면 동작합니다'; setTimeout(() => renderGame(game), 1600); });
+$('useCard').onclick = () => $('useCard').textContent = '규칙 구현 후 동작';
 
 /* ---------- 방 만들기 / 입장 ---------- */
 const send = msg => ws.send(JSON.stringify({ ...msg, name: $('name').value }));
@@ -501,7 +726,7 @@ ws.onmessage = e => {
   }
   if (msg.type === 'start') {
     pending = loading(['게임판을 펼치는 중', '카드를 나누는 중', '진영을 정하는 중'], 3200);
-    const p = pending; pending = null; p.done(() => view('game'));
+    const p = pending; pending = null; p.done(() => { renderGame(mockGame(room.players, room.you)); view('game'); });
   }
 };
 ws.onclose = () => {
