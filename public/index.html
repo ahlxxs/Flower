@@ -174,9 +174,12 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
 #game > *, .g-me > *, .table > * { min-width: 0; }
 .frame[data-view="game"] > svg :is(.seal, .pulse) { display: none; } /* 게임 중엔 제단과 겹치지 않게 배경 마법진을 숨김 */
 .h-right { display: flex; align-items: center; gap: 1.25rem; }
-.fs { width: 2.25rem; height: 2.25rem; display: grid; place-items: center; border: 1px solid #e8c27a55; border-radius: 50%; background: #0a141066; cursor: pointer; }
-.fs svg { width: 1.1rem; fill: none; stroke: var(--amber); stroke-width: 2; stroke-linecap: round; }
-.fs:hover { border-color: var(--amber); }
+.h-right .mi { white-space: nowrap; }
+@media (max-width: 760px) { .h-right { gap: .8rem; } .h-right [data-settings] { display: none; } }
+.icon-btn { width: 2.25rem; height: 2.25rem; display: grid; place-items: center; border: 1px solid #e8c27a55; border-radius: 50%; background: #0a141066; cursor: pointer; }
+.icon-btn svg { width: 1.1rem; fill: none; stroke: var(--amber); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn:hover { border-color: var(--amber); }
+.gear:hover svg { rotate: 60deg; } .gear svg { transition: rotate .4s; }
 .g-bar { display: flex; align-items: center; gap: 1rem; }
 .g-bar .brand { font-size: .95rem; }
 .g-phase { display: flex; gap: 0.625rem; align-items: baseline; font-size: .85rem; color: var(--fog); }
@@ -219,6 +222,41 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
 .rv-hint { margin: 0; font-size: .75rem; color: var(--dim); }
 
 /* 직업 설명 창 */
+/* ---------- 설정: 소리 / 조작 방법 / 기본 규칙 ---------- */
+#settings { width: min(100%, 42rem); height: min(86vh, 40rem); padding: 2rem 2rem 1.5rem; }
+#settings[open] { display: grid; grid-template-rows: auto auto 1fr; }
+.st-head { display: flex; align-items: center; justify-content: center; position: relative; }
+.st-close { position: absolute; right: 0; top: 50%; translate: 0 -50%; width: 2rem; height: 2rem; border: 0; background: none; color: var(--dim); font-size: 1.4rem; cursor: pointer; }
+.st-close:hover { color: var(--amber); }
+.tabs { display: flex; justify-content: center; gap: .4rem; margin: .4rem 0 1.2rem; border-bottom: 1px solid #e8c27a26; }
+.tabs button { border: 0; background: none; padding: .7rem 1rem; font-size: .92rem; color: var(--dim); cursor: pointer; position: relative; }
+.tabs button[aria-selected="true"] { color: var(--amber); }
+.tabs button[aria-selected="true"]::after { content: ''; position: absolute; left: 20%; right: 20%; bottom: -1px; height: 2px; background: var(--amber); }
+.panes { overflow-y: auto; min-height: 0; padding-right: .4rem; }
+.pane h3 { margin: 1.4rem 0 .6rem; font-size: .8rem; letter-spacing: .2em; color: var(--amber); font-weight: 500; }
+.pane h3:first-child { margin-top: 0; }
+.pane p, .pane li { font-size: .88rem; line-height: 1.75; color: var(--fog); }
+.pane p { margin: 0 0 .6rem; }
+.pane ul, .pane ol { margin: 0; padding-left: 1.2rem; display: grid; gap: .3rem; }
+.pane b { color: var(--text); font-weight: 500; }
+.pane .soon { font-size: .7rem; padding: 0 .4rem; border-radius: .5rem; border: 1px solid #a9b8ae55; color: var(--dim); margin-left: .3rem; white-space: nowrap; }
+.row { display: grid; grid-template-columns: 7rem 1fr 3rem; align-items: center; gap: 1rem; padding: .9rem 0; border-bottom: 1px solid #e8c27a1a; }
+.row label { margin: 0; font-size: .9rem; color: var(--text); letter-spacing: 0; }
+.row output { text-align: right; font-size: .85rem; color: var(--amber); font-variant-numeric: tabular-nums; }
+.row input[type=range] { width: 100%; accent-color: var(--amber); }
+.row input:disabled { opacity: .35; }
+.switch { appearance: none; -webkit-appearance: none; justify-self: end; width: 2.8rem; height: 1.5rem; border-radius: 1rem; background: #ffffff22; position: relative; cursor: pointer; transition: background .2s; margin: 0; }
+.switch::after { content: ''; position: absolute; top: .2rem; left: .2rem; width: 1.1rem; height: 1.1rem; border-radius: 50%; background: var(--fog); transition: translate .2s; }
+.switch:checked { background: var(--amber); } .switch:checked::after { translate: 1.3rem 0; background: #1b1407; }
+.keys { display: grid; grid-template-columns: auto 1fr; gap: .5rem 1.2rem; margin: 0; }
+.keys dt { font-size: .82rem; color: var(--amber); white-space: nowrap; }
+.keys dd { margin: 0; font-size: .88rem; line-height: 1.6; color: var(--fog); }
+@media (max-width: 760px) {
+  #settings { height: 88vh; padding: 1.6rem 1.1rem 1rem; }
+  .tabs button { padding: .7rem .6rem; }
+  .row { grid-template-columns: 5.5rem 1fr 2.6rem; gap: .6rem; }
+  .keys { grid-template-columns: 1fr; gap: .1rem; } .keys dd { margin-bottom: .6rem; }
+}
 #jobDlg { width: min(100%, 32.5rem); max-height: 84vh; overflow-y: auto; }
 #jobDlg .sum { margin: 0 0 0.875rem; text-align: center; color: var(--amber); font-size: .9rem; line-height: 1.6; }
 #jobDlg .txt { margin: 0 0 1.25rem; white-space: pre-line; font-size: .85rem; line-height: 1.8; color: var(--fog); }
@@ -388,8 +426,9 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
   <header>
     <div class="brand">ARCANA</div>
     <div class="h-right">
-      <nav aria-label="메인 메뉴"><button class="mi" data-open="join">코드로 입장</button></nav>
-      <button class="fs" type="button" aria-label="전체 화면" title="전체 화면"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      <nav aria-label="메인 메뉴"><button class="mi" data-open="join">코드로 입장</button><button class="mi" data-settings="rules">게임 방법</button></nav>
+      <button class="icon-btn gear" type="button" aria-label="설정" title="설정"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      <button class="icon-btn fs" type="button" aria-label="전체 화면" title="전체 화면"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
   </header>
   <section class="hero">
@@ -436,7 +475,8 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
       <div class="brand">ARCANA</div>
       <div class="g-phase"><b id="gRound"></b><span id="gPhase"></span></div>
       <div class="g-turn" id="gTurn" aria-live="polite"></div>
-      <button class="fs" type="button" aria-label="전체 화면" title="전체 화면"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      <button class="icon-btn gear" type="button" aria-label="설정" title="설정"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      <button class="icon-btn fs" type="button" aria-label="전체 화면" title="전체 화면"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
       <button class="btn ghost sm" type="button" id="leaveGame">나가기</button>
     </div>
     <ul class="opps" id="opps" aria-label="다른 플레이어"></ul>
@@ -520,6 +560,71 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
   <button class="btn" id="rvOk" type="button">확인했습니다</button>
   <p class="rv-hint">진영은 게임 중 "진영 확인"으로 다시 볼 수 있습니다</p>
 </div>
+<dialog id="settings" class="glass ornate" aria-labelledby="stTitle">
+  <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
+  <div class="st-head"><h2 id="stTitle">설정</h2><button class="st-close" type="button" id="stClose" aria-label="닫기">×</button></div>
+  <div class="tabs" role="tablist">
+    <button role="tab" type="button" data-tab="sound" aria-controls="tab-sound">소리</button>
+    <button role="tab" type="button" data-tab="controls" aria-controls="tab-controls">조작 방법</button>
+    <button role="tab" type="button" data-tab="rules" aria-controls="tab-rules">기본 규칙</button>
+  </div>
+  <div class="panes">
+    <section class="pane" id="tab-sound" role="tabpanel">
+      <div class="row"><label for="sMute">음소거</label><span></span><input class="switch" type="checkbox" id="sMute"></div>
+      <div class="row"><label for="sBgm">배경 음악</label><input type="range" id="sBgm" min="0" max="100" step="5"><output for="sBgm" id="oBgm"></output></div>
+      <div class="row"><label for="sSfx">효과음</label><input type="range" id="sSfx" min="0" max="100" step="5"><output for="sSfx" id="oSfx"></output></div>
+      <p style="margin-top:1rem;font-size:.78rem;color:var(--dim)">배경 음악과 효과음은 곧 추가됩니다. 설정은 이 기기에 저장되어 다음 접속에도 유지됩니다.</p>
+    </section>
+    <section class="pane" id="tab-controls" role="tabpanel" hidden>
+      <h3>방과 대기실</h3>
+      <dl class="keys">
+        <dt>방 만들기</dt><dd>홈의 "방 만들기 →"를 누르고 닉네임을 입력합니다.</dd>
+        <dt>친구 초대</dt><dd>대기실의 "초대 링크 보내기"나 "+ 친구 초대"로 링크를 보내거나, 5자리 초대 코드를 알려 주세요.</dd>
+        <dt>입장</dt><dd>받은 링크를 열거나, 홈의 "코드로 입장"에 코드를 입력합니다.</dd>
+        <dt>준비와 시작</dt><dd>참가자는 "준비하기", 모두 준비되면 방장이 "게임 시작"을 누릅니다.</dd>
+        <dt>잠깐 나갔다 오기</dt><dd>새로고침하거나 다른 앱에 다녀와도 같은 탭이면 자동으로 돌아옵니다. 탭을 닫았다면 같은 닉네임으로 다시 입장하세요. 자리는 10분 동안 유지됩니다.</dd>
+      </dl>
+      <h3>게임 화면</h3>
+      <dl class="keys">
+        <dt>카드 고르기</dt><dd>손패의 카드를 누릅니다. 한 번 더 누르면 선택이 풀립니다.</dd>
+        <dt>카드 사용</dt><dd>카드를 고른 뒤 "카드 사용"을 누릅니다.<span class="soon">준비 중</span></dd>
+        <dt>거래 · 턴 종료</dt><dd>내 차례가 끝날 때 오른쪽 아래 버튼을 씁니다.<span class="soon">준비 중</span></dd>
+        <dt>직업 설명</dt><dd>이름 옆의 직업 표시를 누르면 능력 설명이 열립니다.</dd>
+        <dt>내 진영 확인</dt><dd>"진영 확인"을 누르면 2.5초 동안만 보입니다. 주변 시선을 조심하세요.</dd>
+      </dl>
+      <h3>화면</h3>
+      <dl class="keys">
+        <dt>전체 화면</dt><dd>오른쪽 위 ⛶ 버튼. 다시 누르거나 Esc로 돌아옵니다.</dd>
+        <dt>설정</dt><dd>오른쪽 위 톱니바퀴. 게임 중에도 열 수 있습니다.</dd>
+      </dl>
+    </section>
+    <section class="pane" id="tab-rules" role="tabpanel" hidden>
+      <h3>승리 조건</h3>
+      <ul>
+        <li><b>용사 파티</b>: 마왕군을 모두 쓰러뜨리면 승리합니다.</li>
+        <li><b>마왕군</b>: 제단의 봉인 카드가 목표 수에 도달하면 즉시 승리합니다. 용사 파티를 전멸시켜도 승리합니다.</li>
+      </ul>
+      <h3>직업과 진영</h3>
+      <p>모두 서로 다른 <b>직업</b>을 받고, 직업은 모두에게 공개됩니다. <b>진영</b>은 비밀이며 나만 압니다. "마왕"이라는 직업은 없으니, 마왕군은 평범한 직업으로 섞여 있습니다.</p>
+      <h3>손패가 곧 생명</h3>
+      <p>카드 뒷면의 하트가 생명입니다. 손패가 0장이 되면 쓰러집니다. 공격을 막지 못하면 손패를 잃고, 잃은 카드는 아무도 볼 수 없게 뒷면으로 버려집니다.</p>
+      <h3>내 차례</h3>
+      <ol>
+        <li>카드를 쓰면 모두가 볼 수 있게 앞면으로 내고, 바로 덱에서 1장을 뽑습니다.</li>
+        <li>차례를 마칠 때 한 명에게 <b>거래</b>를 제안할 수 있습니다. 원하는 카드를 말할 수 없고, 서로 1장씩 뒷면으로 내밀어 동시에 바꿉니다. 상대는 거절할 수 있습니다.</li>
+      </ol>
+      <h3>헌납 (라운드 끝)</h3>
+      <ol>
+        <li>모두 손패에서 1장을 뒷면으로 골라, 신호에 맞춰 동시에 제단에 냅니다. 모두가 반드시 내야 합니다.</li>
+        <li>제단의 카드를 섞어 공개합니다. 봉인 카드는 제단에 남고, 나머지는 버려집니다.</li>
+        <li>모두 1장씩 보충합니다. 누가 봉인 카드를 냈는지는 아무도 모릅니다.</li>
+      </ol>
+      <h3>쓰러진 뒤</h3>
+      <p>쓰러지면 진영이 공개됩니다. 쓰러진 마왕군도 용사 파티를 방해할 수 있지만, 봉인은 더 이상 도울 수 없습니다.</p>
+      <p style="font-size:.78rem;color:var(--dim)">카드 종류, 봉인 목표 수, 한 차례에 할 수 있는 행동 수는 아직 정해지는 중입니다.</p>
+    </section>
+  </div>
+</dialog>
 <dialog id="jobDlg" class="glass ornate">
   <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
   <h2 id="jobName"></h2>
@@ -734,6 +839,41 @@ $('game').addEventListener('click', e => {
   $('jobDlg').showModal();
 });
 $('jobClose').onclick = () => $('jobDlg').close();
+/* ---------- 설정 ----------
+   소리 설정은 localStorage에 저장한다. BGM을 붙일 때는 settings 값을 읽고
+   'arcana:settings' 이벤트를 들으면 된다. */
+const settings = Object.assign({ mute: false, bgm: 60, sfx: 80, tab: 'sound' }, (() => { try { return JSON.parse(localStorage.getItem('arcana-settings')) || {}; } catch { return {}; } })());
+function saveSettings() {
+  try { localStorage.setItem('arcana-settings', JSON.stringify(settings)); } catch {}
+  dispatchEvent(new CustomEvent('arcana:settings', { detail: settings }));
+}
+function syncSound() {
+  $('sMute').checked = settings.mute;
+  for (const k of ['bgm', 'sfx']) {
+    const el = $('s' + k[0].toUpperCase() + k.slice(1));
+    el.value = settings[k]; el.disabled = settings.mute;
+    $('o' + k[0].toUpperCase() + k.slice(1)).textContent = settings.mute ? '끔' : settings[k] + '%';
+  }
+}
+$('sMute').onchange = e => { settings.mute = e.target.checked; syncSound(); saveSettings(); };
+$('sBgm').oninput = e => { settings.bgm = +e.target.value; syncSound(); saveSettings(); };
+$('sSfx').oninput = e => { settings.sfx = +e.target.value; syncSound(); saveSettings(); };
+function showTab(name) {
+  settings.tab = name; saveSettings();
+  document.querySelectorAll('[data-tab]').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === name));
+  document.querySelectorAll('.pane').forEach(p => p.hidden = p.id !== 'tab-' + name);
+  document.querySelector('.panes').scrollTop = 0;
+}
+document.querySelectorAll('[data-tab]').forEach(t => t.onclick = () => showTab(t.dataset.tab));
+function openSettings(tab) { syncSound(); showTab(tab || settings.tab); $('settings').showModal(); }
+document.querySelectorAll('.gear').forEach(b => b.onclick = () => openSettings());
+document.querySelectorAll('[data-settings]').forEach(b => b.onclick = () => openSettings(b.dataset.settings));
+$('stClose').onclick = () => $('settings').close();
+$('settings').addEventListener('click', e => { // 창 바깥(배경)을 누르면 닫기
+  const r = $('settings').getBoundingClientRect();
+  if (e.target === $('settings') && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) $('settings').close();
+});
+
 // 전체 화면 (브라우저 주소창·탭까지 숨김). 지원하지 않는 기기(아이폰 등)에서는 버튼을 숨긴다
 document.querySelectorAll('.fs').forEach(b => {
   b.hidden = !document.fullscreenEnabled;
