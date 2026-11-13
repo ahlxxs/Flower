@@ -1,7 +1,9 @@
 // 프로필 저장소. 프로필의 주인은 기기에 저장된 비밀 열쇠(key)로 구분한다 (로그인 없음).
-// ponytail: JSON 파일 하나에 저장한다. Render 무료 서버처럼 디스크가 초기화되는 곳에서는 지워지므로,
-//           오래 보관하려면 DATA_DIR을 영구 디스크로 두거나 이 파일만 DB로 바꾸면 된다.
+// 저장 위치: 환경 변수 DATABASE_URL이 있으면 PostgreSQL(Neon 등), 없으면 DATA_DIR의 JSON 파일(개발용).
+// ponytail: 시작할 때 전부 메모리로 읽고, 바뀐 프로필만 DB에 쓴다. 서버가 한 대일 때만 맞는 방식.
+//           여러 대로 늘리면 닉네임 중복 검사를 DB의 UNIQUE 제약으로 옮겨야 한다.
 import { readFileSync, mkdirSync } from 'node:fs';
+import pg from 'pg';
 import { writeFile, rename } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
@@ -20,13 +22,25 @@ export const TITLES = [
 
 const byKey = new Map();  // key -> profile
 const byName = new Map(); // 소문자 닉네임 -> key
-try {
-  for (const p of JSON.parse(readFileSync(FILE, 'utf8'))) { byKey.set(p.key, p); byName.set(p.nickname.toLowerCase(), p.key); }
-} catch { /* 첫 실행: 파일 없음 */ }
+const db = process.env.DATABASE_URL ? new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 }) : null;
+let loaded;
+if (db) {
+  await db.query('CREATE TABLE IF NOT EXISTS profiles (key text PRIMARY KEY, data jsonb NOT NULL)');
+  loaded = (await db.query('SELECT data FROM profiles')).rows.map(r => r.data);
+  console.log(`프로필 ${loaded.length}개를 데이터베이스에서 불러왔습니다.`);
+} else {
+  try { loaded = JSON.parse(readFileSync(FILE, 'utf8')); } catch { loaded = []; } // 첫 실행: 파일 없음
+}
+for (const p of loaded) { byKey.set(p.key, p); byName.set(p.nickname.toLowerCase(), p.key); }
 
-let saveTimer;
-function persist() { // 변경이 몰려도 0.5초에 한 번만, 임시 파일에 쓴 뒤 바꿔치기해서 깨지지 않게
-  clearTimeout(saveTimer);
+let saveTimer, dbQueue = Promise.resolve();
+function persist(p) {
+  if (db) { // 바뀐 프로필 하나만 순서대로 저장
+    dbQueue = dbQueue.then(() => db.query('INSERT INTO profiles (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = $2', [p.key, p]))
+      .catch(e => console.error('프로필 저장 실패:', e.message));
+    return;
+  }
+  clearTimeout(saveTimer); // 파일: 변경이 몰려도 0.5초에 한 번만, 임시 파일에 쓴 뒤 바꿔치기해서 깨지지 않게
   saveTimer = setTimeout(async () => {
     mkdirSync(DIR, { recursive: true });
     await writeFile(FILE + '.tmp', JSON.stringify([...byKey.values()]));
@@ -70,6 +84,6 @@ export function save(key, input) {
   if (p) byName.delete(p.nickname.toLowerCase());
   Object.assign(next, { nickname, intro, emblem, color, title });
   byKey.set(next.key, next); byName.set(nickname.toLowerCase(), next.key);
-  persist();
+  persist(next);
   return { profile: next };
 }
