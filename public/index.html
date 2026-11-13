@@ -287,6 +287,61 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
   .row { grid-template-columns: 5.5rem 1fr 2.6rem; gap: .6rem; }
   .keys { grid-template-columns: 1fr; gap: .1rem; } .keys dd { margin-bottom: .6rem; }
 }
+/* ---------- 프로필 ---------- */
+.me-btn { width: auto; min-width: 2.25rem; padding: 0 .7rem 0 .25rem; gap: .45rem; display: flex; border-radius: 1.2rem; font-size: .82rem; color: var(--text); }
+.me-btn .medal { width: 1.75rem; height: 1.75rem; border-width: 1px; }
+.me-btn .medal svg { width: 1rem; }
+.me-btn.empty { padding: 0; width: 2.25rem; justify-content: center; }
+.medal {
+  --pc: var(--amber); flex: none; width: 4.5rem; height: 4.5rem; border-radius: 50%; display: grid; place-items: center;
+  border: 2px solid var(--pc); background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--pc) 25%, #0a1410), #050907);
+  box-shadow: 0 0 1.2rem color-mix(in srgb, var(--pc) 35%, transparent), inset 0 0 0 .2rem #050907, inset 0 0 0 .26rem color-mix(in srgb, var(--pc) 45%, transparent);
+}
+.medal svg { width: 2.2rem; fill: none; stroke: var(--pc); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.c-amber { --pc: #e8c27a; } .c-jade { --pc: #7fbfa5; } .c-crimson { --pc: #e86a76; } .c-violet { --pc: #b3a6f5; } .c-silver { --pc: #cfd8d4; }
+.pcard { display: grid; justify-items: center; text-align: center; gap: .55rem; padding: .4rem 0 .2rem; }
+.pcard .pname { font-size: 1.35rem; font-weight: 500; letter-spacing: .03em; }
+.ptitle { font-size: .75rem; letter-spacing: .12em; padding: .15rem .7rem; border-radius: 1rem; color: var(--pc, var(--amber)); border: 1px solid color-mix(in srgb, var(--pc, var(--amber)) 55%, transparent); }
+.pintro { margin: 0; max-width: 24rem; font-size: .88rem; line-height: 1.7; color: var(--fog); white-space: pre-line; overflow-wrap: anywhere; }
+.pintro.none { color: var(--dim); }
+.pstats { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin-top: .6rem; }
+.pstats div { padding: .6rem .3rem; border-radius: .4rem; background: #0006; border: 1px solid #e8c27a1f; display: grid; gap: .15rem; }
+.pstats b { font-family: var(--didone); font-weight: 400; font-size: 1.3rem; color: var(--amber); font-variant-numeric: tabular-nums; }
+.pstats span { font-size: .68rem; color: var(--dim); letter-spacing: .05em; }
+.pnote { margin: .2rem 0 0; font-size: .7rem; color: var(--dim); }
+#profile { width: min(100%, 36rem); height: min(90vh, 46rem); padding: 2rem 1.8rem 1.4rem; }
+#profile[open] { display: grid; grid-template-rows: auto auto 1fr; }
+#pview { width: min(100%, 26rem); }
+.pform { display: grid; gap: .9rem; margin-top: 1rem; }
+.pform label { margin: 0 0 .35rem; }
+.pform input[type=text], .pform textarea, .pform select, .psearch {
+  width: 100%; padding: .7rem .8rem; font: inherit; font-size: .95rem; color: var(--text); background: #0006; border: 1px solid #e8c27a40; border-radius: .4rem;
+}
+.pform textarea { resize: none; height: 4.6rem; line-height: 1.6; }
+.pform select option { background: #0a1410; }
+.pform :is(input, textarea, select):focus, .psearch:focus { outline: 1px solid var(--amber); border-color: var(--amber); }
+.counter { float: right; font-size: .72rem; color: var(--dim); font-variant-numeric: tabular-nums; }
+.picks { display: flex; gap: .5rem; flex-wrap: wrap; border: 0; padding: 0; margin: 0; }
+.picks legend { padding: 0; margin-bottom: .35rem; font-size: .78rem; color: var(--dim); letter-spacing: .08em; }
+.picks input { position: absolute; opacity: 0; pointer-events: none; }
+.picks label { margin: 0; cursor: pointer; }
+.picks .medal { width: 2.6rem; height: 2.6rem; opacity: .55; transition: opacity .15s, transform .15s; }
+.picks .medal svg { width: 1.3rem; }
+.picks input:checked + .medal { opacity: 1; transform: scale(1.08); }
+.picks input:focus-visible + .medal { outline: 2px solid var(--amber); outline-offset: 2px; }
+.swatch { width: 2rem; height: 2rem; border-radius: 50%; background: var(--pc); opacity: .5; transition: opacity .15s, transform .15s; display: block; }
+.picks input:checked + .swatch { opacity: 1; transform: scale(1.1); box-shadow: 0 0 0 2px #050907, 0 0 0 3px var(--pc); }
+.picks input:focus-visible + .swatch { outline: 2px solid var(--amber); outline-offset: 3px; }
+.pmsg { min-height: 1.2em; margin: 0; text-align: center; font-size: .85rem; }
+.pmsg.bad { color: #ff8f98; } .pmsg.good { color: #9fd1bd; }
+.presults { list-style: none; margin: .8rem 0 0; padding: 0; display: grid; gap: .4rem; }
+.presults button { width: 100%; display: flex; align-items: center; gap: .8rem; padding: .55rem .7rem; border-radius: .5rem; border: 1px solid #e8c27a26; background: #0a141099; color: var(--text); cursor: pointer; text-align: left; }
+.presults button:hover { border-color: var(--amber); }
+.presults .medal { width: 2.4rem; height: 2.4rem; border-width: 1px; } .presults .medal svg { width: 1.2rem; }
+.presults small { display: block; font-size: .72rem; color: var(--pc); }
+.pempty { margin: 1rem 0 0; text-align: center; font-size: .85rem; color: var(--dim); }
+.seat:not(.empty), .opp { cursor: pointer; }
+@media (max-width: 760px) { #profile { height: 92vh; padding: 1.6rem 1rem 1rem; } .me-btn .me-name { display: none; } .me-btn { padding: 0 .25rem; } }
 #jobDlg { width: min(100%, 32.5rem); max-height: 84vh; overflow-y: auto; }
 #jobDlg .sum { margin: 0 0 0.875rem; text-align: center; color: var(--amber); font-size: .9rem; line-height: 1.6; }
 #jobDlg .txt { margin: 0 0 1.25rem; white-space: pre-line; font-size: .85rem; line-height: 1.8; color: var(--fog); }
@@ -457,6 +512,7 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
     <div class="brand">ARCANA</div>
     <div class="h-right">
       <nav aria-label="메인 메뉴"><button class="mi" data-settings="rules">게임 방법</button></nav>
+      <button class="icon-btn me-btn" type="button" id="meBtn" aria-label="내 프로필" title="내 프로필"></button>
       <button class="icon-btn gear" type="button" aria-label="설정" title="설정"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
       <button class="icon-btn fs" type="button" aria-label="전체 화면" title="전체 화면"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
@@ -666,6 +722,39 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
     </section>
   </div>
 </dialog>
+<dialog id="profile" class="glass ornate" aria-labelledby="pfTitle">
+  <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
+  <div class="st-head"><h2 id="pfTitle">프로필</h2><button class="st-close" type="button" data-close="profile" aria-label="닫기">×</button></div>
+  <div class="tabs" role="tablist">
+    <button role="tab" type="button" data-ptab="mine" aria-controls="ptab-mine">내 프로필</button>
+    <button role="tab" type="button" data-ptab="find" aria-controls="ptab-find">프로필 찾기</button>
+  </div>
+  <div class="panes">
+    <section class="pane" id="ptab-mine" role="tabpanel">
+      <div id="pPreview"></div>
+      <form class="pform" id="pForm">
+        <div><label for="pName">닉네임</label><input type="text" id="pName" maxlength="12" autocomplete="nickname" placeholder="2~12자" required></div>
+        <div id="pTitleRow"><label for="pTitle">칭호</label><select id="pTitle"></select></div>
+        <div><label for="pIntro">소개말 <span class="counter" id="pCount"></span></label><textarea id="pIntro" maxlength="80" placeholder="다른 모험가에게 보여 줄 한마디"></textarea></div>
+        <fieldset class="picks" id="pEmblems"><legend>문양</legend></fieldset>
+        <fieldset class="picks" id="pColors"><legend>색</legend></fieldset>
+        <p class="pmsg" id="pMsg" role="status"></p>
+        <button class="btn" id="pSave">저장</button>
+        <p class="pnote" id="pKeyNote">프로필은 이 기기에 연결됩니다. 브라우저 데이터를 지우면 다시 찾을 수 없으니 주의하세요.</p>
+      </form>
+    </section>
+    <section class="pane" id="ptab-find" role="tabpanel" hidden>
+      <input class="psearch" id="pSearch" type="search" placeholder="닉네임으로 찾기" aria-label="닉네임으로 찾기" autocomplete="off">
+      <ul class="presults" id="pResults"></ul>
+      <p class="pempty" id="pEmpty">찾고 싶은 모험가의 닉네임을 입력하세요.</p>
+    </section>
+  </div>
+</dialog>
+<dialog id="pview" class="glass ornate" aria-label="프로필 보기">
+  <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
+  <div id="pviewBody"></div>
+  <button class="btn" type="button" data-close="pview" style="width:100%;margin-top:1rem">닫기</button>
+</dialog>
 <dialog id="jobDlg" class="glass ornate">
   <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
   <h2 id="jobName"></h2>
@@ -841,7 +930,7 @@ function mockGame(players, you) {
   return {
     round: 1, phase: '행동 페이즈', turn: players[0].id, deck: 38, down: 3, up: 'attack', seal: [2, 5], // 방장부터 시작
     you, role: room.role || 'hero',
-    players: seated.map((p, i) => ({ id: p.id, name: p.name, online: p.online !== false, job: p.job || PREVIEW_JOBS[i % 6], hand: i === 3 ? 0 : [5, 4, 5, 3, 4, 2][i % 6], role: i === 3 ? 'demon' : null })),
+    players: seated.map((p, i) => ({ id: p.id, name: p.name, profile: p.profile, online: p.online !== false, job: p.job || PREVIEW_JOBS[i % 6], hand: i === 3 ? 0 : [5, 4, 5, 3, 4, 2][i % 6], role: i === 3 ? 'demon' : null })),
     hand: ['attack', 'defend', 'seal', 'attack', 'defend'],
     log: ['라운드 1이 시작되었습니다.', '제단에 봉인 카드 2장이 남았습니다.', '당신의 차례입니다.'],
   };
@@ -857,7 +946,7 @@ function renderGame(g) {
   $('gTurn').classList.toggle('mine', mine);
   $('opps').innerHTML = g.players.slice(1).map(p => {
     const dead = p.hand === 0;
-    return `<li class="opp${p.id === g.turn ? ' turn' : ''}${dead ? ' dead' : ''}${p.online ? '' : ' off'}">
+    return `<li class="opp${p.id === g.turn ? ' turn' : ''}${dead ? ' dead' : ''}${p.online ? '' : ' off'}" data-name="${esc(p.name)}" data-profile="${p.profile ? '1' : ''}">
       <span class="avatar">${esc(p.name[0])}</span><span class="nm">${esc(p.name)}${p.online ? '' : ' <span class="off-tag">연결 끊김</span>'}</span>
       <span class="sub"><button type="button" class="job" data-job="${esc(p.job)}">${esc(p.job)}</button>${dead ? `<span class="role ${p.role}">${p.role === 'demon' ? '마왕군' : '용사 파티'}</span>` : `<span class="hp" aria-label="손패 ${p.hand}장">${hearts(p.hand)}</span>`}</span>
     </li>`;
@@ -963,6 +1052,9 @@ try { $('name').value = localStorage.getItem('name') || ''; } catch {}
 
 function open(m) {
   mode = m;
+  // 프로필이 있으면 닉네임은 프로필 닉네임으로 고정
+  $('name').readOnly = !!myProfile;
+  if (myProfile) $('name').value = myProfile.nickname;
   $('dlgTitle').textContent = m === 'create' ? '방 만들기' : '방 참가하기';
   $('codeRow').hidden = m === 'create';
   $('code').required = m === 'join';
@@ -976,7 +1068,7 @@ $('form').onsubmit = e => {
   $('err').textContent = '';
   $('dlg').close();
   pending = loading(['대기실로 가는 중', '자리를 마련하는 중'], 1600);
-  send({ type: mode, code: $('code').value });
+  send({ type: mode, code: $('code').value, key: profileKey() });
 };
 
 /* ---------- 대기실 ---------- */
@@ -1003,6 +1095,7 @@ function renderLobby() {
   $('seats').replaceChildren(...room.players.map(p => {
     const li = document.createElement('li');
     li.className = 'seat' + (p.ready || p.host ? ' ready' : '') + (p.id === room.you ? ' me' : '') + (p.online ? '' : ' off');
+    li.dataset.name = p.name; li.dataset.profile = p.profile ? '1' : '';
     li.append($('heart').content.cloneNode(true));
     if (p.host) li.insertAdjacentHTML('beforeend', '<span class="badge">방장</span>');
     const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = p.name + (p.id === room.you ? ' (나)' : '');
@@ -1028,14 +1121,133 @@ function syncView() {
   view(want);
 }
 
+/* ---------- 프로필 ---------- */
+const EMBLEM = {
+  sword: '<path d="M14.5 4H20v5.5L9 20.5 3.5 15Z"/><path d="M6 12l6 6M3 21l3-3"/>',
+  shield: '<path d="M12 3l8 3v6c0 5-3.6 8-8 9-4.4-1-8-4-8-9V6Z"/>',
+  star: '<path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4Z"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/>',
+  heart: '<path d="M12 20 3.5 11.8A4.8 4.8 0 0 1 12 6.3a4.8 4.8 0 0 1 8.5 5.5Z"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+};
+const EMBLEM_NAME = { sword: '검', shield: '방패', star: '별', moon: '달', heart: '하트', eye: '눈' };
+const COLOR_NAME = { amber: '금빛', jade: '옥빛', crimson: '진홍', violet: '보랏빛', silver: '은빛' };
+const medal = (emblem, color) => `<span class="medal c-${color}"><svg viewBox="0 0 24 24">${EMBLEM[emblem] || EMBLEM.star}</svg></span>`;
+let myProfile = null;
+const profileKey = () => { try { return localStorage.getItem('arcana-profile') || ''; } catch { return ''; } };
+
+function profileCard(p) {
+  if (!p) return '';
+  const st = p.stats || {}, rate = st.games ? Math.round(st.wins / st.games * 100) + '%' : '-';
+  return `<div class="pcard c-${p.color}">${medal(p.emblem, p.color)}
+    <span class="pname">${esc(p.nickname)}</span>
+    ${p.title ? `<span class="ptitle">${esc(p.title)}</span>` : ''}
+    <p class="pintro${p.intro ? '' : ' none'}">${p.intro ? esc(p.intro) : '아직 소개말이 없습니다.'}</p>
+    <div class="pstats">
+      <div><b>${st.games ?? 0}</b><span>플레이</span></div><div><b>${st.wins ?? 0}</b><span>승리</span></div><div><b>${rate}</b><span>승률</span></div>
+      <div><b>${st.heroWins ?? 0}</b><span>용사로 승리</span></div><div><b>${st.demonWins ?? 0}</b><span>마왕군으로 승리</span></div><div><b>${st.bestStreak ?? 0}</b><span>최고 연승</span></div>
+    </div>
+    <p class="pnote">전적은 실제 게임 결과가 생기면 기록됩니다.</p></div>`;
+}
+function guestCard(name) {
+  return `<div class="pcard c-silver">${medal('star', 'silver')}<span class="pname">${esc(name)}</span><span class="ptitle">게스트</span>
+    <p class="pintro none">프로필을 만들지 않은 모험가입니다.</p></div>`;
+}
+function renderMeBtn() {
+  $('meBtn').classList.toggle('empty', !myProfile);
+  $('meBtn').innerHTML = myProfile ? `${medal(myProfile.emblem, myProfile.color)}<span class="me-name">${esc(myProfile.nickname)}</span>`
+    : '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
+}
+renderMeBtn();
+// 선택지 그리기
+$('pEmblems').insertAdjacentHTML('beforeend', Object.keys(EMBLEM).map(k =>
+  `<label title="${EMBLEM_NAME[k]}"><input type="radio" name="pEmblem" value="${k}" aria-label="${EMBLEM_NAME[k]}">${medal(k, 'amber')}</label>`).join(''));
+$('pColors').insertAdjacentHTML('beforeend', Object.keys(COLOR_NAME).map(k =>
+  `<label title="${COLOR_NAME[k]}"><input type="radio" name="pColor" value="${k}" aria-label="${COLOR_NAME[k]}"><span class="swatch c-${k}"></span></label>`).join(''));
+const formValue = () => ({
+  nickname: $('pName').value.trim(), intro: $('pIntro').value, title: $('pTitle').value,
+  emblem: document.querySelector('[name=pEmblem]:checked')?.value || 'star', color: document.querySelector('[name=pColor]:checked')?.value || 'amber',
+});
+function previewProfile() { // 입력하는 대로 위쪽 카드가 바뀐다
+  const v = formValue(), t = myProfile?.titles?.find(t => t.id === v.title);
+  $('pEmblems').querySelectorAll('.medal').forEach(m => m.className = 'medal c-' + v.color);
+  $('pCount').textContent = `${$('pIntro').value.length} / 80`;
+  $('pPreview').innerHTML = profileCard({ ...(myProfile || {}), ...v, nickname: v.nickname || '닉네임', title: t?.name || '새내기 모험가', stats: myProfile?.stats || {} });
+}
+function fillProfileForm() {
+  const p = myProfile || { nickname: $('name').value.trim(), intro: '', emblem: 'star', color: 'amber', titles: [] };
+  $('pName').value = p.nickname; $('pIntro').value = p.intro;
+  $('pTitle').innerHTML = (p.titles || []).map(t => `<option value="${t.id}" title="${esc(t.desc)}">${esc(t.name)}</option>`).join('');
+  $('pTitle').value = p.titleId || ''; $('pTitleRow').hidden = !myProfile;
+  document.querySelector(`[name=pEmblem][value=${p.emblem}]`).checked = true;
+  document.querySelector(`[name=pColor][value=${p.color}]`).checked = true;
+  $('pSave').textContent = myProfile ? '저장' : '프로필 만들기';
+  $('pMsg').textContent = ''; $('pMsg').className = 'pmsg';
+  previewProfile();
+}
+$('pForm').addEventListener('input', previewProfile);
+$('pForm').onsubmit = e => {
+  e.preventDefault();
+  $('pMsg').textContent = '저장하는 중…'; $('pMsg').className = 'pmsg';
+  send({ type: 'profile:save', key: profileKey(), ...formValue() });
+};
+function showPTab(name) {
+  document.querySelectorAll('[data-ptab]').forEach(t => t.setAttribute('aria-selected', t.dataset.ptab === name));
+  $('ptab-mine').hidden = name !== 'mine'; $('ptab-find').hidden = name !== 'find';
+  if (name === 'find') $('pSearch').focus();
+}
+document.querySelectorAll('[data-ptab]').forEach(t => t.onclick = () => showPTab(t.dataset.ptab));
+$('meBtn').onclick = () => { fillProfileForm(); showPTab('mine'); $('profile').showModal(); };
+let searchT;
+$('pSearch').oninput = () => {
+  clearTimeout(searchT);
+  searchT = setTimeout(() => send({ type: 'profile:find', q: $('pSearch').value }), 200);
+};
+$('pResults').onclick = e => { const b = e.target.closest('[data-name]'); if (b) send({ type: 'profile:view', nickname: b.dataset.name }); };
+// 대기실 자리 / 게임 상대를 누르면 프로필 보기
+function viewPlayer(el) {
+  if (!el || el.classList.contains('empty')) return;
+  if (el.dataset.profile) send({ type: 'profile:view', nickname: el.dataset.name });
+  else { $('pviewBody').innerHTML = guestCard(el.dataset.name); $('pview').showModal(); }
+}
+$('seats').addEventListener('click', e => viewPlayer(e.target.closest('.seat')));
+$('opps').addEventListener('click', e => { if (!e.target.closest('[data-job]')) viewPlayer(e.target.closest('.opp')); });
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dataset.close).close());
+['profile', 'pview'].forEach(id => $(id).addEventListener('click', e => { // 바깥 누르면 닫기
+  const r = $(id).getBoundingClientRect();
+  if (e.target === $(id) && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) $(id).close();
+}));
+
+function onProfileMessage(msg) {
+  if (msg.type === 'profile:me') {
+    if (msg.key) try { localStorage.setItem('arcana-profile', msg.key); } catch {}
+    if (!msg.profile && profileKey()) try { localStorage.removeItem('arcana-profile'); } catch {} // 서버에 없는 열쇠
+    myProfile = msg.profile; renderMeBtn();
+    if (msg.saved) { fillProfileForm(); $('pMsg').textContent = '저장했습니다.'; $('pMsg').className = 'pmsg good'; }
+  }
+  if (msg.type === 'profile:error') { $('pMsg').textContent = msg.message; $('pMsg').className = 'pmsg bad'; }
+  if (msg.type === 'profile:list' && msg.q === $('pSearch').value) {
+    $('pResults').innerHTML = msg.results.map(p => `<li><button type="button" data-name="${esc(p.nickname)}" class="c-${p.color}">${medal(p.emblem, p.color)}
+      <span>${esc(p.nickname)}<small>${esc(p.title)}</small></span></button></li>`).join('');
+    $('pEmpty').hidden = !!msg.results.length;
+    $('pEmpty').textContent = msg.q.trim() ? '그런 닉네임의 모험가가 없습니다.' : '찾고 싶은 모험가의 닉네임을 입력하세요.';
+  }
+  if (msg.type === 'profile:view') {
+    $('pviewBody').innerHTML = msg.profile ? profileCard(msg.profile) : guestCard(msg.nickname);
+    $('pview').showModal();
+  }
+}
+
 function onMessage(e) {
   const msg = JSON.parse(e.data);
   if (msg.type === 'welcome') {
     try { sessionStorage.setItem('arcana-token', msg.token); } catch {}
     retry = 0; net('');
     if (!msg.inRoom && room && !booting && !preview) { room = null; view('home'); $('err').textContent = '자리를 비운 사이 방이 사라졌습니다.'; open('join'); }
+    if (profileKey()) ws.send(JSON.stringify({ type: 'profile:me', key: profileKey() })); // 내 프로필 불러오기
     welcomed();
   }
+  if (msg.type.startsWith('profile:')) return onProfileMessage(msg);
   if (msg.type === 'replaced') replaced = true;
   if (msg.type === 'error') {
     if (pending) { pending.cancel(); pending = null; open(mode); }

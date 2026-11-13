@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { randomBytes, randomInt } from 'node:crypto';
 import { WebSocketServer } from 'ws';
 import { JOBS } from './jobs.js';
+import * as profiles from './profiles.js';
 
 const PORT = process.env.PORT || 3000;
 const MAX_NAME = 12;
@@ -39,7 +40,7 @@ const canStart = room => room.players.length >= MIN_PLAYERS && room.players.leng
 
 function broadcast(room) {
   // 직업은 공개, 진영은 본인에게만 보낸다
-  const list = room.players.map(p => ({ id: p.id, name: p.name, host: p === room.host, ready: p.ready, online: !!p.ws, job: p.job }));
+  const list = room.players.map(p => ({ id: p.id, name: p.name, host: p === room.host, ready: p.ready, online: !!p.ws, job: p.job, profile: !!p.profiled }));
   const jobs = room.started ? Object.fromEntries(JOBS.filter(j => room.players.some(p => p.job === j.name)).map(j => [j.name, j])) : null;
   for (const p of room.players) {
     send(p, { type: 'room', code: room.code, players: list, you: p.id, minPlayers: MIN_PLAYERS, maxPlayers: JOBS.length,
@@ -94,9 +95,28 @@ new WebSocketServer({ server: http }).on('connection', ws => {
     if (!me) return;
     const room = rooms.get(me.room);
 
+    // ---------- 프로필 ----------
+    if (msg.type === 'profile:me') {
+      const prof = profiles.getByKey(msg.key);
+      return send(me, { type: 'profile:me', profile: prof && profiles.ownView(prof) });
+    }
+    if (msg.type === 'profile:save') {
+      const res = profiles.save(msg.key, msg);
+      if (res.error) return send(me, { type: 'profile:error', message: res.error });
+      return send(me, { type: 'profile:me', key: res.profile.key, profile: profiles.ownView(res.profile), saved: true });
+    }
+    if (msg.type === 'profile:find') return send(me, { type: 'profile:list', q: msg.q, results: profiles.search(msg.q) });
+    if (msg.type === 'profile:view') {
+      const prof = profiles.getByName(msg.nickname);
+      return send(me, { type: 'profile:view', nickname: msg.nickname, profile: prof && profiles.publicView(prof) });
+    }
+
     if (msg.type === 'create' || msg.type === 'join') {
-      const name = String(msg.name ?? '').trim().slice(0, MAX_NAME);
+      // 프로필이 있으면 프로필 닉네임으로 들어간다. 없으면 게스트 (등록된 닉네임은 쓸 수 없음)
+      const prof = profiles.getByKey(msg.key);
+      const name = prof ? prof.nickname : String(msg.name ?? '').trim().slice(0, MAX_NAME);
       if (!name) return err(me, '닉네임을 입력하세요.');
+      if (!prof && profiles.getByName(name)) return err(me, '프로필로 등록된 닉네임입니다. 다른 닉네임을 쓰거나 그 프로필로 접속하세요.');
       const code = msg.type === 'create' ? newCode() : String(msg.code ?? '').trim().toUpperCase();
       const target = msg.type === 'create' ? { code, host: me, players: [], started: false } : rooms.get(code);
       if (!target) return err(me, '존재하지 않는 방입니다.');
@@ -108,7 +128,7 @@ new WebSocketServer({ server: http }).on('connection', ws => {
       if (room) remove(me);
       if (target.players.length >= JOBS.length && !seat) return err(me, `방이 가득 찼습니다. (최대 ${JOBS.length}명)`);
       if (msg.type === 'create') rooms.set(code, target);
-      me.name = name; me.room = code;
+      me.name = name; me.room = code; me.profiled = !!prof;
       if (seat) {
         clearTimeout(seat.timer); players.delete(seat.token);
         me.ready = seat.ready; me.job = seat.job; me.role = seat.role;
