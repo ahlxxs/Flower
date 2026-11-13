@@ -16,6 +16,10 @@ const players = new Map(); // token -> { id, token, name, room, ready, ws, timer
 const demonCount = n => Math.max(1, Math.floor(n / 4));
 
 const http = createServer(async (req, res) => {
+  if (req.url === '/health') { // 상태 확인용: 프로필 저장 위치와 개수 (비밀 값은 내보내지 않음)
+    res.writeHead(200, { 'content-type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, storage: profiles.storage, profiles: profiles.count() }));
+  }
   // 한 페이지짜리 앱: 모든 경로에 index.html (초대 링크는 /?room=ABCDE)
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
   res.end(await readFile(new URL('./public/index.html', import.meta.url)));

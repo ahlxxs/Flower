@@ -24,6 +24,7 @@ const byKey = new Map();  // key -> profile
 const byName = new Map(); // 소문자 닉네임 -> key
 const db = process.env.DATABASE_URL ? new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 }) : null;
 let loaded;
+export const storage = db ? 'database' : 'file'; // /health에서 보여 줌
 if (db) {
   await db.query('CREATE TABLE IF NOT EXISTS profiles (key text PRIMARY KEY, data jsonb NOT NULL)');
   loaded = (await db.query('SELECT data FROM profiles')).rows.map(r => r.data);
@@ -48,6 +49,7 @@ function persist(p) {
   }, 500);
 }
 
+export const count = () => byKey.size;
 export const getByKey = key => byKey.get(String(key ?? '')) || null;
 export const getByName = name => byKey.get(byName.get(String(name ?? '').trim().toLowerCase())) || null;
 export const titlesOf = p => TITLES.filter(t => t.test(p));
