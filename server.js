@@ -1,7 +1,8 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomInt } from 'node:crypto';
 import { WebSocketServer } from 'ws';
+import { JOBS } from './jobs.js';
 
 const PORT = process.env.PORT || 3000;
 const MAX_NAME = 12;
@@ -9,7 +10,9 @@ const MIN_PLAYERS = 2; // ponytail: 테스트용 최소 인원. 규칙이 정해
 const GRACE_MS = Number(process.env.GRACE_MS) || 10 * 60 * 1000; // 연결이 끊긴 자리를 지켜 주는 시간
 // ponytail: 방과 플레이어는 메모리에만 있다. 서버가 재시작되면 모두 사라진다. 필요해지면 Redis/DB로.
 const rooms = new Map();   // code -> { code, host, players: [player], started }
-const players = new Map(); // token -> { id, token, name, room, ready, ws, timer }
+const players = new Map(); // token -> { id, token, name, room, ready, ws, timer, job, role }
+// ponytail: 마왕군 수는 임시로 4명당 1명(최소 1명). 규칙이 정해지면 바꾼다.
+const demonCount = n => Math.max(1, Math.floor(n / 4));
 
 const http = createServer(async (req, res) => {
   // 한 페이지짜리 앱: 모든 경로에 index.html (초대 링크는 /?room=ABCDE)
@@ -18,6 +21,7 @@ const http = createServer(async (req, res) => {
 });
 
 const id = n => randomBytes(n).toString('hex');
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = randomInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 function newCode() {
   const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 0/O, 1/I 혼동 없는 글자만
   let code;
@@ -30,12 +34,16 @@ const send = (p, msg) => p.ws?.readyState === 1 && p.ws.send(JSON.stringify(msg)
 const err = (p, message) => send(p, { type: 'error', message });
 
 // 방장을 뺀 전원이 준비하고, 최소 인원이 모이면 시작할 수 있다
-const canStart = room => room.players.length >= MIN_PLAYERS && room.players.every(p => p === room.host || p.ready);
+const canStart = room => room.players.length >= MIN_PLAYERS && room.players.length <= JOBS.length
+  && room.players.every(p => p === room.host || p.ready);
 
 function broadcast(room) {
-  const list = room.players.map(p => ({ id: p.id, name: p.name, host: p === room.host, ready: p.ready, online: !!p.ws }));
+  // 직업은 공개, 진영은 본인에게만 보낸다
+  const list = room.players.map(p => ({ id: p.id, name: p.name, host: p === room.host, ready: p.ready, online: !!p.ws, job: p.job }));
+  const jobs = room.started ? Object.fromEntries(JOBS.filter(j => room.players.some(p => p.job === j.name)).map(j => [j.name, j])) : null;
   for (const p of room.players) {
-    send(p, { type: 'room', code: room.code, players: list, you: p.id, minPlayers: MIN_PLAYERS, canStart: canStart(room), started: room.started });
+    send(p, { type: 'room', code: room.code, players: list, you: p.id, minPlayers: MIN_PLAYERS, maxPlayers: JOBS.length,
+      canStart: canStart(room), started: room.started, role: p.role, jobs });
   }
 }
 
@@ -98,15 +106,16 @@ new WebSocketServer({ server: http }).on('connection', ws => {
       if (seat?.ws) return err(me, '이미 같은 닉네임이 방에 있습니다.');
       if (target.started && !seat) return err(me, '이미 게임이 시작된 방입니다.');
       if (room) remove(me);
+      if (target.players.length >= JOBS.length && !seat) return err(me, `방이 가득 찼습니다. (최대 ${JOBS.length}명)`);
       if (msg.type === 'create') rooms.set(code, target);
       me.name = name; me.room = code;
       if (seat) {
         clearTimeout(seat.timer); players.delete(seat.token);
-        me.ready = seat.ready;
+        me.ready = seat.ready; me.job = seat.job; me.role = seat.role;
         target.players[target.players.indexOf(seat)] = me;
         if (target.host === seat) target.host = me;
       } else {
-        me.ready = false;
+        me.ready = false; me.job = null; me.role = null;
         target.players.push(me);
       }
       broadcast(target); // started 값으로 클라이언트가 게임 화면으로 바로 간다
@@ -118,7 +127,11 @@ new WebSocketServer({ server: http }).on('connection', ws => {
       if (!room || room.host !== me || room.started) return;
       if (!canStart(room)) return err(me, '모두 준비해야 시작할 수 있습니다.');
       room.started = true;
-      for (const p of room.players) send(p, { type: 'start' });
+      const jobs = shuffle(JOBS.map(j => j.name));
+      const demons = new Set(shuffle([...room.players]).slice(0, demonCount(room.players.length)));
+      room.players.forEach((p, i) => { p.job = jobs[i]; p.role = demons.has(p) ? 'demon' : 'hero'; });
+      for (const p of room.players) send(p, { type: 'start' }); // 먼저 보내야 클라이언트가 로딩부터 띄운다
+      broadcast(room);
     } else if (msg.type === 'leave') {
       remove(me);
       send(me, { type: 'left' });
