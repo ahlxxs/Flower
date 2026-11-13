@@ -1,5 +1,6 @@
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
 import { randomBytes, randomInt } from 'node:crypto';
 import { WebSocketServer } from 'ws';
 import { JOBS } from './jobs.js';
@@ -16,6 +17,20 @@ const players = new Map(); // token -> { id, token, name, room, ready, ws, timer
 const demonCount = n => Math.max(1, Math.floor(n / 4));
 
 const http = createServer(async (req, res) => {
+  // 배경 음악: /audio/이름.mp3 (아이폰 사파리는 Range 요청을 지원해야 재생된다)
+  const audio = req.url.match(/^\/audio\/([\w-]+\.mp3)$/);
+  if (audio) {
+    const file = new URL(`./public/audio/${audio[1]}`, import.meta.url);
+    const size = await stat(file).then(s => s.size, () => 0);
+    if (!size) { res.writeHead(404); return res.end(); }
+    const head = { 'content-type': 'audio/mpeg', 'accept-ranges': 'bytes', 'cache-control': 'public, max-age=86400' };
+    const m = (req.headers.range || '').match(/bytes=(\d*)-(\d*)/);
+    if (!m) { res.writeHead(200, { ...head, 'content-length': size }); return createReadStream(file).pipe(res); }
+    const start = m[1] ? +m[1] : size - +m[2], end = m[1] && m[2] ? Math.min(+m[2], size - 1) : size - 1;
+    if (start >= size || start > end) { res.writeHead(416, { 'content-range': `bytes */${size}` }); return res.end(); }
+    res.writeHead(206, { ...head, 'content-length': end - start + 1, 'content-range': `bytes ${start}-${end}/${size}` });
+    return createReadStream(file, { start, end }).pipe(res);
+  }
   if (req.url === '/health') { // 상태 확인용: 프로필 저장 위치와 개수 (비밀 값은 내보내지 않음)
     res.writeHead(200, { 'content-type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, storage: profiles.storage, profiles: profiles.count() }));

@@ -670,7 +670,7 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
       <div class="row"><label for="sMute">음소거</label><span></span><input class="switch" type="checkbox" id="sMute"></div>
       <div class="row"><label for="sBgm">배경 음악</label><input type="range" id="sBgm" min="0" max="100" step="5"><output for="sBgm" id="oBgm"></output></div>
       <div class="row"><label for="sSfx">효과음</label><input type="range" id="sSfx" min="0" max="100" step="5"><output for="sSfx" id="oSfx"></output></div>
-      <p style="margin-top:1rem;font-size:.78rem;color:var(--dim)">배경 음악과 효과음은 곧 추가됩니다. 설정은 이 기기에 저장되어 다음 접속에도 유지됩니다.</p>
+      <p style="margin-top:1rem;font-size:.78rem;color:var(--dim)">배경 음악은 홈 화면에서 나옵니다. 브라우저 정책상 화면을 한 번 누른 뒤부터 재생됩니다. 효과음은 곧 추가됩니다. 설정은 이 기기에 저장됩니다.</p>
     </section>
     <section class="pane" id="tab-controls" role="tabpanel" hidden>
       <h3>방과 대기실</h3>
@@ -872,7 +872,7 @@ connect();
 let pending = loading(STAGES, 2800); // 처음 접속
 const bootFail = setTimeout(() => pending?.fail('서버에 연결하지 못했습니다. 잠시 후 새로고침 해주세요.'), 20000);
 Promise.all([firstWelcome, document.fonts.ready]).then(() => pending.done(() => {
-  pending = null; booting = false; clearTimeout(bootFail);
+  pending = null; booting = false; clearTimeout(bootFail); syncBgm();
   if (still) $('logo').querySelectorAll('animateTransform').forEach(a => a.remove()); // 움직임 줄이기: 광택 끔
   if (room) syncView();
   else if (preview) { // 혼자서 게임 화면을 보는 미리보기: 주소 끝에 #preview
@@ -903,6 +903,7 @@ function playLogo() {
 function view(name) {
   if (name === 'home' && $('frame').dataset.view !== 'home') playLogo();
   $('frame').dataset.view = name;
+  syncBgm();
   $('lobby').hidden = name !== 'lobby';
   $('game').hidden = name !== 'game';
   if (!preview) history.replaceState(null, '', name === 'home' ? '/' : `/?room=${room.code}`);
@@ -1022,6 +1023,40 @@ $('settings').addEventListener('click', e => { // 창 바깥(배경)을 누르�
   const r = $('settings').getBoundingClientRect();
   if (e.target === $('settings') && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) $('settings').close();
 });
+
+/* ---------- 배경 음악: 홈 화면에서만 ----------
+   브라우저는 사용자가 화면을 한 번 누르기 전엔 소리를 막으므로, 첫 터치/키 입력에 맞춰 시작한다.
+   볼륨은 Web Audio로 조절한다 (아이폰은 audio.volume 을 바꿀 수 없음). */
+const bgm = new Audio('/audio/home.mp3');
+bgm.loop = true; bgm.preload = 'none';
+let actx, gain, pauseT;
+const bgmLevel = () => settings.mute ? 0 : settings.bgm / 100;
+const bgmWanted = () => !booting && $('frame').dataset.view === 'home' && document.visibilityState === 'visible' && bgmLevel() > 0;
+function unlockAudio() {
+  if (actx) return;
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+  gain = actx.createGain(); gain.gain.value = 0;
+  actx.createMediaElementSource(bgm).connect(gain).connect(actx.destination);
+  removeEventListener('pointerdown', unlockAudio); removeEventListener('keydown', unlockAudio);
+  syncBgm();
+}
+addEventListener('pointerdown', unlockAudio); addEventListener('keydown', unlockAudio);
+function syncBgm() { // 지금 화면과 설정에 맞춰 서서히 켜거나 끈다
+  if (!actx) return;
+  const t = actx.currentTime, g = gain.gain;
+  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+  clearTimeout(pauseT);
+  if (bgmWanted()) {
+    actx.resume();
+    if (bgm.paused) bgm.play().catch(() => {});
+    g.linearRampToValueAtTime(bgmLevel(), t + 1.2);
+  } else {
+    g.linearRampToValueAtTime(0, t + .8);
+    pauseT = setTimeout(() => bgmWanted() || bgm.pause(), 900);
+  }
+}
+addEventListener('arcana:settings', syncBgm);
+document.addEventListener('visibilitychange', syncBgm); // 다른 앱으로 가면 멈춤
 
 // 전체 화면 (브라우저 주소창·탭까지 숨김). 지원하지 않는 기기(아이폰 등)에서는 버튼을 숨긴다
 document.querySelectorAll('.fs').forEach(b => {
