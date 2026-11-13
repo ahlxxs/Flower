@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ARCANA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;500&family=Playfair+Display:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;500&family=Playfair+Display:wght@400;500&family=Nanum+Myeongjo:wght@800&display=swap">
 <style>
 html, body { height: 100%; margin: 0; }
 /* 화면 크기에 맞춰 UI 전체를 키운다: 1440×860 기준 16px. 휴대폰(760px 이하)은 16px 고정 */
@@ -390,15 +390,7 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
 .pile b { font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
 .deck { justify-self: end; }
 .piles-r { justify-self: start; display: flex; gap: 1.125rem; }
-.cardback, .cardface { width: clamp(3.5rem, 6.5vw, 5.25rem); aspect-ratio: 5 / 7; border-radius: 0.4375rem; }
-.cardback {
-  display: grid; place-items: center; background: #10201a; border: 1px solid var(--amber);
-  box-shadow: inset 0 0 0 0.25rem #10201a, inset 0 0 0 0.3125rem #e8c27a66;
-}
-.cardback::before { content: ''; width: 34%; aspect-ratio: 32 / 29; background: var(--amber);
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M16 29 2.6 15.6A8 8 0 0 1 16 4.3 8 8 0 0 1 29.4 15.6Z'/%3E%3C/svg%3E") center / contain no-repeat;
-          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M16 29 2.6 15.6A8 8 0 0 1 16 4.3 8 8 0 0 1 29.4 15.6Z'/%3E%3C/svg%3E") center / contain no-repeat; }
-.stack { box-shadow: inset 0 0 0 0.25rem #10201a, inset 0 0 0 0.3125rem #e8c27a66, 0.1875rem 0.1875rem 0 -1px #10201a, 0.1875rem 0.1875rem 0 0 #e8c27a66, 0.375rem 0.375rem 0 -1px #10201a, 0.375rem 0.375rem 0 0 #e8c27a44; }
+.table .ac { --cw: clamp(3.5rem, 6.5vw, 5.25rem); }
 .altar { position: relative; width: clamp(10.625rem, 24vh, 15.625rem); aspect-ratio: 1; display: grid; place-items: center; text-align: center; }
 .altar > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .altar .ring { fill: none; stroke: #f0cf7a; stroke-opacity: .55; }
@@ -411,17 +403,47 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
   font-size: .75rem; line-height: 1.5; color: var(--fog); background: #0a1410a6; border-left: 1px solid #e8c27a33; }
 .log li::marker { color: var(--amber); }
 
-.cardface {
-  position: relative; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; padding: 0.5rem 0.375rem; text-align: center;
-  background: linear-gradient(170deg, #f4ead2, #dccca4); color: #2a2216; border: 1px solid #b89a5e;
-  box-shadow: inset 0 0 0 0.1875rem #f4ead2, inset 0 0 0 0.25rem var(--tone, #b89a5e);
+/* AC:START ---------- 카드 디자인 ----------
+   앞면: 숯색 바탕 + 가는 금선 테두리와 매듭 모서리 / 뒷면: 검정 + 오목한 모서리의 이중 금테 + 세공 하트.
+   카드 크기는 --cw(너비) 하나로 정하고, 안쪽은 모두 em(= 너비의 10%)으로 비례한다. */
+.ac {
+  --gold: #d2ad63; --gold-hi: #f4dfa2; --attr: #a9b0aa;
+  position: relative; flex: none; width: var(--cw, 12rem); aspect-ratio: 5 / 8; font-size: calc(var(--cw, 12rem) / 10);
+  border-radius: .3em; overflow: hidden; container-type: inline-size; user-select: none; text-align: center;
+  box-shadow: 0 .3em 1em #0009;
 }
-.cardface svg { width: 34%; margin-top: 0.375rem; fill: none; stroke: var(--tone); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.cardface .cn-name { align-self: center; font-weight: 500; font-size: .9rem; letter-spacing: .1em; }
-.cardface .cn-text { font-size: .62rem; line-height: 1.35; color: #5a4c33; }
-.cardface.sm .cn-text { display: none; }
-.t-attack { --tone: #b8323f; } .t-defend { --tone: #2a7d86; } .t-seal { --tone: #9a7a2e; }
-.t-seal svg { fill: var(--tone); }
+.ac-frame { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: url(#acGold); stroke-width: 1.1; pointer-events: none; }
+.ac-frame * { vector-effect: non-scaling-stroke; }
+.ac-front {
+  display: grid; grid-template-rows: auto auto auto 1fr auto; gap: .32em; padding: 1.15em .95em 1.05em; color: #ece3cc;
+  background: radial-gradient(circle at 20% 15%, #ffffff0a, transparent 40%), radial-gradient(#ffffff09 .5px, transparent .6px) 0 0 / .55em .55em,
+    radial-gradient(#00000033 .6px, transparent .7px) .27em .3em / .7em .7em, #1b1a18;
+}
+.ac-top { display: flex; justify-content: space-between; align-items: center; font-size: .5em; letter-spacing: .12em; color: var(--gold); }
+.ac-kind { display: flex; align-items: center; gap: .35em; }
+.ac-kind svg { width: 1.3em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ac-attr { display: flex; align-items: center; gap: .35em; color: var(--attr); }
+.ac-attr::before { content: ''; width: .55em; height: .55em; rotate: 45deg; background: var(--attr); box-shadow: 0 0 .5em var(--attr); }
+.ac-name { margin: .1em 0 0; font-family: 'Nanum Myeongjo', var(--didone, serif); font-weight: 800; font-size: .95em; line-height: 1.25; color: var(--gold-hi); text-wrap: balance; letter-spacing: .02em; }
+.ac-art {
+  position: relative; aspect-ratio: 1 / .78; display: grid; place-items: center; border: 1px solid #d2ad6399;
+  border-radius: 50% 50% .25em .25em / 38% 38% .25em .25em;
+  background: radial-gradient(ellipse at 50% 60%, color-mix(in srgb, var(--attr) 28%, transparent), transparent 70%), #0f0e0d;
+}
+.ac-art svg { width: 42%; fill: none; stroke: var(--gold); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 .4em color-mix(in srgb, var(--attr) 60%, transparent)); }
+.ac-text { margin: 0; font-size: .47em; line-height: 1.55; color: #d6cdb6; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 9; word-break: keep-all; overflow-wrap: anywhere; }
+.ac-foot { display: flex; justify-content: center; gap: .35em; flex-wrap: wrap; font-size: .42em; }
+.ac-foot span { padding: .15em .6em; border-radius: 1em; border: 1px solid #d2ad6366; color: var(--gold-hi); white-space: nowrap; }
+.a-선 { --attr: #f3e7b8; } .a-악 { --attr: #e8576a; } .a-일반 { --attr: #a9b0aa; }
+.a-이타심 { --attr: #7fc8a8; } .a-이기심 { --attr: #eb9a4b; } .a-환상 { --attr: #b6a6ff; }
+.ac-back { display: grid; place-items: center; background: radial-gradient(ellipse at 50% 45%, #15130f, #050505 70%); }
+.ac-back .heart { width: 34%; fill: none; stroke: url(#acGold); stroke-width: 1.2; stroke-linejoin: round; filter: drop-shadow(0 0 .5em #d2ad6355); }
+.ac.stack { box-shadow: .18em .18em 0 -1px #050505, .18em .18em 0 0 #d2ad6355, .36em .36em 0 -1px #050505, .36em .36em 0 0 #d2ad6333, 0 .3em 1em #0009; overflow: visible; }
+.ac.stack > * { border-radius: inherit; }
+@container (max-width: 8.5rem) { .ac-text { -webkit-line-clamp: 4; } }
+@container (max-width: 7rem) { .ac-text, .ac-foot { display: none; } .ac-name { font-size: 1.15em; } }
+@container (max-width: 5.6rem) { .ac-top { display: none; } .ac-front { padding: .9em .8em; } .ac-name { font-size: 1.35em; } }
+/* AC:END */
 
 .g-me { display: grid; grid-template-columns: 13.75rem 1fr 13.75rem; gap: 1rem; align-items: end; }
 .me-info { padding: 1.125rem 1.125rem 1rem; border-radius: 0.5rem; background: #0a1410d9; border: 1px solid #e8c27a33; display: grid; gap: 0.5rem; }
@@ -432,10 +454,10 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
 .hand { list-style: none; margin: 0; padding: 1.625rem 0 0.25rem; display: flex; justify-content: center; }
 .hand li + li { margin-left: -10px; }
 .hand button { border: 0; padding: 0; background: none; cursor: pointer; display: block; transition: transform .2s; transform: rotate(var(--rot)) translateY(var(--dy)); transform-origin: 50% 120%; }
-.hand .cardface { width: clamp(4.875rem, 8.4vw, 7rem); }
+.hand .ac { --cw: clamp(5.5rem, 8.4vw, 7.5rem); }
 .hand button:hover, .hand button:focus-visible { transform: rotate(var(--rot)) translateY(calc(var(--dy) - 0.625rem)); outline: none; }
 .hand button[aria-pressed="true"] { transform: rotate(0) translateY(-1.4rem); }
-.hand button[aria-pressed="true"] .cardface { box-shadow: inset 0 0 0 0.1875rem #f4ead2, inset 0 0 0 0.25rem var(--tone), 0 0 0 0.125rem var(--amber), 0 0 1.625rem #e8c27a99; }
+.hand button[aria-pressed="true"] .ac { box-shadow: 0 0 0 0.125rem var(--amber), 0 0 1.625rem #e8c27a99; }
 .me-act { display: grid; gap: 0.5rem; }
 .g-note { margin: 0; text-align: center; font-size: .68rem; color: var(--dim); letter-spacing: .08em; }
 
@@ -452,14 +474,13 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
   .avatar { width: 1.875rem; height: 1.875rem; font-size: .8rem; }
   .table { gap: 0.625rem; }
   .altar { width: 8.5rem; }
-  .table .cardback, .table .cardface { width: 2.875rem; }
-  .cardface.sm .cn-name { font-size: .72rem; }
+  .table .ac { --cw: 2.875rem; }
   .piles-r { gap: 0.625rem; }
   .g-me { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
   .hand { grid-column: 1 / -1; grid-row: 1; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; padding: 1.875rem 0.5rem 1rem; scrollbar-width: none; }
   .pile { font-size: .66rem; }
   .me-act .btn { white-space: nowrap; font-size: .85rem; }
-  .hand .cardface { width: 4.625rem; }
+  .hand .ac { --cw: 4.8rem; }
   .hand li + li { margin-left: 0.375rem; }
   .hand button, .hand button:hover, .hand button:focus-visible { transform: none; }
   .hand button[aria-pressed="true"] { transform: translateY(-1.1rem); }
@@ -478,6 +499,7 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs><linearGradient id="acGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b38a45"/><stop offset=".5" stop-color="#f4dfa2"/><stop offset="1" stop-color="#b38a45"/></linearGradient></defs>
   <symbol id="corner" viewBox="0 0 120 120" fill="none" stroke="currentColor">
     <path d="M4 120V20Q4 4 20 4H120" stroke-width="1.4"/>
     <path d="M12 92V28Q12 12 28 12H92" stroke-width=".7"/>
@@ -603,7 +625,7 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
     </div>
     <ul class="opps" id="opps" aria-label="다른 플레이어"></ul>
     <div class="table">
-      <div class="pile deck"><div class="cardback stack"></div><span>덱 <b id="gDeck"></b></span></div>
+      <div class="pile deck"><span class="back-slot"></span><span>덱 <b id="gDeck"></b></span></div>
       <div class="altar" aria-label="제단">
         <svg viewBox="0 0 200 200" aria-hidden="true">
           <circle class="ring" cx="100" cy="100" r="96" stroke-width="1.2"/>
@@ -615,7 +637,7 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
       </div>
       <div class="piles-r">
         <div class="pile"><div id="gUp"></div><span>공개 버림</span></div>
-        <div class="pile"><div class="cardback stack"></div><span>피해 버림 <b id="gDown"></b></span></div>
+        <div class="pile"><span class="back-slot"></span><span>피해 버림 <b id="gDown"></b></span></div>
       </div>
       <ol class="log" id="gLog" aria-label="최근 기록"></ol>
     </div>
@@ -633,7 +655,7 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
         <button class="btn ghost" data-soon type="button">턴 종료</button>
       </div>
     </div>
-    <p class="g-note">레이아웃 미리보기 · 직업과 카드, 숫자는 모두 예시입니다</p>
+    <p class="g-note" id="gNote">레이아웃 미리보기 · 손패는 실제 카드에서 무작위로 뽑은 예시입니다</p>
   </section>
 
   <div class="foot">
@@ -909,7 +931,8 @@ connect();
 
 let pending = loading(STAGES, 2800); // 처음 접속
 const bootFail = setTimeout(() => pending?.fail('서버에 연결하지 못했습니다. 잠시 후 새로고침 해주세요.'), 20000);
-Promise.all([firstWelcome, document.fonts.ready]).then(() => pending.done(() => {
+const cardsLoaded = fetch('/cards.json').then(r => r.json()).then(d => CARD_DB = d).catch(() => {}); // 카드 목록
+Promise.all([firstWelcome, document.fonts.ready, cardsLoaded]).then(() => pending.done(() => {
   pending = null; booting = false; clearTimeout(bootFail); syncBgm();
   if (still) $('logo').querySelectorAll('animateTransform').forEach(a => a.remove()); // 움직임 줄이기: 광택 끔
   if (room) syncView();
@@ -950,29 +973,56 @@ function view(name) {
 /* ---------- 게임 화면 (레이아웃 단계: 예시 데이터로 그린다) ---------- */
 // ponytail: 규칙 엔진 전까지 mockGame이 상태를 만든다. 서버가 같은 모양의 상태를 보내면 renderGame만 남기면 된다.
 const preview = location.hash === '#preview';
-const ICON = {
-  attack: '<svg viewBox="0 0 24 24"><path d="M14.5 4H20v5.5L9 20.5 3.5 15Z"/><path d="M6 12l6 6M3 21l3-3"/></svg>',
-  defend: '<svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.6 8-8 9-4.4-1-8-4-8-9V6Z"/></svg>',
-  seal: '<svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4Z"/></svg>',
+// AC:START ---------- 카드 그리기 (카드 데이터 → HTML) ----------
+const AC_ICON = { // 분류별 그림 (카드 일러스트가 생기기 전까지 쓰는 문양)
+  행동: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  물체: '<path d="M6 3h12l3 6-9 12L3 9z"/><path d="M3 9h18M9 3 7.5 9 12 21l4.5-12L15 3"/>',
+  생명체: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><path d="M12 7.5c-1.2 1.8-1.2 7.2 0 9 1.2-1.8 1.2-7.2 0-9Z"/>',
+  장소: '<path d="M4 21V9l3-2 3 2V5l2-2 2 2v4l3-2 3 2v12Z"/><path d="M10 21v-4a2 2 0 0 1 4 0v4"/>',
+  전용: '<path d="M3 18 5 7l4.5 5L12 4l2.5 8L19 7l2 11Z"/><path d="M3 21h18"/>',
+  제물: '<path d="M12 3c2 3 3 4.5 3 6.5A3 3 0 0 1 9 9.5C9 7.5 10 6 12 3Z"/><path d="M8 13h8v8H8z"/><path d="M5 21h14"/>',
 };
-const CARDS = {
-  attack: ['공격', '한 명에게 피해 1'],
-  defend: ['방어', '공격 한 번을 막는다'],
-  seal: ['봉인', '제단에 오르면 봉인 진행'],
-};
-const PREVIEW_JOBS = ['용사', '마법사', '사제', '도적', '궁수', '상인']; // #preview 전용
-function cardFace(type, small) {
-  const [name, text] = CARDS[type];
-  return `<div class="cardface t-${type}${small ? ' sm' : ''}">${ICON[type]}<span class="cn-name">${name}</span><span class="cn-text">${text}</span></div>`;
+const acEsc = s => String(s).replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
+// 앞면 테두리: 오목한 모서리 + 매듭
+const AC_FRONT_FRAME = `<svg class="ac-frame" viewBox="0 0 100 160" preserveAspectRatio="none" aria-hidden="true">
+  <path d="M11 4.5H89A6.5 6.5 0 0 0 95.5 11V149A6.5 6.5 0 0 0 89 155.5H11A6.5 6.5 0 0 0 4.5 149V11A6.5 6.5 0 0 0 11 4.5Z"/>
+  ${[[0, 0, 1, 1], [100, 0, -1, 1], [0, 160, 1, -1], [100, 160, -1, -1]].map(([x, y, sx, sy]) =>
+    `<g transform="translate(${x} ${y}) scale(${sx} ${sy})"><circle cx="3.6" cy="8.6" r="2.4"/><circle cx="8.6" cy="3.6" r="2.4"/><circle cx="4" cy="4" r="1.3"/></g>`).join('')}
+</svg>`;
+// 뒷면 테두리: 오목한 모서리의 이중 금테 + 모서리 별
+const AC_BACK_FRAME = `<svg class="ac-frame" viewBox="0 0 100 160" preserveAspectRatio="none" aria-hidden="true">
+  <path d="M12 5H88A7 7 0 0 0 95 12V148A7 7 0 0 0 88 155H12A7 7 0 0 0 5 148V12A7 7 0 0 0 12 5Z"/>
+  <path d="M13.5 8H86.5A5.5 5.5 0 0 0 92 13.5V146.5A5.5 5.5 0 0 0 86.5 152H13.5A5.5 5.5 0 0 0 8 146.5V13.5A5.5 5.5 0 0 0 13.5 8Z"/>
+  ${[[3, 3], [97, 3], [3, 157], [97, 157]].map(([x, y]) => `<path fill="url(#acGold)" stroke="none" d="M${x} ${y - 2.6}L${x + .6} ${y - .6}L${x + 2.6} ${y}L${x + .6} ${y + .6}L${x} ${y + 2.6}L${x - .6} ${y + .6}L${x - 2.6} ${y}L${x - .6} ${y - .6}Z"/>`).join('')}
+</svg>`;
+// 세공 하트 (손패 = 생명)
+const AC_HEART = '<svg class="heart" viewBox="0 0 40 36" aria-hidden="true"><path d="M20 34 3.5 16V9.5L9 4h6l5 5 5-5h6l5.5 5.5V16Z"/><path d="M3.5 16 20 20l16.5-4M20 9v25M9 4l5.5 12.5M31 4l-5.5 12.5M15 4l5 5M25 4l-5 5"/></svg>';
+
+function cardHTML(card, extra = '') {
+  const foot = [card.stat, card.job && `${card.job} 전용`, ...(card.tags || []).filter(t => t !== card.kind)].filter(Boolean);
+  return `<div class="ac ac-front a-${card.attr} ${extra}">${AC_FRONT_FRAME}
+    <div class="ac-top"><span class="ac-kind"><svg viewBox="0 0 24 24">${AC_ICON[card.kind]}</svg>${card.kind}</span><span class="ac-attr">${card.attr}</span></div>
+    <h4 class="ac-name">${acEsc(card.name)}</h4>
+    <div class="ac-art"><svg viewBox="0 0 24 24">${AC_ICON[card.kind]}</svg></div>
+    <p class="ac-text">${acEsc(card.text)}</p>
+    <div class="ac-foot">${foot.map(f => `<span>${acEsc(f)}</span>`).join('')}</div>
+  </div>`;
 }
+const cardBackHTML = (extra = '') => `<div class="ac ac-back ${extra}" role="img" aria-label="카드 뒷면">${AC_BACK_FRAME}${AC_HEART}</div>`;
+// AC:END
+
+let CARD_DB = []; // 서버의 /cards.json
+const PREVIEW_JOBS = ['용사', '마법사', '사제', '도적', '궁수', '상인']; // #preview 전용
+document.querySelectorAll('.back-slot').forEach(el => el.outerHTML = cardBackHTML('stack'));
+const pickCard = () => CARD_DB[Math.random() * CARD_DB.length | 0];
 function mockGame(players, you) {
   const meIdx = players.findIndex(p => p.id === you);
   const seated = [...players.slice(meIdx), ...players.slice(0, meIdx)]; // 나부터 시계 방향
   return {
-    round: 1, phase: '행동 페이즈', turn: players[0].id, deck: 38, down: 3, up: 'attack', seal: [2, 5], // 방장부터 시작
+    round: 1, phase: '행동 페이즈', turn: players[0].id, deck: 38, down: 3, up: pickCard(), seal: [2, 5], // 방장부터 시작
     you, role: room.role || 'hero',
     players: seated.map((p, i) => ({ id: p.id, name: p.name, profile: p.profile, online: p.online !== false, job: p.job || PREVIEW_JOBS[i % 6], hand: i === 3 ? 0 : [5, 4, 5, 3, 4, 2][i % 6], role: i === 3 ? 'demon' : null })),
-    hand: ['attack', 'defend', 'seal', 'attack', 'defend'],
+    hand: Array.from({ length: 5 }, pickCard), // 예시: 실제 카드에서 무작위
     log: ['라운드 1이 시작되었습니다.', '제단에 봉인 카드 2장이 남았습니다.', '당신의 차례입니다.'],
   };
 }
@@ -993,7 +1043,7 @@ function renderGame(g) {
     </li>`;
   }).join('');
   $('gDeck').textContent = g.deck; $('gDown').textContent = g.down;
-  $('gUp').innerHTML = cardFace(g.up, true);
+  $('gUp').innerHTML = cardHTML(g.up);
   $('gSeal').textContent = `${g.seal[0]} / ${g.seal[1]}`;
   $('slots').innerHTML = Array.from({ length: g.seal[1] }, (_, i) => {
     const a = -90 + i * 360 / g.seal[1];
@@ -1003,8 +1053,8 @@ function renderGame(g) {
   $('gMe').textContent = me.name + ' (나)'; $('gJob').textContent = me.job; $('gJob').dataset.job = me.job;
   $('gHp').innerHTML = hearts(g.hand.length);
   const mid = (g.hand.length - 1) / 2;
-  $('hand').innerHTML = g.hand.map((t, i) => `<li><button type="button" aria-pressed="false" aria-label="${CARDS[t][0]}: ${CARDS[t][1]}"
-    style="--rot:${(i - mid) * 4}deg;--dy:${Math.abs(i - mid) * .3}rem">${cardFace(t)}</button></li>`).join('');
+  $('hand').innerHTML = g.hand.map((c, i) => `<li><button type="button" aria-pressed="false" aria-label="${acEsc(c.name)}: ${acEsc(c.text)}"
+    style="--rot:${(i - mid) * 4}deg;--dy:${Math.abs(i - mid) * .3}rem">${cardHTML(c)}</button></li>`).join('');
   $('useCard').disabled = true;
 }
 // 게임 시작 연출 (약 3.2초). 끝나면 then()으로 게임 화면과 운명 공개를 띄우고 연출을 걷어 낸다
@@ -1150,6 +1200,8 @@ $('hand').onclick = e => {
   $('hand').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
   b.setAttribute('aria-pressed', on);
   picked = on ? b : null;
+  const card = picked && game.hand[[...$('hand').children].indexOf(b.parentElement)];
+  $('gNote').textContent = card ? `${card.name} · ${card.text}` : '카드를 누르면 설명이 여기에 나옵니다.'; // 손패 카드는 작아서 전체 설명은 아래에
   $('useCard').disabled = !picked || game.turn !== game.you;
 };
 let roleT;

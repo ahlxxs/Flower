@@ -5,6 +5,8 @@ import { randomBytes, randomInt } from 'node:crypto';
 import { WebSocketServer } from 'ws';
 import { JOBS } from './jobs.js';
 import * as profiles from './profiles.js';
+import { CARDS } from './cards.js';
+const CARDS_JSON = JSON.stringify(CARDS);
 
 const PORT = process.env.PORT || 3000;
 const MAX_NAME = 12;
@@ -30,6 +32,10 @@ const http = createServer(async (req, res) => {
     if (start >= size || start > end) { res.writeHead(416, { 'content-range': `bytes */${size}` }); return res.end(); }
     res.writeHead(206, { ...head, 'content-length': end - start + 1, 'content-range': `bytes ${start}-${end}/${size}` });
     return createReadStream(file, { start, end }).pipe(res);
+  }
+  if (req.url === '/cards.json') { // 카드 목록 (게임 화면에서 카드를 그릴 때 사용)
+    res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=300' });
+    return res.end(CARDS_JSON);
   }
   if (req.url === '/health') { // 상태 확인용: 프로필 저장 위치와 개수 (비밀 값은 내보내지 않음)
     res.writeHead(200, { 'content-type': 'application/json' });
