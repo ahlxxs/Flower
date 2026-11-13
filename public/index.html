@@ -63,10 +63,6 @@ header nav { display: flex; gap: clamp(0.875rem, 3vw, 2.25rem); }
 #logo.play .s2 { animation-delay: 1.8s, 3.1s; }
 #logo.play .s3 { animation-delay: 2s, 3.8s; }
 #logo.play .s1 { animation-name: popStill, blink; animation-timing-function: ease-out, ease-in-out; }
-.orbiter { fill: #fff3c8; opacity: 0; }
-.orbiter path { filter: drop-shadow(0 0 8px #ffe6a0); }
-#logo.play .orbiter.front { animation: fadeIn 1s ease 2.6s both; opacity: 1; }
-#logo.play .orbiter.back { animation: fadeIn 1s ease 2.6s both; opacity: .55; }
 @keyframes popStill { from { transform: scale(0); opacity: 0; } }
 @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.88); } }
 #logo { transition: opacity .7s ease; }
@@ -472,20 +468,15 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
             <stop offset=".5" stop-color="#ffe6a6"/><stop offset=".58" stop-color="#f3f6f2"/><stop offset="1" stop-color="#f3f6f2"/>
             <animateTransform attributeName="gradientTransform" type="translate" values="-500 0; 1100 0; 1100 0" keyTimes="0; .45; 1" dur="7s" begin="indefinite" repeatCount="indefinite"/>
           </linearGradient>
-          <!-- 궤도 별이 위쪽(뒤)을 지날 땐 글자 뒤, 아래쪽(앞)을 지날 땐 글자 앞에 보이도록 반씩 자른다 -->
-          <clipPath id="orbitBack" clipPathUnits="userSpaceOnUse"><rect x="-100" y="-200" width="1200" height="366"/></clipPath>
-          <clipPath id="orbitFront" clipPathUnits="userSpaceOnUse"><rect x="-100" y="166" width="1200" height="300"/></clipPath>
         </defs>
-        <g transform="rotate(-7 500 160)"><path class="orbit-back" pathLength="1" d="M40 168 A465 92 0 0 1 960 168"/>
-          <g class="orbiter back" clip-path="url(#orbitBack)"><path d="M0 -18 L4 -4 L18 0 L4 4 L0 18 L-4 4 L-18 0 L-4 -4 Z"><animateMotion class="orbit-motion" path="M35 166 A465 93 0 0 0 965 166 A465 93 0 0 0 35 166" dur="9s" begin="indefinite" repeatCount="indefinite"/></path></g></g>
+        <g transform="rotate(-7 500 160)"><path class="orbit-back" pathLength="1" d="M40 168 A465 92 0 0 1 960 168"/></g>
         <line class="axis" x1="503" y1="0" x2="503" y2="300" stroke="#f3f6f2" stroke-width="2.5"/>
         <text class="word" x="500" y="225" text-anchor="middle"><tspan class="ltr" style="--i:0">A</tspan><tspan class="ltr" style="--i:1">R</tspan><tspan class="ltr" style="--i:2">C</tspan><tspan class="ltr" style="--i:3">A</tspan><tspan class="ltr" style="--i:4">N</tspan><tspan class="ltr" style="--i:5">A</tspan></text>
         <g transform="rotate(-7 500 160)"><g class="orb-front">
           <path class="orbit" d="M28 168 A472 100 0 0 0 972 168 L958 162 A458 86 0 0 1 42 162 Z"/>
           <path class="orbit" d="M972 168 Q 1000 150 990 118 Q 996 152 958 162 Z"/>
           <path class="orbit" d="M28 168 Q 0 186 12 214 Q 4 182 42 162 Z"/>
-        </g>
-          <g class="orbiter front" clip-path="url(#orbitFront)"><path d="M0 -18 L4 -4 L18 0 L4 4 L0 18 L-4 4 L-18 0 L-4 -4 Z"><animateMotion class="orbit-motion" path="M35 166 A465 93 0 0 0 965 166 A465 93 0 0 0 35 166" dur="9s" begin="indefinite" repeatCount="indefinite"/></path></g></g>
+        </g></g>
         <path class="spark s1" d="M503 112 L512 150 L548 159 L512 168 L503 206 L494 168 L458 159 L494 150 Z"/>
         <path class="spark s2" d="M908 50 L912 66 L928 70 L912 74 L908 90 L904 74 L888 70 L904 66 Z"/>
         <path class="spark s3" d="M96 248 L99 260 L111 263 L99 266 L96 278 L93 266 L81 263 L93 260 Z"/>
@@ -787,7 +778,7 @@ let pending = loading(STAGES, 2800); // 처음 접속
 const bootFail = setTimeout(() => pending?.fail('서버에 연결하지 못했습니다. 잠시 후 새로고침 해주세요.'), 20000);
 Promise.all([firstWelcome, document.fonts.ready]).then(() => pending.done(() => {
   pending = null; booting = false; clearTimeout(bootFail);
-  if (still) $('logo').querySelectorAll('animateTransform, animateMotion, .orbiter').forEach(a => a.remove()); // 움직임 줄이기: 광택과 궤도 별 끔
+  if (still) $('logo').querySelectorAll('animateTransform').forEach(a => a.remove()); // 움직임 줄이기: 광택 끔
   if (room) syncView();
   else if (!preview) setTimeout(playLogo, 450); // 로딩 화면이 걷히는 동안 기다렸다가
   else if (preview) { // 혼자서 게임 화면을 보는 미리보기: 주소 끝에 #preview
@@ -798,14 +789,14 @@ Promise.all([firstWelcome, document.fonts.ready]).then(() => pending.done(() => 
 }));
 
 /* ---------- 화면 ---------- */
-const LOGO_LOOP_MS = 90000; // 이 시간마다 로고 애니메이션을 처음부터 다시
+const LOGO_LOOP_MS = 60000; // 이 시간마다 로고 애니메이션을 처음부터 다시
 let logoTimer;
 function playLogo() {
   clearTimeout(logoTimer);
   const logo = $('logo');
   logo.classList.remove('play', 'out'); void logo.offsetWidth; logo.classList.add('play'); // 다시 재생
-  // 광택과 궤도 별은 등장이 끝난 2.6초 뒤부터
-  logo.querySelectorAll('animateTransform, animateMotion').forEach(a => a.beginElementAt?.(2.6));
+  // 광택은 등장이 끝난 2.6초 뒤부터
+  logo.querySelectorAll('animateTransform').forEach(a => a.beginElementAt?.(2.6));
   if (!still) logoTimer = setTimeout(() => {
     if ($('frame').dataset.view !== 'home') return; // 홈을 떠나 있으면 돌아올 때 다시 재생된다
     logo.classList.add('out'); // 부드럽게 사라진 뒤
