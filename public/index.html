@@ -81,8 +81,8 @@ header nav { display: flex; gap: clamp(0.875rem, 3vw, 2.25rem); }
 .cta { border: 1px solid var(--amber); background: var(--amber); color: #1b1407; border-radius: 1.875rem; padding: 0.6875rem 1.625rem; font-weight: 500; letter-spacing: .1em; cursor: pointer; }
 .cta.mi::after { display: none; } .cta:hover, .cta:focus-visible { box-shadow: 0 0 1.5rem #e8c27a88; }
 .ctas { display: grid; gap: .7rem; justify-items: stretch; }
-.cta.join { background: #9fd1bd; border-color: #9fd1bd; color: #0c1f17; } /* 방 참가하기: 옥빛 */
-.cta.join:hover, .cta.join:focus-visible { box-shadow: 0 0 1.5rem #9fd1bd88; }
+.cta.join { background: #2f5443e6; border-color: #7fa88f; color: #eef4ec; } /* 방 참가하기: 숲 이끼색 */
+.cta.join:hover, .cta.join:focus-visible { background: #3a6552; box-shadow: 0 0 1.5rem #7fa88f66; }
 .facts { display: flex; gap: clamp(0.875rem, 3vw, 2.125rem); margin: 0; padding: 0; list-style: none; }
 .facts li { display: flex; align-items: center; gap: 0.5625rem; font-size: .72rem; line-height: 1.25; letter-spacing: .06em; }
 .facts svg { width: 1.875rem; height: 1.875rem; flex: none; fill: none; stroke: var(--text); stroke-width: 1.4; }
@@ -456,7 +456,7 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
   <header>
     <div class="brand">ARCANA</div>
     <div class="h-right">
-      <nav aria-label="메인 메뉴"><button class="mi" data-open="join">코드로 입장</button><button class="mi" data-settings="rules">게임 방법</button></nav>
+      <nav aria-label="메인 메뉴"><button class="mi" data-settings="rules">게임 방법</button></nav>
       <button class="icon-btn gear" type="button" aria-label="설정" title="설정"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
       <button class="icon-btn fs" type="button" aria-label="전체 화면" title="전체 화면"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
@@ -621,7 +621,7 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
       <dl class="keys">
         <dt>방 만들기</dt><dd>홈의 "방 만들기 →"를 누르고 닉네임을 입력합니다.</dd>
         <dt>친구 초대</dt><dd>대기실의 "초대 링크 보내기"나 "+ 친구 초대"로 링크를 보내거나, 5자리 초대 코드를 알려 주세요.</dd>
-        <dt>입장</dt><dd>받은 링크를 열거나, 홈의 "코드로 입장"에 코드를 입력합니다.</dd>
+        <dt>입장</dt><dd>받은 링크를 열거나, 홈의 "방 참가하기"를 누르고 코드를 입력합니다.</dd>
         <dt>준비와 시작</dt><dd>참가자는 "준비하기", 모두 준비되면 방장이 "게임 시작"을 누릅니다.</dd>
         <dt>잠깐 나갔다 오기</dt><dd>새로고침하거나 다른 앱에 다녀와도 같은 탭이면 자동으로 돌아옵니다. 탭을 닫았다면 같은 닉네임으로 다시 입장하세요. 자리는 10분 동안 유지됩니다.</dd>
       </dl>
