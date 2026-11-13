@@ -92,7 +92,14 @@ function schedule(room) {
   if (!g || g.over) return;
   const p = g.pending;
   if (p) { // 기다리는 일마다 시간이 지나면: 공격은 맞은 것으로, 거절 대기는 효과 적용, 고르기는 무작위로
-    const act = p.kind === 'attack' ? () => G.react(g, p.target, null) : p.kind === 'counter' ? () => G.resolveCounter(g) : () => G.choose(g, p.who, {}, true);
+    const act = {
+      attack: () => G.react(g, p.target, null),                                   // 방어 안 함 → 맞음
+      counter: () => G.resolveCounter(g),                                          // 아무도 거절 안 함 → 효과
+      choice: () => G.choose(g, p.who, {}, true),                                  // 무작위로 고름
+      trade: () => (p.stage === 'offer' ? G.tradeSkip(g, p.who) : G.tradeAnswer(g, p.who, { accept: false })), // 거래 안 함 / 거절
+      offering: () => G.offer(g, null, null, true),                                // 못 고른 사람은 무작위로 바침
+      thief: () => G.endThief(g),                                                  // 제단 공개
+    }[p.kind];
     room.timer = setTimeout(() => apply(room, act), Math.max(0, p.endsAt - Date.now()));
   } else {
     room.timer = setTimeout(() => apply(room, () => G.endTurn(g, g.seats[g.turn].id)), Math.max(0, room.turnEndsAt - Date.now()));
@@ -107,6 +114,7 @@ function apply(room, action, who) {
   // 내 차례에 내가 쓰러졌거나(양날도끼 반동 등) 악마의 숲을 썼으면 다음 사람에게
   if (!g.over && !g.pending && (!g.seats[g.turn].alive || g.forceEnd)) fx.push(...(G.endTurn(g, g.seats[g.turn].id).fx || []));
   if (g.turn !== before || fx.some(f => f.kind === 'turn')) room.turnEndsAt = Date.now() + G.TURN_MS;
+  if (g.phase !== 'action' && !g.pending) room.turnEndsAt = Date.now() + G.TURN_MS;
   pushGame(room, fx);
   schedule(room);
 }
@@ -218,14 +226,23 @@ new WebSocketServer({ server: http }).on('connection', ws => {
       for (const p of room.players) send(p, { type: 'start' }); // 먼저 보내야 클라이언트가 로딩부터 띄운다
       broadcast(room);
       schedule(room);
-    } else if (['use', 'react', 'counter', 'choose', 'end'].includes(msg.type)) {
+    } else if (['use', 'react', 'counter', 'choose', 'end', 'tradeOffer', 'tradeSkip', 'tradeAnswer', 'tradeUnfair', 'offer', 'thief'].includes(msg.type)) {
       if (!room?.game) return;
       const g = room.game, num = v => (v === null || v === undefined ? null : Number(v));
-      apply(room, () => msg.type === 'use' ? G.useCard(g, me.id, num(msg.index), { target: msg.target, target2: msg.target2, give: num(msg.give) })
-        : msg.type === 'react' ? G.react(g, me.id, num(msg.index))
-        : msg.type === 'counter' ? G.counter(g, me.id, num(msg.index))
-        : msg.type === 'choose' ? G.choose(g, me.id, msg.data || {})
-        : G.endTurn(g, me.id), me);
+      const actions = {
+        use: () => G.useCard(g, me.id, num(msg.index), { target: msg.target, target2: msg.target2, give: num(msg.give) }),
+        react: () => G.react(g, me.id, num(msg.index)),
+        counter: () => G.counter(g, me.id, num(msg.index)),
+        choose: () => G.choose(g, me.id, msg.data || {}),
+        end: () => G.endTurn(g, me.id),
+        tradeOffer: () => G.tradeOffer(g, me.id, { target: msg.target, index: num(msg.index), claim: msg.claim }),
+        tradeSkip: () => G.tradeSkip(g, me.id),
+        tradeAnswer: () => G.tradeAnswer(g, me.id, { accept: !!msg.accept, index: num(msg.index), claim: msg.claim }),
+        tradeUnfair: () => G.useCard(g, me.id, num(msg.index), { target: msg.target, asTrade: true }), // 거래 턴에 불공정 거래를 거래 대신
+        offer: () => G.offer(g, me.id, num(msg.index)),
+        thief: () => G.thief(g, me.id, num(msg.index)),
+      };
+      apply(room, actions[msg.type], me);
     } else if (msg.type === 'debugHand' && process.env.ARCANA_TEST && room?.game) { // 테스트 전용: 손패 지정 (실제 서버에서는 꺼져 있음)
       const st = room.game.seats.find(x => x.id === me.id);
       st.hand = msg.names.map(n => CARDS.find(c => c.name === n).id);

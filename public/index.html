@@ -261,6 +261,19 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
 .tags { display: inline-flex; gap: 3px; } .tags span { font-size: .62rem; padding: 0 .35rem; border-radius: .5rem; border: 1px solid; white-space: nowrap; }
 .tag-charm { color: #d3b8ff; border-color: #b6a6ff88; } .tag-wall { color: #a9d8ff; border-color: #8cc3ff88; }
 .role.eater { background: #b6a6ff; color: #120d24; }
+.phase-bar { position: absolute; z-index: 31; left: 50%; bottom: 13.5rem; translate: -50% 0; width: min(36rem, calc(100% - 2rem)); padding: .9rem 1.1rem; text-align: center;
+  background: #0a1410f2; border: 1px solid var(--amber); border-radius: .6rem; box-shadow: 0 0 1.6rem #e8c27a44, 0 1rem 2rem #000b; animation: gdIn .25s ease both; }
+.phase-bar.offering { border-color: #b6a6ff; box-shadow: 0 0 1.6rem #b6a6ff44, 0 1rem 2rem #000b; }
+.phase-bar h4 { margin: 0 0 .3rem; font-size: .95rem; color: var(--amber); font-weight: 500; letter-spacing: .05em; }
+.phase-bar.offering h4 { color: #cbbfff; }
+.phase-bar p { margin: 0 0 .7rem; font-size: .84rem; line-height: 1.6; color: var(--fog); }
+.phase-bar .row2 { display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem; margin-bottom: .6rem; align-items: center; }
+.phase-bar .who { padding: .35rem .9rem; border-radius: 2rem; border: 1px solid #e8c27a55; background: none; color: var(--text); cursor: pointer; font-size: .85rem; }
+.phase-bar .who[aria-pressed="true"] { background: var(--amber); color: #1b1407; }
+.phase-bar select { font: inherit; font-size: .85rem; padding: .4rem .6rem; border-radius: .4rem; background: #000a; color: var(--text); border: 1px solid #e8c27a55; max-width: 100%; }
+.phase-bar .btns { justify-content: center; flex-wrap: wrap; } .phase-bar .btns .btn { flex: 0 1 auto; padding: .55rem 1.1rem; font-size: .88rem; }
+.phase-bar .pick-hint { color: var(--amber); font-size: .8rem; }
+@media (max-width: 760px) { .phase-bar { position: fixed; bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px)); } }
 .turn-banner { position: fixed; z-index: 28; left: 50%; top: 36%; translate: -50% -50%; pointer-events: none; opacity: 0; white-space: nowrap;
   padding: .8rem 2.4rem; border-radius: 3rem; background: #050907d9; border: 1px solid #e8c27a66; font-size: clamp(1.1rem, 2.4vw, 1.6rem); letter-spacing: .1em; color: var(--amber); box-shadow: 0 0 2rem #000c; }
 .turn-banner.mine { background: #e8c27a; color: #1b1407; }
@@ -765,6 +778,7 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
       <p id="reactText"></p>
       <div class="react-btns"><button class="btn" id="blockBtn" type="button">방어 카드로 막기</button><button class="btn ghost" id="takeBtn" type="button">맞기</button></div>
     </div>
+    <div class="phase-bar" id="phaseBar" hidden role="region" aria-live="polite"></div>
     <div class="fx-card" id="fxCard" aria-hidden="true"></div>
     <div class="turn-banner" id="turnBanner" aria-live="polite"></div>
     <div class="pick" id="pickBox" hidden role="dialog" aria-modal="true" aria-labelledby="pickTitle">
@@ -1233,7 +1247,7 @@ function renderGame(g) {
   $('hand').innerHTML = g.hand.map((c, i) => `<li><button type="button" aria-pressed="false" aria-label="${acEsc(c.name)}: ${acEsc(c.text)}"
     style="--rot:${(i - mid) * 4}deg;--dy:${Math.abs(i - mid) * .3}rem">${cardHTML(c)}</button></li>`).join('');
   $('useCard').disabled = true; $('useCard').textContent = '카드 사용';
-  $('endTurnBtn').disabled = g.live && (!mine || !!g.pending || !!g.over);
+  $('endTurnBtn').disabled = g.live && (!mine || !!g.pending || !!g.over || g.gphase !== 'action');
   if (g.live) {
     $('gTurn').dataset.base = $('gTurn').textContent; tickTimers();
     $('gNote').classList.remove('hint');
@@ -1241,7 +1255,7 @@ function renderGame(g) {
     // 다시 그려도 고르던 카드는 유지
     const keep = keepPick !== null && g.handIds[keepPick] === keepPickId && $('hand').children[keepPick]?.querySelector('button');
     if (keep) selectBtn(keep, true);
-    renderReact(); renderOver();
+    renderReact(); renderPhase(); renderOver();
   }
   keepPick = keepPickId = null;
 }
@@ -1418,7 +1432,8 @@ function selectBtn(b, on = b.getAttribute('aria-pressed') !== 'true') { // 손�
   showDetail(pickedCard());
   cancelTargeting();
   $('useCard').disabled = !!usableReason();
-  if (game.live && picked) { const why = usableReason(); $('gNote').textContent = why || '카드 사용을 누르세요.'; $('gNote').classList.toggle('hint', !!why); }
+  if (game.live && picked && game.gphase === 'action') { const why = usableReason(); $('gNote').textContent = why || '카드 사용을 누르세요.'; $('gNote').classList.toggle('hint', !!why); }
+  if (game.live && !$('phaseBar').hidden) { const v = $('claimSel')?.value; renderPhase(); if (v && $('claimSel')) $('claimSel').value = v; }
 };
 const pickedIndex = () => picked ? [...$('hand').children].indexOf(picked.parentElement) : -1;
 const pickedCard = () => picked && game.hand[pickedIndex()];
@@ -1429,6 +1444,7 @@ function usableReason() { // 지금 고른 카드를 쓸 수 없는 이유 (쓸 
   if (!game.live) return '';
   if (game.over) return '게임이 끝났습니다.';
   if (game.turn !== game.you) return '내 차례가 아닙니다.';
+  if (game.gphase !== 'action') return '지금은 카드를 쓰는 시간이 아닙니다.';
   if (game.pending) return '다른 일이 끝나기를 기다리는 중입니다.';
   if (game.actions <= 0) return `이번 차례에는 더 쓸 수 없습니다. 차례 끝내기를 누르세요.`;
   if (c.unusable) return c.unusable;
@@ -1549,7 +1565,68 @@ function renderReact() {
 $('blockBtn').onclick = () => $('blockBtn').dataset.act === 'counter' ? send({ type: 'counter', index: myRefuseIndex() }) : send({ type: 'react', index: myDefenseIndex() });
 $('takeBtn').onclick = () => { if ($('takeBtn').dataset.act === 'skip') $('reactBar').hidden = true; else send({ type: 'react', index: null }); };
 
-/* 고르기 창: 불공정 거래(상대 카드 1 + 내 카드 1), 상점(카드 1), 고블린(사람 1) */
+/* ---------- 단계 안내 막대: 거래 턴, 거래 답하기, 헌납, 제단 도둑 ---------- */
+let phaseSel = {}, phaseKey = '';
+const CLAIM_OPTIONS = () => '<option value="">무슨 카드인지 말하지 않기</option>' + [...new Set(CARD_DB.map(c => c.name))].map(n => `<option value="${acEsc(n)}">"${acEsc(n)}"(이)라고 말하기</option>`).join('');
+function renderPhase() {
+  const p = game.pending, bar = $('phaseBar'), me = game.you;
+  const key = JSON.stringify([p?.kind, p?.stage, p?.who, p?.from]);
+  if (key !== phaseKey) { phaseKey = key; phaseSel = {}; }
+  bar.className = 'phase-bar';
+  const show = html => { bar.innerHTML = html; bar.hidden = false; if (phaseSel.claim && $('claimSel')) $('claimSel').value = phaseSel.claim; tickTimers(); };
+  const sel = picked ? `손패에서 고른 카드: <b>${acEsc(pickedCard().name)}</b>` : '<span class="pick-hint">손패에서 카드를 눌러 고르세요.</span>';
+  if (p?.kind === 'trade' && p.stage === 'offer') {
+    if (p.who !== me) { bar.hidden = true; $('gNote').textContent = `${nameOf(p.who)}의 거래 턴입니다.`; return; }
+    const others = game.players.filter(x => x.id !== me && x.alive !== false);
+    const unfair = game.hand.findIndex(c => c.name === '불공정 거래');
+    return show(`<h4>거래 턴 · <span id="phaseLeft"></span></h4>
+      <p>상대를 고르고, 손패에서 뒷면으로 내밀 카드를 고르세요. 무슨 카드라고 말할지 정할 수 있습니다(거짓말 가능).<br>${sel}</p>
+      <div class="row2">${others.map(x => `<button type="button" class="who" data-who="${x.id}" aria-pressed="${phaseSel.target === x.id}">${esc(x.name)}</button>`).join('')}</div>
+      <div class="row2"><select id="claimSel" aria-label="말할 카드 이름">${CLAIM_OPTIONS()}</select></div>
+      <div class="btns"><button class="btn" type="button" data-act="offer"${phaseSel.target && picked ? '' : ' disabled'}>거래 제안</button>
+      ${unfair >= 0 ? `<button class="btn ghost" type="button" data-act="unfair"${phaseSel.target ? '' : ' disabled'}>불공정 거래 카드로 하기</button>` : ''}
+      <button class="btn ghost" type="button" data-act="skip">거래하지 않기</button></div>`);
+  }
+  if (p?.kind === 'trade' && p.stage === 'answer') {
+    if (p.who !== me) { bar.hidden = true; $('gNote').textContent = `${nameOf(p.from)}이(가) ${nameOf(p.who)}에게 거래를 제안했습니다.`; return; }
+    return show(`<h4>거래 제안 · <span id="phaseLeft"></span></h4>
+      <p><b>${esc(nameOf(p.from))}</b>이(가) ${p.claim ? `<b>"${esc(p.claim)}"</b>(이)라며` : '말없이'} 카드 1장을 뒷면으로 내밀었습니다. 진짜인지는 알 수 없습니다.<br>
+      수락하려면 대신 내밀 카드를 고르세요. ${sel}</p>
+      <div class="row2"><select id="claimSel" aria-label="말할 카드 이름">${CLAIM_OPTIONS()}</select></div>
+      <div class="btns"><button class="btn" type="button" data-act="accept"${picked ? '' : ' disabled'}>수락하고 맞바꾸기</button><button class="btn ghost" type="button" data-act="reject">거절</button></div>`);
+  }
+  if (p?.kind === 'offering') {
+    bar.classList.add('offering');
+    const need = p.need.includes(me), done = p.done.includes(me);
+    if (!need) { bar.hidden = true; $('gNote').textContent = `헌납 중… (${p.done.length}/${p.need.length})`; return; }
+    if (done) return show(`<h4>헌납 · <span id="phaseLeft"></span></h4><p>제단에 바칠 카드를 골랐습니다. 다른 사람을 기다리는 중… (${p.done.length}/${p.need.length})</p>`);
+    return show(`<h4>헌납 · <span id="phaseLeft"></span></h4>
+      <p>라운드가 끝났습니다. 손패에서 제단에 바칠 카드 1장을 고르세요. 모두 반드시 바쳐야 하며, 누가 무엇을 냈는지는 섞여서 알 수 없습니다.<br>${sel}</p>
+      <div class="btns"><button class="btn" type="button" data-act="offerCard"${picked && pickedCard().name !== '악마의 서' ? '' : ' disabled'}>제단에 바치기</button></div>`);
+  }
+  if (p?.kind === 'thief') {
+    const ti = game.hand.findIndex(c => c.name === '제단 도둑');
+    if (ti < 0) { bar.hidden = true; $('gNote').textContent = '제단을 공개하는 중…'; return; }
+    return show(`<h4>제단 공개 직전!</h4><p>제단 도둑으로 바쳐진 카드 중 한 장을 몰래 가져올 수 있습니다.</p>
+      <div class="btns"><button class="btn" type="button" data-act="thief">제단 도둑 쓰기</button></div>`);
+  }
+  bar.hidden = true;
+}
+$('phaseBar').addEventListener('click', e => {
+  const who = e.target.closest('[data-who]'), act = e.target.closest('[data-act]')?.dataset.act;
+  if (who) { phaseSel.target = who.dataset.who; return renderPhase(); }
+  const claim = $('claimSel')?.value || '';
+  if (act === 'offer') send({ type: 'tradeOffer', target: phaseSel.target, index: pickedIndex(), claim });
+  if (act === 'unfair') send({ type: 'tradeUnfair', target: phaseSel.target, index: game.hand.findIndex(c => c.name === '불공정 거래') });
+  if (act === 'skip') send({ type: 'tradeSkip' });
+  if (act === 'accept') send({ type: 'tradeAnswer', accept: true, index: pickedIndex(), claim });
+  if (act === 'reject') send({ type: 'tradeAnswer', accept: false });
+  if (act === 'offerCard') send({ type: 'offer', index: pickedIndex() });
+  if (act === 'thief') send({ type: 'thief', index: game.hand.findIndex(c => c.name === '제단 도둑') });
+});
+$('phaseBar').addEventListener('change', e => { if (e.target.id === 'claimSel') phaseSel.claim = e.target.value; });
+
+/* 고르기 창: 불공정 거래(상대 카드 1 + 내 카드 1), 상점(카드 1), 고블린(사람 1), 강제(대상), 여명과 황혼의 산(3장) */
 let pickSel = {};
 function renderPick() {
   const p = game.pending, mine = p?.kind === 'choice' && p.who === game.you;
@@ -1567,6 +1644,14 @@ function renderPick() {
   } else if (p.type === 'shop') {
     $('pickTitle').textContent = '상점'; $('pickSub').textContent = '가져갈 카드 1장을 고르세요.';
     $('pickBody').innerHTML = cards(p.options, 'pick');
+  } else if (p.type === 'force') {
+    $('pickTitle').textContent = '강제';
+    $('pickSub').textContent = `${nameOf(p.target)}에게 "${CARD_DB[p.card].name}"을(를) 쓰게 합니다. 그 카드의 대상을 ${p.spec === 'two' ? '두 사람' : '한 사람'} 고르세요.`;
+    $('pickBody').innerHTML = `<div class="pick-cards read" style="margin-bottom:1rem"><button type="button" tabindex="-1">${cardHTML(CARD_DB[p.card])}</button></div>
+      <div class="pick-players" data-row="target" data-multi="${p.spec === 'two' ? 2 : 1}">${p.options.map(id => `<button type="button" data-v="${id}" aria-pressed="false">${esc(nameOf(id))}${id === game.you ? ' (나)' : ''}</button>`).join('')}</div>`;
+  } else if (p.type === 'keep3') {
+    $('pickTitle').textContent = '여명과 황혼의 산'; $('pickSub').textContent = '손패에 남길 카드 3장을 고르세요. 나머지는 내려놓습니다.';
+    $('pickBody').innerHTML = `<div class="pick-cards" data-row="keep" data-multi="3">${p.options.map((id, i) => `<button type="button" data-i="${i}" aria-pressed="false">${cardHTML(CARD_DB[id])}</button>`).join('')}</div>`;
   } else if (p.type === 'goblin') {
     $('pickTitle').textContent = '고블린'; $('pickSub').textContent = '카드 한 장을 가져올 사람을 고르세요.';
     $('pickBody').innerHTML = `<div class="pick-players" data-row="target">${p.options.map(id => `<button type="button" data-v="${id}" aria-pressed="false">${esc(nameOf(id))}</button>`).join('')}</div>`;
@@ -1574,18 +1659,34 @@ function renderPick() {
   $('pickOk').disabled = true; $('pickBox').hidden = false;
 }
 $('pickBody').onclick = e => {
-  const b = e.target.closest('button'), row = b?.closest('[data-row]'); if (!b || row.classList.contains('read')) return;
-  row.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
-  pickSel[row.dataset.row] = b.dataset.v ?? Number(b.dataset.i);
-  const need = { unfair: ['take', 'give'], shop: ['pick'], goblin: ['target'] }[$('pickBox').dataset.type] || [];
-  $('pickOk').disabled = !need.every(k => pickSel[k] !== undefined);
+  const b = e.target.closest('button'), row = b?.closest('[data-row]'); if (!b || !row || row.classList.contains('read')) return;
+  const multi = Number(row.dataset.multi || 1), val = b.dataset.v ?? Number(b.dataset.i);
+  if (multi > 1) { // 여러 개 고르기 (방벽 대상 2명, 남길 카드 3장)
+    const on = b.getAttribute('aria-pressed') !== 'true', cur = row.querySelectorAll('[aria-pressed="true"]').length;
+    if (on && cur >= multi) return;
+    b.setAttribute('aria-pressed', on);
+    pickSel[row.dataset.row] = [...row.querySelectorAll('[aria-pressed="true"]')].map(x => x.dataset.v ?? Number(x.dataset.i));
+  } else {
+    row.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    pickSel[row.dataset.row] = val;
+  }
+  const type = $('pickBox').dataset.type;
+  const ok = type === 'keep3' ? pickSel.keep?.length === 3
+    : type === 'force' ? (Array.isArray(pickSel.target) ? pickSel.target.length === Number($('pickBody [data-row="target"]').dataset.multi) : pickSel.target !== undefined)
+    : ({ unfair: ['take', 'give'], shop: ['pick'], goblin: ['target'] }[type] || []).every(k => pickSel[k] !== undefined);
+  $('pickOk').disabled = !ok;
 };
 $('pickOk').onclick = () => {
   if ($('pickBox').dataset.type === 'view') { $('pickBox').hidden = true; return; }
-  send({ type: 'choose', data: pickSel }); $('pickBox').hidden = true;
+  const data = { ...pickSel };
+  if (Array.isArray(data.target)) [data.target, data.target2] = data.target; // 강제로 두 사람(방벽)
+  send({ type: 'choose', data }); $('pickBox').hidden = true;
 };
 // 관심법·공개로 본 손패 (보기만)
-function showCards(title, sub, ids) {
+let viewT;
+function showCards(title, sub, ids, autoClose) { // autoClose: 몇 ms 뒤 저절로 닫기 (제단 공개처럼 모두에게 뜨는 창)
+  clearTimeout(viewT);
+  if (autoClose) viewT = setTimeout(() => { if ($('pickBox').dataset.type === 'view') $('pickBox').hidden = true; }, autoClose);
   $('pickBox').dataset.type = 'view'; $('pickBox').dataset.key = '';
   $('pickTitle').textContent = title; $('pickSub').textContent = sub;
   $('pickBody').innerHTML = `<div class="pick-cards read" data-row="view">${ids.length ? ids.map(id => `<button type="button" tabindex="-1">${cardHTML(CARD_DB[id])}</button>`).join('') : '<p>손패가 없습니다.</p>'}</div>`;
@@ -1597,7 +1698,8 @@ let turnDeadline = 0, reactDeadline = 0;
 function tickTimers() {
   if (!game?.live) return;
   const sec = d => Math.max(0, Math.ceil((d - Date.now()) / 1000));
-  if (!game.over && $('gTurn').dataset.base) $('gTurn').textContent = `${$('gTurn').dataset.base} · ${sec(turnDeadline)}초`;
+  if (!game.over && $('gTurn').dataset.base) $('gTurn').textContent = `${$('gTurn').dataset.base} · ${sec(game.pending ? reactDeadline : turnDeadline)}초`;
+  if ($('phaseLeft')) $('phaseLeft').textContent = `${sec(reactDeadline)}초`;
   if ($('reactLeft')) $('reactLeft').textContent = `(${sec(reactDeadline)}초)`;
 }
 setInterval(tickTimers, 500);
@@ -1609,7 +1711,7 @@ function renderOver() {
   if (!o) return;
   const meP = game.players[0], myRole = meP.role || game.role;
   const win = o.winner === 'eater' ? o.id === game.you : myRole !== 'eater' && (o.winner === 'hero') === (myRole !== 'demon');
-  $('overTitle').textContent = o.winner === 'eater' ? `${nameOf(o.id)}, 별을 먹는 괴물의 승리!` : o.winner === 'hero' ? '용사 파티 승리!' : '마왕군 승리!';
+  $('overTitle').textContent = o.winner === 'eater' ? `${nameOf(o.id)}, 별을 먹는 괴물의 승리!` : o.winner === 'hero' ? '용사 파티 승리!' : o.seal ? '봉인 의식 완성 · 마왕군 승리!' : '마왕군 승리!';
   $('overTitle').style.color = o.winner === 'hero' ? 'var(--amber)' : o.winner === 'eater' ? '#b6a6ff' : '#ff7a86';
   $('overMe').textContent = win ? '당신의 진영이 이겼습니다.' : '당신의 진영이 졌습니다.';
   $('overList').innerHTML = game.players.map(p => `<li class="${p.alive === false ? 'x' : ''}"><span>${esc(p.name)}${p.id === meP.id ? ' (나)' : ''} · ${esc(p.job || '')}</span>
@@ -1661,7 +1763,22 @@ function playFx(list = []) {
     if (f.kind === 'swap' || f.kind === 'rotate') { shake(false); sfx('play'); if (f.a) { flash(f.a, 'fx-block', '⇄'); flash(f.b, 'fx-block', '⇄'); } }
     if (f.kind === 'reveal-role') { sfx('block'); const p = game.players.find(x => x.id === f.target); flash(f.target, 'fx-block', ROLE_LABEL[p?.role] || '정체 공개'); }
     if (f.kind === 'peek') { showCards('관심법', `${nameOf(f.target)}의 손패입니다. 나만 볼 수 있습니다.`, f.cards); }
-    if (f.kind === 'reveal') { showCards('공개', `${nameOf(f.target)}의 손패가 모두에게 공개되었습니다.`, f.cards); }
+    if (f.kind === 'reveal') { showCards('공개', `${nameOf(f.target)}의 손패가 모두에게 공개되었습니다.`, f.cards, 7000); }
+    if (f.kind === 'trade-turn') { banner(null, f.id === game.you ? '내 거래 턴입니다' : `${nameOf(f.id)}의 거래 턴`); return setTimeout(done, 200); }
+    if (f.kind === 'offer') { sfx('play'); flash(f.target, 'fx-block', '거래 제안'); }
+    if (f.kind === 'trade-done') { sfx('chime'); flash(f.a, 'fx-block', '⇄'); flash(f.b, 'fx-block', '⇄'); }
+    if (f.kind === 'traded') { // 나만 보는 알림: 받은 카드
+      const got = CARD_DB[f.got].name;
+      banner(null, f.thief ? `제단에서 "${got}"을(를) 가져왔습니다` : `${nameOf(f.with)}에게서 "${got}"을(를) 받았습니다${f.claim ? ` (상대는 "${f.claim}"이라고 했습니다)` : ''}`);
+      return setTimeout(done, 600);
+    }
+    if (f.kind === 'offering') { sfx('death'); banner(null, '라운드 끝 · 헌납'); return setTimeout(done, 400); }
+    if (f.kind === 'offered') flash(f.by, 'fx-heal', '✓');
+    if (f.kind === 'placed') sfx('hit');
+    if (f.kind === 'altar') {
+      sfx(f.cards.some(id => CARD_DB[id].kind === '제물') ? 'death' : 'block');
+      showCards('제단 공개', `바쳐진 카드를 섞어 공개했습니다. 제물은 제단에 남아 봉인이 진행됩니다. (봉인 ${f.seals} / ${f.goal})`, f.cards, 7000);
+    }
     if (f.kind === 'eater') { banner(null, '당신은 이제 별을 먹는 괴물입니다. 별을 손에 넣으면 승리합니다!'); }
     setTimeout(() => { $('fxVignette').classList.remove('on'); done(); }, 380);
   }));
@@ -1741,8 +1858,10 @@ function fromServer() { // 서버 게임 정보 + 방 정보 → renderGame이 �
   const v = gview, meIdx = Math.max(0, v.players.findIndex(p => p.id === room.you));
   const seated = [...v.players.slice(meIdx), ...v.players.slice(0, meIdx)];
   return {
-    live: true, round: v.round, turn: v.turn, deck: v.deck, down: v.down, up: v.up === null ? null : CARD_DB[v.up], seal: [0, 5],
-    phase: (v.pending?.kind === 'attack' ? '공격 응답 대기' : v.pending?.kind === 'counter' ? '거절 대기' : v.pending ? '고르는 중' : '행동 페이즈')
+    live: true, round: v.round, turn: v.turn, deck: v.deck, down: v.down, up: v.up === null ? null : CARD_DB[v.up], seal: [v.altar.seals.length, v.altar.goal], gphase: v.phase,
+    phase: ({ action: '행동', trade: '거래 턴', offering: '헌납', reveal: '제단 공개' }[v.phase] || '')
+      + (v.pending?.kind === 'attack' ? ' · 공격 응답 대기' : v.pending?.kind === 'counter' ? ' · 거절 대기' : v.pending?.kind === 'choice' ? ' · 고르는 중' : '')
+      + (v.market ? ' · 암시장' : '')
       + (v.dir < 0 ? ' · 역방향' : '') + (v.tree ? ' · 세계수' : '') + (v.tavern ? ' · 주점' : ''),
     you: room.you, role: v.players.find(p => p.id === room.you)?.role || room.role,
     // 방을 나간 사람도 게임 자리는 남는다 (그 사람은 방 정보가 없으니 기본값으로). 직업은 주점 때문에 게임 정보를 따른다

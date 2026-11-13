@@ -2,7 +2,9 @@
 //  - 생명 = 손패 + 소울하트. 피해는 소울하트가 먼저 받고, 그다음 손패를 뒷면 버림으로 잃는다. 둘 다 0이면 쓰러진다.
 //  - 카드를 쓰면 앞면으로 공개하고 바로 1장을 뽑는다. 차례를 시작할 때도 1장을 뽑는다. 덱이 비면 버림 더미를 섞어 되돌린다.
 //  - "바퀴"는 라운드 1번으로 본다. 행동 카드는 쓰고 나서 잠깐 동안 다른 사람이 "거절"로 막을 수 있다.
-// ponytail: 헌납·봉인(제단), 거래, 사거리, 직업 능력은 아직 없다. 이것에 기대는 카드 효과는 "아직 효과 없음"으로 공개만 된다.
+//  - 한 사람의 차례: 행동(카드 사용) → 거래 턴(뒷면 카드 1장 교환 제안, 말로 블러핑 가능) → 다음 사람.
+//  - 살아 있는 모두가 한 번씩 차례를 마치면 헌납(규칙 5): 모두 1장을 동시에 바치고, 섞어서 공개, 제물은 제단에 남아 봉인 진행, 모두 1장 보충.
+// ponytail: 사거리와 직업 능력은 아직 없다. 이것에 기대는 카드 효과는 "아직 효과 없음"으로 공개만 된다.
 import { CARDS, buildDeck } from './cards.js';
 
 export const HAND_START = 5;        // 시작 손패
@@ -10,7 +12,12 @@ export const ACTIONS_PER_TURN = 2;  // 한 차례에 쓸 수 있는 카드 수 (
 export const TURN_MS = 60000;       // 차례 제한 시간
 export const REACT_MS = 10000;      // 공격받았을 때 방어를 고르는 시간
 export const COUNTER_MS = 4000;     // 행동 카드에 "거절"을 낼 수 있는 시간
-export const CHOICE_MS = 20000;     // 카드·사람을 고르는 시간 (불공정 거래, 상점, 고블린)
+export const CHOICE_MS = 20000;     // 카드·사람을 고르는 시간 (불공정 거래, 상점, 고블린, 강제, 여명과 황혼의 산)
+export const TRADE_MS = 25000;      // 거래 턴: 제안을 고르는 시간
+export const ANSWER_MS = 20000;     // 거래 제안을 받은 사람이 답하는 시간
+export const OFFER_MS = 20000;      // 헌납: 바칠 카드를 고르는 시간
+export const THIEF_MS = 4000;       // 헌납 직후 공개 전, 제단 도둑을 쓸 수 있는 시간
+export const SEAL_GOAL = 2;         // 봉인 목표 (규칙 미정: 덱에 바칠 수 있는 제물이 적어 임시로 2)
 
 const C = id => CARDS[id];
 export const isAttack = c => c.tags.includes('공격');
@@ -29,9 +36,8 @@ export const UNUSABLE = {
 };
 const PLACE = { '힘의 펜던트': 3, '민첩의 펜던트': 3, '방어의 펜던트': 3, '치유의 펜던트': 3, 고블린: 2, 던전: 1, '여명과 황혼의 산': 5 }; // 자기 앞에 놓는 카드: 남는 바퀴 수
 const REMOVE = new Set(['소문내기', '부활!', '주정뱅이']); // 쓰면 게임에서 제외
-const NO_EFFECT = { // 지금은 효과를 낼 수 없는 카드 → 이유
-  성수: '제단(헌납)이 아직 없어 효과가 없습니다.', '몽마의 돌': '제단에 바쳐졌을 때의 효과라, 지금은 효과가 없습니다.', '제단 도둑': '제단(헌납)이 아직 없어 효과가 없습니다.',
-  네크로노미콘: '제단에 있을 때의 효과라, 지금은 효과가 없습니다.', 암시장: '거래가 아직 없어 효과가 없습니다.', 꽃: '예쁘다.',
+const NO_EFFECT = { // 사용했을 때는 효과가 없는 카드 → 이유
+  '몽마의 돌': '제단에 바쳐졌을 때 효과가 있는 카드라, 사용하면 효과가 없습니다.', 네크로노미콘: '제단에 있을 때 효과가 있는 카드라, 사용하면 효과가 없습니다.', 꽃: '예쁘다.',
   '성스러운 십자가': '지니고 있을 때의 효과라, 쓰면 효과가 없습니다.', '은둔자의 로브': '사용 효과가 없는 카드입니다.', 야수: '사용 효과가 없는 카드입니다.',
 };
 
@@ -40,7 +46,8 @@ export function newGame(players, shuffle) {
     shuffle, deck: buildDeck(shuffle), up: [], down: [], removed: [], round: 1, turn: 0, turnCount: 0, dir: 1, actions: ACTIONS_PER_TURN,
     seats: players.map(p => ({ id: p.id, name: p.name, role: p.role, job: p.job, hand: [], soul: 0, field: [], alive: true, revealed: false,
       eater: false, starUses: 0, hitsRound: 0, attacksTurn: 0 })),
-    charms: [], barriers: [], tree: null, tavern: null, pending: null, queue: [], forceEnd: false, log: [], over: null,
+    charms: [], barriers: [], tree: null, tavern: null, market: null, pending: null, queue: [], forceEnd: false, log: [], over: null,
+    phase: 'action', played: [], tradesDone: 0, tradeOpen: false, altar: { seals: [], placed: [] },
   };
   for (let i = 0; i < HAND_START; i++) for (const s of g.seats) draw(g, s);
   say(g, '라운드 1이 시작되었습니다.');
@@ -137,15 +144,24 @@ function exposeDevil(g, t, fx) {
 /* ---------- 카드 사용 ---------- */
 // opts: { target, target2, give } (give = 기부로 건넬 내 카드의 손패 번호)
 export function useCard(g, id, index, opts = {}) {
-  const s = seat(g, id);
+  const s = seat(g, id), asTrade = !!opts.asTrade; // asTrade: 거래 턴에 불공정 거래를 거래 대신 쓰는 경우
   if (g.over) return { error: '게임이 끝났습니다.' };
   if (!s || s !== g.seats[g.turn]) return { error: '내 차례가 아닙니다.' };
-  if (g.pending) return { error: '다른 일이 끝나기를 기다리는 중입니다.' };
-  if (g.actions <= 0) return { error: `이번 차례에는 카드를 ${ACTIONS_PER_TURN}장까지 쓸 수 있습니다. 차례를 끝내세요.` };
+  if (asTrade) {
+    if (g.pending?.kind !== 'trade' || g.pending.stage !== 'offer' || g.pending.who !== id) return { error: '지금은 거래 턴이 아닙니다.' };
+    if (C(s.hand[index] ?? 0).name !== '불공정 거래') return { error: '불공정 거래 카드만 거래 대신 쓸 수 있습니다.' };
+    g.pending = null;
+  } else {
+    if (g.phase !== 'action') return { error: '지금은 카드를 쓰는 시간이 아닙니다.' };
+    if (g.pending) return { error: '다른 일이 끝나기를 기다리는 중입니다.' };
+    if (g.actions <= 0) return { error: `이번 차례에는 카드를 ${ACTIONS_PER_TURN}장까지 쓸 수 있습니다. 차례를 끝내세요.` };
+  }
   const cardId = s.hand[index];
   if (cardId === undefined) return { error: '없는 카드입니다.' };
   const c = C(cardId), spec = targetOf(c);
   if (UNUSABLE[c.name]) return { error: UNUSABLE[c.name] };
+  if (c.name === '제단 도둑') return { error: '제단 도둑은 헌납한 직후, 제단을 공개하기 전에만 쓸 수 있습니다.' };
+  if (HEAL_CARDS.has(c.name) && s.job !== '사제' && g.altar.seals.some(i => C(i).name === '네크로노미콘')) return { error: '제단의 네크로노미콘 때문에 사제가 아니면 치유 카드를 쓸 수 없습니다.' };
   if (isDefense(c)) return { error: '방어 카드는 공격을 받을 때 씁니다.' };
   if (isAttack(c) && g.tree) return { error: '세계수가 자라는 동안에는 공격할 수 없습니다.' };
   const t = seat(g, opts.target), t2 = seat(g, opts.target2);
@@ -166,7 +182,7 @@ export function useCard(g, id, index, opts = {}) {
   if (PLACE[c.name]) s.field.push({ card: cardId, until: g.round + PLACE[c.name], dmg: 0 });
   else if (REMOVE.has(c.name)) g.removed.push(cardId);
   else if (!['세이렌', '투탕카멘의 가면', '별'].includes(c.name)) g.up.push(cardId);
-  draw(g, s, 1, fx); g.actions--;
+  draw(g, s, 1, fx); if (!asTrade) g.actions--;
   const ctx = { s, t, t2, cardId, c, giftId };
   if (c.kind === '행동') { // 다른 사람이 거절할 수 있도록 잠깐 기다린다
     g.pending = { kind: 'counter', by: s.id, ctx, endsAt: Date.now() + COUNTER_MS };
@@ -238,6 +254,11 @@ function resolve(g, { s, t, t2, cardId, c, giftId }, fx) {
       const f = t.field.splice(i, 1)[0]; give(g, s, f.card, fx); line(`${s.name}이(가) ${t.name}의 ${C(f.card).name}을(를) 빼앗았습니다.`); break;
     }
     case '강제': force(g, s, t, fx); break;
+    case '성수': {
+      const n = g.altar.seals.length; g.up.push(...g.altar.seals); g.altar.seals = [];
+      line(n ? `성수가 제단을 정화했습니다! 제물 ${n}장이 버림 더미로 갔습니다.` : '성수를 뿌렸지만 제단에 제물이 없습니다.'); if (n) fx.push({ kind: 'altar', seals: 0 }); break;
+    }
+    case '암시장': g.market = { until: g.round + 1 }; line(`${s.name}이(가) 암시장을 열었습니다. 한 바퀴 동안 거래를 2번까지 할 수 있습니다.`); break;
     case '투탕카멘의 가면':
       give(g, t, cardId, fx); line(`${t.name}이(가) 투탕카멘의 가면을 받아 카드 두 장을 내려놓습니다.`);
       fx.push({ kind: 'hit', target: t.id, amount: 2 }); loseCards(g, t, 2, fx, cardId); break;
@@ -246,15 +267,15 @@ function resolve(g, { s, t, t2, cardId, c, giftId }, fx) {
       line(`${s.name}이(가) ${n}을(를) 앞에 내려놓았습니다. (세 바퀴)${n === '민첩의 펜던트' ? ' 사거리 규칙이 아직 없어 효과는 없습니다.' : ''}`); break;
     case '고블린': line(`${s.name}이(가) 고블린을 앞에 두었습니다. 두 바퀴 동안 차례 시작에 다른 사람의 카드를 가져옵니다.`); break;
     case '던전': line(`${s.name}이(가) 던전에 들어갔습니다. 한 바퀴 동안 피해를 3 미만으로 받으면 보상이 있습니다.`); break;
-    case '여명과 황혼의 산': {
-      while (s.hand.length > 3) g.down.push(takeOut(s, rnd(s.hand.length)));
-      line(`${s.name}이(가) 여명과 황혼의 산에 올랐습니다. 손패 3장만 남기고, 다섯 바퀴 뒤 보상을 받습니다.`); break;
-    }
+    case '여명과 황혼의 산':
+      line(`${s.name}이(가) 여명과 황혼의 산에 올랐습니다. 손패 3장만 남기고, 다섯 바퀴 뒤 보상을 받습니다.`);
+      if (s.hand.length > 3) g.pending = { kind: 'choice', type: 'keep3', who: s.id, options: [...s.hand], endsAt: Date.now() + CHOICE_MS };
+      break;
     case '세이렌': draw(g, s, 1, fx); give(g, t, cardId, fx); line(`${s.name}이(가) 카드를 한 장 뽑고 세이렌을 ${t.name}에게 넘겼습니다.`); break;
     case '도깨비': {
       const a = alive(g), hands = a.map(x => x.hand);
-      a.forEach((x, i) => { x.hand = hands[(i + 1) % a.length]; }); // 시계 반대 방향으로 한 칸
-      line('도깨비가 나타나 모두의 손패가 시계 반대 방향으로 한 칸 옮겨졌습니다!'); fx.push({ kind: 'rotate' }); break;
+      a.forEach((x, i) => { x.hand = hands[(i + g.dir + a.length) % a.length]; }); // 진행 방향의 반대로 한 칸
+      line('도깨비가 나타나 모두의 손패가 진행 방향의 반대로 한 칸 옮겨졌습니다!'); fx.push({ kind: 'rotate' }); break;
     }
     case '구미호': {
       const k = s.hand.length; g.down.push(...s.hand); s.hand = []; s.soul += k + 3;
@@ -273,7 +294,7 @@ function resolve(g, { s, t, t2, cardId, c, giftId }, fx) {
       line(`상점이 열렸습니다! 카드 ${cards.length}장 중에서 ${s.name}부터 한 장씩 가져갑니다.`);
       nextShopPick(g); break;
     }
-    case '주점': g.tavern = { until: g.turnCount + 3 }; line('주점에서 모두의 직업 카드가 시계 반대 방향으로 한 칸씩 옮겨졌습니다. (3턴 동안)'); fx.push({ kind: 'rotate' }); break;
+    case '주점': g.tavern = { until: g.turnCount + 3, dir: g.dir }; line('주점에서 모두의 직업 카드가 진행 방향의 반대로 한 칸씩 옮겨졌습니다. (3턴 동안)'); fx.push({ kind: 'rotate' }); break;
     case '바다': {
       g.deck = g.shuffle([...g.deck, ...g.up, ...g.down]); g.up = []; g.down = [];
       line('바다가 모든 카드 더미를 휩쓸어 섞었습니다.');
@@ -302,15 +323,20 @@ function resolve(g, { s, t, t2, cardId, c, giftId }, fx) {
   if (!g.pending && g.queue.length === 0) g.shop = null;
 }
 
-// 강제: 대상이 지금 손패에서 쓸 수 있는 카드 하나를 (무작위로) 쓰게 한다. 대상이 필요하면 무작위로 정한다
+// 강제: 대상의 손패에서 쓸 수 있는 카드 하나(무작위)를 쓰게 한다. 그 카드의 대상은 강제를 쓴 사람이 고른다
 function force(g, s, t, fx) {
-  const ok = t.hand.map((id, i) => i).filter(i => { const c = C(t.hand[i]); return !UNUSABLE[c.name] && !isDefense(c) && !(isAttack(c) && g.tree); });
+  const ok = t.hand.map((id, i) => i).filter(i => { const c = C(t.hand[i]); return !UNUSABLE[c.name] && c.name !== '제단 도둑' && !isDefense(c) && !(isAttack(c) && g.tree); });
   if (!ok.length) { say(g, `${t.name}에게는 쓸 수 있는 카드가 없습니다.`); return; }
   const i = ok[rnd(ok.length)], cardId = t.hand[i], c = C(cardId), spec = targetOf(c);
-  const others = alive(g).filter(x => x !== t && !blocked(g, t, x));
-  const pick = () => others.splice(rnd(others.length), 1)[0];
-  const tt = spec === 'any' ? t : spec ? pick() : null, tt2 = spec === 'two' ? pick() : null;
-  if (spec && (!tt || (spec === 'two' && !tt2))) { say(g, `${t.name}에게 ${c.name}을(를) 쓰게 하려 했지만 대상이 없습니다.`); return; }
+  const cand = alive(g).filter(x => (spec === 'any' || spec === 'two' || x !== t) && (x === t || !blocked(g, t, x)));
+  if (spec && cand.length < (spec === 'two' ? 2 : 1)) { say(g, `${t.name}에게 ${c.name}을(를) 쓰게 하려 했지만 대상이 없습니다.`); return; }
+  say(g, `${s.name}이(가) ${t.name}에게 ${c.name}을(를) 쓰게 합니다!`);
+  if (!spec) return applyForced(g, s, t, cardId, null, null, fx);
+  g.pending = { kind: 'choice', type: 'force', who: s.id, target: t.id, card: cardId, spec, options: cand.map(x => x.id), endsAt: Date.now() + CHOICE_MS };
+}
+function applyForced(g, s, t, cardId, tt, tt2, fx) {
+  const c = C(cardId), spec = targetOf(c), i = t.hand.indexOf(cardId);
+  if (i < 0) return;
   takeOut(t, i);
   const giftI = spec === 'give' ? t.hand.length ? rnd(t.hand.length) : -1 : -1;
   if (spec === 'give' && giftI < 0) { g.up.push(cardId); say(g, `${t.name}에게 건넬 카드가 없습니다.`); return; }
@@ -319,7 +345,6 @@ function force(g, s, t, fx) {
   else if (REMOVE.has(c.name)) g.removed.push(cardId);
   else if (!['세이렌', '투탕카멘의 가면', '별'].includes(c.name)) g.up.push(cardId);
   draw(g, t, 1, fx);
-  say(g, `${s.name}이(가) ${t.name}에게 ${c.name}을(를) 쓰게 했습니다!`);
   fx.push({ kind: 'use', by: t.id, card: cardId, target: tt?.id, target2: tt2?.id });
   resolve(g, { s: t, t: tt, t2: tt2, cardId, c, giftId }, fx);
 }
@@ -386,6 +411,21 @@ export function choose(g, id, data = {}, auto = false) {
     if (g.shop[i] === undefined) return { error: '가져갈 카드를 골라 주세요.' };
     const got = g.shop.splice(i, 1)[0]; give(g, s, got, fx);
     say(g, `${s.name}이(가) 상점에서 ${C(got).name}을(를) 가져갔습니다.`);
+  } else if (p.type === 'force') {
+    const pool = p.options.map(x => seat(g, x)).filter(x => x.alive);
+    const pickR = () => pool.splice(rnd(pool.length), 1)[0];
+    let tt = auto ? pickR() : seat(g, data.target), tt2 = p.spec === 'two' ? (auto ? pickR() : seat(g, data.target2)) : null;
+    if (!tt || !p.options.includes(tt.id) || (p.spec === 'two' && (!tt2 || tt2 === tt || !p.options.includes(tt2.id)))) return { error: p.spec === 'two' ? '서로 다른 두 사람을 골라 주세요.' : '대상을 골라 주세요.' };
+    g.pending = null;
+    applyForced(g, s, seat(g, p.target), p.card, tt, tt2, fx);
+    afterPending(g, fx);
+    return { fx };
+  } else if (p.type === 'keep3') {
+    let keep = auto ? s.hand.map((x, i) => i).slice(0, 3) : [...new Set((data.keep || []).map(Number))];
+    if (keep.length !== 3 || keep.some(i => s.hand[i] === undefined)) return { error: '남길 카드 3장을 골라 주세요.' };
+    const kept = keep.map(i => s.hand[i]);
+    g.down.push(...s.hand.filter((x, i) => !keep.includes(i))); s.hand = kept;
+    say(g, `${s.name}이(가) 카드 3장만 남기고 나머지를 내려놓았습니다.`);
   } else if (p.type === 'goblin') {
     const others = alive(g).filter(x => x !== s && x.hand.length);
     const t = auto ? others[rnd(others.length)] : seat(g, data.target);
@@ -409,33 +449,71 @@ function nextShopPick(g) {
   if (g.shop?.length) g.up.push(...g.shop);
   g.shop = null; g.queue = [];
 }
-function afterPending(g) {
+function afterPending(g, fx = []) {
   if (!g.pending && g.queue.length) nextShopPick(g);
+  advance(g, fx);
 }
 
-/* ---------- 차례 ---------- */
+/* ---------- 차례: 행동 → 거래 턴 → 다음 사람. 모두 한 번씩 하면 헌납 ---------- */
+// 차례 끝내기: 행동을 마치고 거래 턴으로
 export function endTurn(g, id) {
   if (g.over) return { error: '게임이 끝났습니다.' };
-  if (g.seats[g.turn].id !== id) return { error: '내 차례가 아닙니다.' };
+  const s = g.seats[g.turn];
+  if (s.id !== id) return { error: '내 차례가 아닙니다.' };
+  if (g.phase !== 'action') return { error: '이미 차례를 끝냈습니다.' };
   if (g.pending) return { error: '다른 일이 끝나기를 기다리는 중입니다.' };
   const fx = [];
-  g.forceEnd = false;
-  let next = g.turn;
-  do {
-    const prev = next;
-    next = (next + g.dir + g.seats.length) % g.seats.length;
-    if ((g.dir === 1 && next <= prev) || (g.dir === -1 && next >= prev)) startRound(g, fx); // 한 바퀴를 돌았다
-    if (g.over) return { fx };
-  } while (!g.seats[next].alive);
-  g.turn = next; g.actions = ACTIONS_PER_TURN;
-  startTurn(g, fx);
+  g.forceEnd = false; g.phase = 'trade'; g.tradesDone = 0; g.tradeOpen = false;
+  // 고블린: 거래 턴이 시작될 때 원하는 사람의 카드를 가져온다
+  const others = alive(g).filter(x => x !== s && x.hand.length);
+  if (s.alive && fieldHas(s, '고블린') && others.length) g.pending = { kind: 'choice', type: 'goblin', who: s.id, options: others.map(x => x.id), endsAt: Date.now() + CHOICE_MS };
+  advance(g, fx);
   return { fx };
 }
+// 기다리는 일이 없을 때 다음 단계로 진행한다
+function advance(g, fx) {
+  while (!g.over && !g.pending) {
+    if (g.phase === 'trade') {
+      if (g.tradeOpen) { g.tradeOpen = false; g.tradesDone++; } // 거래 하나(성사/거절/불공정 거래)가 끝났다
+      const s = g.seats[g.turn], limit = g.market ? 2 : 1;
+      if (s.alive && g.tradesDone < limit && alive(g).some(x => x !== s && !blocked(g, s, x))) {
+        g.pending = { kind: 'trade', stage: 'offer', who: s.id, endsAt: Date.now() + TRADE_MS }; g.tradeOpen = true;
+        say(g, `${s.name}의 거래 턴입니다.`); fx.push({ kind: 'trade-turn', id: s.id });
+        return;
+      }
+      finishTurn(g, fx); continue;
+    }
+    if (g.phase === 'reveal') { revealAltar(g, fx); continue; }
+    return; // 행동 중(사람을 기다림)
+  }
+}
+function finishTurn(g, fx) {
+  const s = g.seats[g.turn];
+  if (!g.played.includes(s.id)) g.played.push(s.id);
+  if (alive(g).every(x => g.played.includes(x.id))) return startOffering(g, fx); // 라운드 끝 → 헌납
+  nextTurn(g, fx);
+}
+function nextTurn(g, fx) {
+  let next = g.turn;
+  do next = (next + g.dir + g.seats.length) % g.seats.length; while (!g.seats[next].alive);
+  g.turn = next;
+  startTurn(g, fx);
+}
+function startTurn(g, fx) {
+  const s = g.seats[g.turn];
+  g.phase = 'action'; g.actions = ACTIONS_PER_TURN; g.turnCount++; s.attacksTurn = 0;
+  if (g.tavern && g.turnCount >= g.tavern.until) { g.tavern = null; say(g, '주점이 문을 닫아 모두 원래 직업으로 돌아갔습니다.'); }
+  const n = g.tree ? 2 : 1;
+  draw(g, s, n, fx); // 차례를 시작할 때 1장 (세계수가 있으면 1장 더)
+  say(g, `${s.name}의 차례입니다. (카드 ${n}장 뽑음)`);
+  fx.push({ kind: 'turn', id: s.id, drew: n });
+}
 function startRound(g, fx) {
-  g.round++; say(g, `라운드 ${g.round}이 시작되었습니다.`);
+  g.round++; g.played = []; say(g, `라운드 ${g.round}이 시작되었습니다.`);
   g.charms = g.charms.filter(x => x.until > g.round);
   g.barriers = g.barriers.filter(x => x.until > g.round);
   if (g.tree && g.tree.until <= g.round) { g.tree = null; say(g, '세계수가 시들었습니다.'); }
+  if (g.market && g.market.until <= g.round) { g.market = null; say(g, '암시장이 문을 닫았습니다.'); }
   for (const s of g.seats) {
     s.hitsRound = 0;
     if (!s.alive) continue;
@@ -454,31 +532,151 @@ function startRound(g, fx) {
     }
   }
 }
-function startTurn(g, fx) {
-  const s = g.seats[g.turn];
-  g.turnCount++; s.attacksTurn = 0;
-  if (g.tavern && g.turnCount >= g.tavern.until) { g.tavern = null; say(g, '주점이 문을 닫아 모두 원래 직업으로 돌아갔습니다.'); }
-  const n = g.tree ? 2 : 1;
-  draw(g, s, n, fx); // 차례를 시작할 때 1장 (세계수가 있으면 1장 더)
-  say(g, `${s.name}의 차례입니다. (카드 ${n}장 뽑음)`);
-  fx.push({ kind: 'turn', id: s.id, drew: n });
-  if (fieldHas(s, '고블린') && alive(g).some(x => x !== s && x.hand.length)) {
-    g.pending = { kind: 'choice', type: 'goblin', who: s.id, options: alive(g).filter(x => x !== s && x.hand.length).map(x => x.id), endsAt: Date.now() + CHOICE_MS };
+
+/* ---------- 거래 턴 (규칙 4): 원하는 상대에게 뒷면 카드 1장. 무슨 카드라고 말할 수 있다(거짓말 가능) ---------- */
+const cleanClaim = c => (CARDS.some(x => x.name === c) ? c : ''); // 말한 카드 이름 (없거나 이상하면 "말없이")
+const tradable = id => C(id).name !== '악마의 서'; // 악마의 서는 거래할 수 없다
+export function tradeOffer(g, id, { target, index, claim } = {}) {
+  const p = g.pending;
+  if (!p || p.kind !== 'trade' || p.stage !== 'offer' || p.who !== id) return { error: '지금은 거래를 제안할 수 없습니다.' };
+  const s = seat(g, id), t = seat(g, target), cardId = s.hand[index];
+  if (!t || !t.alive || t === s) return { error: '거래할 상대를 골라 주세요.' };
+  if (blocked(g, s, t)) return { error: `방벽 때문에 ${t.name}과(와) 거래할 수 없습니다.` };
+  if (cardId === undefined) return { error: '내밀 카드를 손패에서 골라 주세요.' };
+  if (!tradable(cardId)) return { error: '악마의 서는 거래할 수 없습니다.' };
+  if (!t.hand.some(tradable)) return { error: `${t.name}에게는 거래할 수 있는 카드가 없습니다.` };
+  const said = cleanClaim(claim);
+  g.pending = { kind: 'trade', stage: 'answer', who: t.id, from: s.id, card: cardId, claim: said, endsAt: Date.now() + ANSWER_MS };
+  say(g, `${s.name}이(가) ${t.name}에게 ${said ? `"${said}"라며` : '말없이'} 카드 1장을 내밀어 거래를 제안합니다.`);
+  return { fx: [{ kind: 'offer', by: s.id, target: t.id }] };
+}
+export function tradeSkip(g, id) {
+  const p = g.pending;
+  if (!p || p.kind !== 'trade' || p.stage !== 'offer' || p.who !== id) return { error: '지금은 거래 턴이 아닙니다.' };
+  g.pending = null; g.tradeOpen = false; g.tradesDone = 99;
+  say(g, `${seat(g, id).name}이(가) 거래하지 않고 차례를 마쳤습니다.`);
+  const fx = []; advance(g, fx); return { fx };
+}
+export function tradeAnswer(g, id, { accept, index, claim } = {}) {
+  const p = g.pending;
+  if (!p || p.kind !== 'trade' || p.stage !== 'answer' || p.who !== id) return { error: '답할 거래가 없습니다.' };
+  const t = seat(g, id), s = seat(g, p.from), fx = [];
+  if (accept) {
+    const myId = t.hand[index];
+    if (myId === undefined) return { error: '대신 내밀 카드를 손패에서 골라 주세요.' };
+    if (!tradable(myId)) return { error: '악마의 서는 거래할 수 없습니다.' };
+    const si = s.hand.indexOf(p.card);
+    if (si >= 0) {
+      const said = cleanClaim(claim);
+      takeOut(s, si); takeOut(t, index); g.pending = null;
+      give(g, s, myId, fx); give(g, t, p.card, fx);
+      say(g, `${t.name}이(가) ${said ? `"${said}"라며` : '말없이'} 카드를 내밀어 거래가 성사되었습니다.`);
+      fx.push({ kind: 'traded', to: s.id, got: myId, claim: said, with: t.id }, { kind: 'traded', to: t.id, got: p.card, claim: p.claim, with: s.id }, { kind: 'trade-done', a: s.id, b: t.id });
+      advance(g, fx); return { fx };
+    }
   }
+  g.pending = null;
+  say(g, `${t.name}이(가) 거래를 거절했습니다.`);
+  fx.push({ kind: 'refuse', by: t.id, target: s.id });
+  advance(g, fx); return { fx };
+}
+
+/* ---------- 헌납 (규칙 5) ---------- */
+function startOffering(g, fx) {
+  g.phase = 'offering';
+  const need = alive(g).filter(x => x.hand.some(tradable)).map(x => x.id); // 바칠 카드가 있는 사람은 모두 의무
+  say(g, `라운드 ${g.round}이 끝났습니다. 헌납: 모두 카드 1장을 골라 제단에 바칩니다.`);
+  fx.push({ kind: 'offering' });
+  if (!need.length) { g.phase = 'reveal'; g.altar.placed = []; return; }
+  g.pending = { kind: 'offering', need, picks: {}, endsAt: Date.now() + OFFER_MS };
+}
+export function offer(g, id, index, auto = false) {
+  const p = g.pending;
+  if (!p || p.kind !== 'offering') return { error: '지금은 헌납 시간이 아닙니다.' };
+  const fx = [];
+  const pickFor = (sid, i) => {
+    const s = seat(g, sid), ok = s.hand.filter(tradable);
+    const cardId = i === null ? ok[rnd(ok.length)] : s.hand[i];
+    if (cardId === undefined) return '바칠 카드를 골라 주세요.';
+    if (!tradable(cardId)) return '악마의 서는 내려놓을 수 없습니다.';
+    p.picks[sid] = cardId; fx.push({ kind: 'offered', by: sid }); return '';
+  };
+  if (auto) { for (const sid of p.need) if (p.picks[sid] === undefined) pickFor(sid, null); } // 시간이 지나면 남은 사람은 무작위로
+  else {
+    if (!p.need.includes(id)) return { error: '바칠 카드가 없습니다.' };
+    if (p.picks[id] !== undefined) return { error: '이미 바칠 카드를 골랐습니다.' };
+    const e = pickFor(id, index); if (e) return { error: e };
+  }
+  if (p.need.every(x => p.picks[x] !== undefined)) placeAltar(g, fx);
+  return { fx };
+}
+// 신호에 맞춰 동시에 내려놓고 섞는다. 공개 전 잠깐 동안 제단 도둑을 쓸 수 있다
+function placeAltar(g, fx) {
+  const p = g.pending, cards = [];
+  for (const [sid, cardId] of Object.entries(p.picks)) { const s = seat(g, sid), i = s.hand.indexOf(cardId); if (i >= 0) cards.push(takeOut(s, i)); }
+  g.altar.placed = g.shuffle(cards);
+  say(g, `모두 동시에 카드 ${cards.length}장을 제단에 바쳤습니다. 섞어서 공개합니다.`);
+  fx.push({ kind: 'placed', count: cards.length });
+  g.phase = 'reveal';
+  g.pending = { kind: 'thief', endsAt: Date.now() + THIEF_MS };
+}
+export function thief(g, id, index) {
+  const p = g.pending, s = seat(g, id);
+  if (!p || p.kind !== 'thief') return { error: '지금은 제단 도둑을 쓸 수 없습니다.' };
+  if (!s?.alive || C(s.hand[index] ?? 0).name !== '제단 도둑') return { error: '제단 도둑 카드가 없습니다.' };
+  if (!g.altar.placed.length) return { error: '제단에 카드가 없습니다.' };
+  const fx = [], cardId = takeOut(s, index);
+  g.up.push(cardId); draw(g, s, 1, fx);
+  const got = g.altar.placed.splice(rnd(g.altar.placed.length), 1)[0];
+  give(g, s, got, fx); g.pending = null;
+  say(g, `${s.name}이(가) 제단 도둑으로 공개 직전의 제단에서 카드 한 장을 슬쩍했습니다!`);
+  fx.push({ kind: 'use', by: s.id, card: cardId }, { kind: 'traded', to: s.id, got, claim: '', thief: true });
+  advance(g, fx); return { fx };
+}
+export function endThief(g) {
+  if (g.pending?.kind !== 'thief') return { error: '없음' };
+  g.pending = null; const fx = []; advance(g, fx); return { fx };
+}
+function revealAltar(g, fx) {
+  const placed = g.altar.placed; g.altar.placed = [];
+  const seals = placed.filter(id => C(id).kind === '제물');
+  g.up.push(...placed.filter(id => C(id).kind !== '제물'));
+  g.altar.seals.push(...seals);
+  say(g, placed.length ? `제단 공개: ${placed.map(id => C(id).name).join(', ')}${seals.length ? ` → 제물 ${seals.length}장이 제단에 남아 봉인이 진행됩니다!` : ''}` : '제단에 바쳐진 카드가 없습니다.');
+  if (placed.some(id => C(id).name === '몽마의 돌')) { // 몽마의 돌: 제물이 있으면 모두 쫓아내고, 없으면 뒷면 버림에서 하나 불러온다
+    if (g.altar.seals.length) { say(g, '몽마의 돌이 제단의 제물을 모두 버림 더미로 쫓아냈습니다.'); g.up.push(...g.altar.seals); g.altar.seals = []; }
+    else {
+      const i = g.down.findIndex(id => C(id).kind === '제물');
+      if (i >= 0) { g.altar.seals.push(g.down.splice(i, 1)[0]); say(g, '몽마의 돌이 뒷면 버림 더미에서 제물 한 장을 제단으로 불러왔습니다!'); }
+    }
+  }
+  fx.push({ kind: 'altar', cards: placed, seals: g.altar.seals.length, goal: SEAL_GOAL });
+  if (g.altar.seals.length >= SEAL_GOAL) {
+    g.over = { winner: 'demon', seal: true }; g.pending = null;
+    say(g, '봉인 의식이 완성되었습니다! 마왕군의 승리!'); fx.push({ kind: 'over' }); return;
+  }
+  for (const s of alive(g)) draw(g, s, 1, fx); // 모두 1장씩 보충
+  startRound(g, fx);
+  nextTurn(g, fx);
 }
 
 /* ---------- 화면에 보낼 정보 ---------- */
 // 한 사람에게 보낼 게임 정보 (남의 손패, 숨겨진 진영, 남이 고를 선택지는 보내지 않는다)
 export function viewFor(g, id) {
   const me = seat(g, id), p = g.pending, n = g.seats.length;
-  const jobOf = i => (g.tavern ? g.seats[(i + 1) % n].job : g.seats[i].job);
+  const jobOf = i => (g.tavern ? g.seats[(i + g.tavern.dir + n) % n].job : g.seats[i].job); // 주점: 진행 방향의 반대로 한 칸
   let pending = null;
   if (p?.kind === 'attack') pending = { kind: 'attack', attacker: p.attacker, target: p.target, card: p.card, dmg: p.dmg };
   if (p?.kind === 'counter') pending = { kind: 'counter', by: p.by, card: p.ctx.cardId, target: p.ctx.t?.id };
-  if (p?.kind === 'choice') pending = { kind: 'choice', type: p.type, who: p.who, target: p.target, options: p.who === id || p.type === 'shop' ? p.options : undefined };
+  if (p?.kind === 'choice') pending = { kind: 'choice', type: p.type, who: p.who, target: p.target, card: p.type === 'force' ? p.card : undefined, spec: p.spec,
+    options: p.who === id || p.type === 'shop' ? p.options : undefined };
+  if (p?.kind === 'trade') pending = { kind: 'trade', stage: p.stage, who: p.who, from: p.from, claim: p.claim };
+  if (p?.kind === 'offering') pending = { kind: 'offering', need: p.need, done: Object.keys(p.picks), mine: p.picks[id] ?? null };
+  if (p?.kind === 'thief') pending = { kind: 'thief' };
   if (pending) pending.left = Math.max(0, p.endsAt - Date.now());
   return {
-    round: g.round, turn: g.seats[g.turn].id, actions: g.actions, actionsMax: ACTIONS_PER_TURN, dir: g.dir, tree: !!g.tree, tavern: !!g.tavern,
+    round: g.round, turn: g.seats[g.turn].id, phase: g.phase, actions: g.actions, actionsMax: ACTIONS_PER_TURN, dir: g.dir, tree: !!g.tree, tavern: !!g.tavern,
+    market: !!g.market, played: g.played, altar: { seals: g.altar.seals, goal: SEAL_GOAL, placed: g.altar.placed.length },
     deck: g.deck.length, up: g.up.at(-1) ?? null, down: g.down.length,
     players: g.seats.map((s, i) => ({
       id: s.id, name: s.name, hand: s.hand.length, soul: s.soul, alive: s.alive, job: jobOf(i),

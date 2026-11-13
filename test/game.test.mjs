@@ -1,7 +1,7 @@
 // 게임 진행 로직 점검 (브라우저 없이). 실행: npm run test:game
 import assert from 'node:assert/strict';
 import { CARDS } from '../cards.js';
-import { newGame, useCard, react, counter, resolveCounter, choose, endTurn, viewFor, HAND_START } from '../game.js';
+import { newGame, useCard, react, counter, resolveCounter, choose, endTurn, tradeOffer, tradeSkip, tradeAnswer, offer, thief, endThief, viewFor, HAND_START, SEAL_GOAL } from '../game.js';
 
 const id = name => { const c = CARDS.find(c => c.name === name); assert.ok(c, name); return c.id; };
 const names = s => s.hand.map(i => CARDS[i].name);
@@ -15,6 +15,8 @@ function fresh(hands = {}) {
 }
 const A = g => g.seats[0], B = g => g.seats[1], Cc = g => g.seats[2];
 const use = (g, who, name, opts) => { const s = g.seats.find(x => x.id === who); const r = useCard(g, who, s.hand.indexOf(id(name)), opts); return r; };
+// 차례 끝내기 + 거래하지 않기 = 다음 사람에게
+const pass = (g, who) => { endTurn(g, who); tradeSkip(g, who); };
 let passed = 0; const t = (label, fn) => { fn(); passed++; };
 
 t('시작: 각자 5장, 첫 사람은 차례 시작 1장 더, 남의 진영은 안 보임', () => {
@@ -24,9 +26,53 @@ t('시작: 각자 5장, 첫 사람은 차례 시작 1장 더, 남의 진영은 �
   assert.equal(viewFor(g, 'a').players[1].role, undefined);
   assert.equal(viewFor(g, 'a').players[0].role, 'hero', '내 진영은 보임');
 });
-t('차례 넘기기: 다음 사람이 1장 뽑음', () => {
+t('차례 끝내기 → 거래 턴 → 다음 사람이 1장 뽑음', () => {
   const g = fresh(); endTurn(g, 'a');
+  assert.equal(g.pending.kind, 'trade'); assert.equal(g.pending.who, 'a', '차례를 끝내면 내 거래 턴');
+  tradeSkip(g, 'a');
   assert.equal(viewFor(g, 'a').turn, 'b'); assert.equal(B(g).hand.length, 6);
+});
+t('거래: 뒷면으로 내밀고, 말은 거짓말일 수 있다. 수락하면 맞바꾼다', () => {
+  const g = fresh({ a: ['검', '꽃'], b: ['방패', '꽃'] }); endTurn(g, 'a');
+  assert.ok(tradeOffer(g, 'a', { target: 'a', index: 0 }).error, '나와는 거래 못 함');
+  tradeOffer(g, 'a', { target: 'b', index: 1, claim: '검' }); // 꽃을 내밀며 "검"이라고 거짓말
+  assert.equal(g.pending.stage, 'answer'); assert.equal(viewFor(g, 'b').pending.claim, '검');
+  const r = tradeAnswer(g, 'b', { accept: true, index: 0, claim: '꽃' }); // 방패를 내밀며 "꽃"이라고
+  assert.ok(names(A(g)).includes('방패') && names(B(g)).filter(x => x === '꽃').length === 2);
+  assert.ok(r.fx.some(f => f.kind === 'traded' && f.to === 'b' && f.claim === '검'), 'B는 받은 카드와 A가 한 말을 안다');
+  assert.equal(viewFor(g, 'a').turn, 'b', '거래 1번 뒤 다음 사람');
+});
+t('거래 거절 / 암시장이면 2번까지', () => {
+  let g = fresh({ a: ['꽃'], b: ['꽃'] }); endTurn(g, 'a');
+  tradeOffer(g, 'a', { target: 'b', index: 0 }); tradeAnswer(g, 'b', { accept: false });
+  assert.equal(viewFor(g, 'a').turn, 'b');
+  g = fresh({ a: ['암시장', '꽃', '꽃'], b: ['꽃', '꽃'] }); use(g, 'a', '암시장'); endTurn(g, 'a');
+  tradeOffer(g, 'a', { target: 'b', index: 0 }); tradeAnswer(g, 'b', { accept: true, index: 0 });
+  assert.equal(g.pending?.kind, 'trade', '암시장: 두 번째 거래');
+});
+t('라운드 끝 헌납: 동시에 바치고 섞어 공개, 제물은 남아 봉인. 모두 1장 보충', () => {
+  const g = fresh({ a: ['네크로노미콘', '꽃'], b: ['꽃', '꽃'], c: ['꽃', '꽃'] });
+  pass(g, 'a'); pass(g, 'b'); pass(g, 'c');
+  assert.equal(g.pending.kind, 'offering');
+  offer(g, 'a', 0); offer(g, 'b', 0); assert.ok(offer(g, 'b', 0).error, '한 번만');
+  offer(g, 'c', 0);
+  assert.equal(g.pending.kind, 'thief', '공개 전 제단 도둑 시간');
+  const r = endThief(g);
+  assert.equal(g.altar.seals.length, 1, '네크로노미콘이 제단에 남음');
+  assert.ok(r.fx.some(f => f.kind === 'altar' && f.cards.length === 3));
+  assert.equal(g.round, 2); assert.equal(viewFor(g, 'a').turn, 'a', '다음 라운드는 진행 방향 다음 사람(한 바퀴 돌아 A)');
+  assert.equal(B(g).hand.length, 3, 'B: 2장 + 차례 시작 1장, 헌납 -1, 보충 +1');
+});
+t(`봉인 ${SEAL_GOAL}장이면 즉시 마왕군 승리 / 제단 도둑 / 성수`, () => {
+  let g = fresh({ a: ['네크로노미콘'], b: ['꽃'], c: ['꽃'] }); g.altar.seals.push(id('악마의 서'));
+  pass(g, 'a'); pass(g, 'b'); pass(g, 'c'); offer(g, 'a', 0); offer(g, 'b', 0); offer(g, 'c', 0); endThief(g);
+  assert.deepEqual(g.over, { winner: 'demon', seal: true });
+  g = fresh({ a: ['꽃'], b: ['제단 도둑', '꽃'], c: ['꽃'] });
+  pass(g, 'a'); pass(g, 'b'); pass(g, 'c'); offer(g, 'a', 0); offer(g, 'b', 1); offer(g, 'c', 0);
+  assert.ok(use(g, 'b', '제단 도둑').error, '제단 도둑은 행동 시간에 못 씀');
+  thief(g, 'b', 0); assert.equal(g.pending, null); assert.equal(B(g).hand.length, 4, '2장 → 차례 시작 3 → 헌납 2 → 제단 도둑 쓰고 1장 뽑아 2 → 제단에서 1장 3 → 보충 4');
+  g = fresh({ a: ['성수', '꽃'] }); g.altar.seals.push(id('네크로노미콘'));
+  use(g, 'a', '성수'); assert.equal(g.altar.seals.length, 0);
 });
 t('공격 → 맞기 / 방어 → 막기', () => {
   let g = fresh({ a: ['검', '검', '꽃', '꽃', '꽃'] });
@@ -40,7 +86,7 @@ t('공격 → 맞기 / 방어 → 막기', () => {
 t('소울하트가 피해를 먼저 받는다 (치유 물약)', () => {
   const g = fresh({ a: ['치유 물약', '꽃', '꽃', '꽃', '꽃'], b: ['검', '꽃', '꽃', '꽃', '꽃'] });
   use(g, 'a', '치유 물약'); assert.equal(A(g).soul, 2);
-  endTurn(g, 'a'); use(g, 'b', '검', { target: 'a' }); react(g, 'a', null);
+  pass(g, 'a'); use(g, 'b', '검', { target: 'a' }); react(g, 'a', null);
   assert.equal(A(g).soul, 1); assert.equal(A(g).hand.length, 5);
 });
 t('행동 카드는 거절로 막을 수 있다', () => {
@@ -56,7 +102,7 @@ t('도둑질 / 영혼 약탈 / 매혹', () => {
   g = fresh({ a: ['영혼 약탈', '꽃', '꽃', '꽃', '꽃'] }); B(g).soul = 3;
   use(g, 'a', '영혼 약탈', { target: 'b' }); resolveCounter(g); assert.equal(B(g).soul, 0);
   g = fresh({ a: ['매혹', '꽃', '꽃', '꽃', '꽃'], b: ['검', '꽃', '꽃', '꽃', '꽃'] });
-  use(g, 'a', '매혹', { target: 'b' }); resolveCounter(g); endTurn(g, 'a');
+  use(g, 'a', '매혹', { target: 'b' }); resolveCounter(g); pass(g, 'a');
   assert.ok(use(g, 'b', '검', { target: 'a' }).error, '매혹한 사람을 공격 못 함');
 });
 t('관심법은 나에게만, 공개는 모두에게, 악마의 서는 들키면 쓰러짐', () => {
@@ -77,7 +123,9 @@ t('부의 재분배 / 부익부 빈익빈 / 대서재 / 도깨비', () => {
   g = fresh({ a: ['대서재', '꽃'], b: ['검', '검', '검'] });
   use(g, 'a', '대서재', { target: 'b' }); assert.deepEqual(names(A(g)), ['검', '검', '검']);
   g = fresh({ a: ['도깨비', '꽃'], b: ['검'], c: ['방패'] });
-  use(g, 'a', '도깨비'); assert.deepEqual(names(A(g)), ['검'], 'A는 B의 손패를'); assert.equal(Cc(g).hand.length, 2, 'C는 A의 손패(꽃 + 방금 뽑은 1장)를'); assert.deepEqual(names(B(g)), ['방패'], 'B는 C의 손패를');
+  use(g, 'a', '도깨비'); assert.deepEqual(names(A(g)), ['검'], '진행 방향의 반대로: A는 다음 사람 B의 손패를'); assert.equal(Cc(g).hand.length, 2, 'C는 A의 손패(꽃 + 방금 뽑은 1장)를'); assert.deepEqual(names(B(g)), ['방패'], 'B는 C의 손패를');
+  g = fresh({ a: ['도깨비', '꽃'], b: ['검'], c: ['방패'] }); g.dir = -1;
+  use(g, 'a', '도깨비'); assert.deepEqual(names(A(g)), ['방패'], '역방향이면 A는 C의 손패를');
 });
 t('기부 / 투탕카멘의 가면 / 세이렌 / 별', () => {
   let g = fresh({ a: ['기부', '검', '꽃'] });
@@ -102,9 +150,9 @@ t('펜던트·던전은 앞에 놓이고 기간이 지나면 처리된다', () =
   use(g, 'a', '치유의 펜던트'); use(g, 'a', '던전');
   assert.equal(A(g).field.length, 2);
   const before = A(g).hand.length;
-  endTurn(g, 'a'); endTurn(g, 'b'); endTurn(g, 'c'); // 한 바퀴
+  pass(g, 'a'); pass(g, 'b'); pass(g, 'c'); offer(g, null, null, true); endThief(g); // 한 바퀴 + 헌납
   assert.equal(A(g).field.length, 1, '던전은 한 바퀴 뒤 끝남');
-  assert.ok(A(g).hand.length >= before + 1 + 1 + 2 + 1, '펜던트 +1, 던전 돌려받음 + 2장, 차례 시작 +1');
+  assert.ok(A(g).hand.length >= before - 1 + 1 + 1 + 1 + 2 + 1, '헌납 -1 보충 +1, 펜던트 +1, 던전 돌려받음 + 2장, 차례 시작 +1');
 });
 t('파괴! / 정복', () => {
   let g = fresh({ a: ['파괴!', '꽃'], b: ['꽃'] }); B(g).field.push({ card: id('힘의 펜던트'), until: 9, dmg: 0 });
@@ -130,7 +178,7 @@ t('불공정 거래: 상대 카드를 보고 골라 가져오고 내 카드를 �
 t('악마의 숲: 차례가 끝나고 방향이 바뀐다 / 세계수: 공격 불가', () => {
   let g = fresh({ a: ['악마의 숲', '꽃'] });
   use(g, 'a', '악마의 숲'); assert.equal(g.forceEnd, true); assert.equal(g.dir, -1);
-  endTurn(g, 'a'); assert.equal(viewFor(g, 'a').turn, 'c', '반대 방향');
+  pass(g, 'a'); assert.equal(viewFor(g, 'a').turn, 'c', '반대 방향');
   g = fresh({ a: ['세계수', '검', '꽃'] });
   use(g, 'a', '세계수'); assert.ok(use(g, 'a', '검', { target: 'b' }).error);
 });
@@ -139,10 +187,22 @@ t('성스러운 십자가: 지닌 채 쓰러지면 모두에게 2 피해', () =>
   use(g, 'a', '검', { target: 'b' }); react(g, 'b', null);
   assert.equal(B(g).alive, false); assert.equal(Cc(g).hand.length, 1);
 });
-t('강제: 대상이 쓸 수 있는 카드를 쓰게 된다', () => {
-  const g = fresh({ a: ['강제', '꽃'], b: ['치유 물약'] });
+t('강제: 대상이 쓸 수 있는 카드를 쓰게 되고, 그 카드의 대상은 강제를 쓴 사람이 고른다', () => {
+  let g = fresh({ a: ['강제', '꽃'], b: ['치유 물약'] });
   use(g, 'a', '강제', { target: 'b' }); resolveCounter(g);
-  assert.equal(B(g).soul, 2, 'B가 치유 물약을 썼다');
+  assert.equal(B(g).soul, 2, 'B가 치유 물약을 썼다 (대상 없는 카드)');
+  g = fresh({ a: ['강제', '꽃'], b: ['검'], c: ['꽃', '꽃'] });
+  use(g, 'a', '강제', { target: 'b' }); resolveCounter(g);
+  assert.equal(g.pending.type, 'force'); assert.equal(g.pending.who, 'a');
+  assert.ok(!g.pending.options.includes('b'), '검은 자기 자신을 공격할 수 없음');
+  choose(g, 'a', { target: 'c' });
+  assert.equal(g.pending.kind, 'attack'); assert.equal(g.pending.attacker, 'b'); assert.equal(g.pending.target, 'c');
+});
+t('여명과 황혼의 산: 남길 3장은 쓴 사람이 고른다', () => {
+  const g = fresh({ a: ['여명과 황혼의 산', '검', '방패', '꽃', '성경', '꽃'] });
+  use(g, 'a', '여명과 황혼의 산'); assert.equal(g.pending.type, 'keep3');
+  assert.ok(choose(g, 'a', { keep: [0, 1] }).error, '3장을 골라야 함');
+  choose(g, 'a', { keep: [0, 1, 3] }); assert.deepEqual(names(A(g)), ['검', '방패', '성경']);
 });
 t('부활!: 쓰러진 사람이 3장을 들고 돌아온다', () => {
   const g = fresh({ a: ['부활!', '꽃'] }); Cc(g).alive = false; Cc(g).hand = [];

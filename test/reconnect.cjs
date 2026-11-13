@@ -2,7 +2,7 @@
 // 실행: npm run test:reconnect  (playwright 필요: npm i -D playwright && npx playwright install chromium)
 const { chromium } = require('playwright');
 const { spawn } = require('node:child_process');
-const server = spawn('node', ['server.js'], { env: { ...process.env, PORT: '3123', GRACE_MS: '8000' }, stdio: 'ignore' });
+const server = spawn('node', ['server.js'], { env: { ...process.env, PORT: '3123', GRACE_MS: '15000' }, stdio: 'ignore' });
 let failed = 0;
 const U = 'http://localhost:3123';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -53,8 +53,8 @@ const ok = (cond, label) => { if (!cond) failed++; console.log((cond ? 'PASS ' :
   await g2.waitForSelector('#game:not([hidden])', { timeout: 10000 }); await sleep(300);
   ok((await g.textContent('#net')).includes('다른 탭'), '다른 탭이 자리를 가져가면 이전 탭에 안내');
 
-  // 6. 유예 시간(테스트용 8초)이 지나면 끊긴 방장이 빠지고 방장이 넘어감
-  await a.close(); await sleep(9000);
+  // 6. 유예 시간(테스트용 15초)이 지나면 끊긴 방장이 빠지고 방장이 넘어감
+  await a.close(); await sleep(16500);
   const after = await g2.evaluate(() => room.players.map(p => p.name + (p.host ? '*' : '')).join(','));
   ok(after === '손님*', '유예 시간 후 끊긴 방장 제거 + 방장 이전 → ' + after);
   ok(!errs.length, '페이지 오류 없음 ' + errs.join(' / '));
