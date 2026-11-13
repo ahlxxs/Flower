@@ -45,9 +45,31 @@ header nav { display: flex; gap: clamp(0.875rem, 3vw, 2.25rem); }
 .hero { align-self: end; padding: 0 clamp(1.125rem, 4vw, 2.75rem); }
 .hero h1 { margin: 0 0 0 -2%; width: clamp(17.5rem, 60vw, 45rem); line-height: 0; filter: drop-shadow(0 0.25rem 1.5rem #000a); }
 .hero h1 svg { width: 100%; height: auto; overflow: visible; }
-.word { font-family: var(--didone); font-weight: 500; font-size: 190px; letter-spacing: -4px; /* SVG 좌표 단위 */ fill: var(--text); }
+.word { font-family: var(--didone); font-weight: 500; font-size: 190px; letter-spacing: -4px; /* SVG 좌표 단위 */ fill: url(#shine); }
 .orbit { fill: var(--text); } .orbit-back { fill: none; stroke: var(--text); stroke-width: 2.5; opacity: .8; }
 .spark { fill: var(--amber); }
+
+/* ---------- 로고 애니메이션: 홈이 보일 때 #logo.play 가 붙으면 등장, 이후 은은하게 반복 ---------- */
+#logo:not(.play) { opacity: 0; } /* 재생 전에는 숨겨 두어 깜빡임 방지 */
+.axis, .word, .spark { transform-box: fill-box; transform-origin: center; }
+.orbit-back { stroke-dasharray: 1; }
+#logo.play .axis { animation: axisIn 1s cubic-bezier(.6, 0, .2, 1) both; }
+#logo.play .word { animation: wordIn 1.6s cubic-bezier(.2, .7, .2, 1) .2s both; }
+#logo.play .ltr { animation: fadeIn .9s ease calc(.3s + var(--i) * .09s) both; }
+#logo.play .orbit-back { animation: drawBack 1.4s cubic-bezier(.5, 0, .2, 1) .7s both; }
+#logo.play .orb-front { animation: sweep 1.3s cubic-bezier(.5, 0, .2, 1) .9s both, breathe 4.5s ease-in-out 2.6s infinite; }
+#logo.play .spark { animation: pop .7s cubic-bezier(.3, 1.6, .5, 1) both, twinkle 3.6s ease-in-out infinite; }
+#logo.play .s1 { animation-delay: 1.5s, 2.4s; }
+#logo.play .s2 { animation-delay: 1.8s, 3.1s; }
+#logo.play .s3 { animation-delay: 2s, 3.8s; }
+@keyframes axisIn { from { transform: scaleY(0); opacity: 0; } }
+@keyframes wordIn { from { transform: scale(1.06); filter: blur(10px); } }
+@keyframes fadeIn { from { opacity: 0; } }
+@keyframes drawBack { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes sweep { from { clip-path: inset(-30% 100% -30% 0); } to { clip-path: inset(-30% -2% -30% 0); } }
+@keyframes breathe { 50% { filter: drop-shadow(0 0 7px #ffe6a0aa); } }
+@keyframes pop { from { transform: scale(0) rotate(-120deg); opacity: 0; } }
+@keyframes twinkle { 0%, 100% { transform: scale(1); } 45% { transform: scale(.72) rotate(12deg); opacity: .75; } 55% { transform: scale(1.12); opacity: 1; } }
 .hero .sub { margin: 0.25rem 0 0; font-size: .8rem; letter-spacing: .5em; color: var(--amber); font-weight: 500; }
 .hero p { margin: 0.875rem 0 0; max-width: 26em; font-weight: 300; font-size: .9rem; line-height: 1.7; color: var(--fog); }
 .foot { display: flex; align-items: end; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap; padding: 1.375rem clamp(1.125rem, 4vw, 2.75rem) 1.625rem; }
@@ -432,19 +454,27 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
     </div>
   </header>
   <section class="hero">
-    <h1 aria-label="ARCANA">
+    <h1 aria-label="ARCANA" id="logo">
       <svg viewBox="0 0 1000 300" aria-hidden="true">
-        <g transform="rotate(-7 500 160)"><path class="orbit-back" d="M40 168 A465 92 0 0 1 960 168"/></g>
-        <line x1="503" y1="0" x2="503" y2="300" stroke="#f3f6f2" stroke-width="2.5"/>
-        <text class="word" x="500" y="225" text-anchor="middle">ARCANA</text>
-        <g transform="rotate(-7 500 160)">
+        <defs>
+          <!-- 글자 위를 지나가는 금빛 광택 -->
+          <linearGradient id="shine" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="420" y2="0" gradientTransform="translate(-500 0)">
+            <stop offset="0" stop-color="#f3f6f2"/><stop offset=".42" stop-color="#f3f6f2"/>
+            <stop offset=".5" stop-color="#ffe6a6"/><stop offset=".58" stop-color="#f3f6f2"/><stop offset="1" stop-color="#f3f6f2"/>
+            <animateTransform attributeName="gradientTransform" type="translate" values="-500 0; 1100 0; 1100 0" keyTimes="0; .45; 1" dur="7s" begin="indefinite" repeatCount="indefinite"/>
+          </linearGradient>
+        </defs>
+        <g transform="rotate(-7 500 160)"><path class="orbit-back" pathLength="1" d="M40 168 A465 92 0 0 1 960 168"/></g>
+        <line class="axis" x1="503" y1="0" x2="503" y2="300" stroke="#f3f6f2" stroke-width="2.5"/>
+        <text class="word" x="500" y="225" text-anchor="middle"><tspan class="ltr" style="--i:0">A</tspan><tspan class="ltr" style="--i:1">R</tspan><tspan class="ltr" style="--i:2">C</tspan><tspan class="ltr" style="--i:3">A</tspan><tspan class="ltr" style="--i:4">N</tspan><tspan class="ltr" style="--i:5">A</tspan></text>
+        <g transform="rotate(-7 500 160)"><g class="orb-front">
           <path class="orbit" d="M28 168 A472 100 0 0 0 972 168 L958 162 A458 86 0 0 1 42 162 Z"/>
           <path class="orbit" d="M972 168 Q 1000 150 990 118 Q 996 152 958 162 Z"/>
           <path class="orbit" d="M28 168 Q 0 186 12 214 Q 4 182 42 162 Z"/>
-        </g>
-        <path class="spark" d="M503 112 L512 150 L548 159 L512 168 L503 206 L494 168 L458 159 L494 150 Z"/>
-        <path class="spark" d="M908 50 L912 66 L928 70 L912 74 L908 90 L904 74 L888 70 L904 66 Z"/>
-        <path class="spark" d="M96 248 L99 260 L111 263 L99 266 L96 278 L93 266 L81 263 L93 260 Z"/>
+        </g></g>
+        <path class="spark s1" d="M503 112 L512 150 L548 159 L512 168 L503 206 L494 168 L458 159 L494 150 Z"/>
+        <path class="spark s2" d="M908 50 L912 66 L928 70 L912 74 L908 90 L904 74 L888 70 L904 66 Z"/>
+        <path class="spark s3" d="M96 248 L99 260 L111 263 L99 266 L96 278 L93 266 L81 263 L93 260 Z"/>
       </svg>
     </h1>
     <p class="sub">봉인의 제단</p>
@@ -743,7 +773,9 @@ let pending = loading(STAGES, 2800); // 처음 접속
 const bootFail = setTimeout(() => pending?.fail('서버에 연결하지 못했습니다. 잠시 후 새로고침 해주세요.'), 20000);
 Promise.all([firstWelcome, document.fonts.ready]).then(() => pending.done(() => {
   pending = null; booting = false; clearTimeout(bootFail);
+  if (still) $('logo').querySelector('animateTransform').remove(); // 움직임 줄이기 설정이면 광택도 끔
   if (room) syncView();
+  else if (!preview) setTimeout(playLogo, 450); // 로딩 화면이 걷히는 동안 기다렸다가
   else if (preview) { // 혼자서 게임 화면을 보는 미리보기: 주소 끝에 #preview
     const names = ['아린', '리아', '도윤', '하람', '세린', '무진'];
     room = { code: 'DEMO', you: 'p0', players: names.map((name, i) => ({ id: 'p' + i, name })) };
@@ -752,7 +784,12 @@ Promise.all([firstWelcome, document.fonts.ready]).then(() => pending.done(() => 
 }));
 
 /* ---------- 화면 ---------- */
+function playLogo() {
+  $('logo').classList.remove('play'); void $('logo').offsetWidth; $('logo').classList.add('play'); // 다시 재생
+  $('logo').querySelector('animateTransform')?.beginElementAt?.(2.6); // 등장이 끝난 뒤 광택 시작
+}
 function view(name) {
+  if (name === 'home' && $('frame').dataset.view !== 'home') playLogo();
   $('frame').dataset.view = name;
   $('lobby').hidden = name !== 'lobby';
   $('game').hidden = name !== 'game';
