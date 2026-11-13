@@ -670,7 +670,7 @@ label { display: block; font-size: .78rem; color: var(--dim); margin: 0 0 0.375r
       <div class="row"><label for="sMute">음소거</label><span></span><input class="switch" type="checkbox" id="sMute"></div>
       <div class="row"><label for="sBgm">배경 음악</label><input type="range" id="sBgm" min="0" max="100" step="5"><output for="sBgm" id="oBgm"></output></div>
       <div class="row"><label for="sSfx">효과음</label><input type="range" id="sSfx" min="0" max="100" step="5"><output for="sSfx" id="oSfx"></output></div>
-      <p style="margin-top:1rem;font-size:.78rem;color:var(--dim)">배경 음악은 홈 화면에서 나옵니다. 브라우저 정책상 화면을 한 번 누른 뒤부터 재생됩니다. 효과음은 곧 추가됩니다. 설정은 이 기기에 저장됩니다.</p>
+      <p style="margin-top:1rem;font-size:.78rem;color:var(--dim)">배경 음악은 홈 화면에서 나옵니다. 브라우저 정책상 화면을 한 번 누른 뒤부터 재생됩니다. 효과음은 버튼을 누를 때 납니다. 설정은 이 기기에 저장됩니다.</p>
     </section>
     <section class="pane" id="tab-controls" role="tabpanel" hidden>
       <h3>방과 대기실</h3>
@@ -1056,6 +1056,29 @@ function syncBgm() { // 지금 화면과 설정에 맞춰 서서히 켜거나 �
   }
 }
 addEventListener('arcana:settings', syncBgm);
+
+/* ---------- 효과음: 버튼을 누를 때. 파일 없이 Web Audio로 합성한다 ---------- */
+const sfxLevel = () => settings.mute ? 0 : settings.sfx / 100;
+function tone(freq, { type = 'sine', at = 0, peak = .2, decay = .35, glideTo } = {}) {
+  const t = actx.currentTime + at, o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t + decay);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(peak * sfxLevel(), t + .005);   // 짧게 올라갔다가
+  g.gain.exponentialRampToValueAtTime(.0001, t + decay);          // 자연스럽게 사라짐
+  o.connect(g).connect(actx.destination); o.start(t); o.stop(t + decay + .05);
+}
+const SFX = {
+  chime() { tone(1046.5, { peak: .16, decay: .45 }); tone(1568, { at: .045, peak: .11, decay: .5 }); }, // 주요 버튼: 딩
+  tick() { tone(1500, { type: 'triangle', peak: .09, decay: .07, glideTo: 750 }); },                 // 그 외: 틱
+};
+function sfx(name) { if (actx && sfxLevel() > 0) { actx.resume(); SFX[name](); } }
+document.addEventListener('click', e => {
+  const b = e.target.closest('button, [role=tab]');
+  if (!b || b.disabled) return;
+  sfx(b.matches('.cta, .btn:not(.ghost)') ? 'chime' : 'tick');
+}, true);
+$('sSfx').addEventListener('change', () => sfx('chime')); // 볼륨을 바꾸면 미리 들려 줌
 document.addEventListener('visibilitychange', syncBgm); // 다른 앱으로 가면 멈춤
 
 // 전체 화면 (브라우저 주소창·탭까지 숨김). 지원하지 않는 기기(아이폰 등)에서는 버튼을 숨긴다
