@@ -2185,7 +2185,7 @@ function renderLobby() {
     const st = document.createElement('span'); st.className = 'st'; st.textContent = !p.online ? '연결 끊김' : p.host ? '방장' : p.ready ? '준비 완료' : '대기 중';
     li.append(nm, st);
     return li;
-  }), Object.assign(document.createElement('li'), { className: 'seat empty', textContent: '+ 친구 초대', onclick: invite }));
+  }), Object.assign(document.createElement('li'), { className: 'seat empty', textContent: '+ 친구 초대', onclick: () => myProfile ? openProfile(null, 'friends') : invite() })); // 로그인했으면 친구 목록에서 바로 초대, 아니면 초대 링크
 
   const short = room.minPlayers - room.players.length;
   $('status').textContent = short > 0 ? `${short}명이 더 들어오면 시작할 수 있습니다`
