@@ -54,7 +54,7 @@ const ok = (c, l) => { if (!c) failed++; console.log((c ? 'PASS ' : 'FAIL ') + l
   ok((await c.textContent('#lgErr')).includes('너무 많습니다'), '5번 틀리면 잠시 로그인 막힘');
 
   // 6. 게스트 + 초대 링크: 로그인 창 → 게스트로 시작 → 바로 참가 창
-  await a.click('.cta'); await a.click('#form .btn:not(.ghost)'); await a.waitForSelector('#lobby:not([hidden])'); await sleep(1800);
+  await a.click('[data-open="create"]'); await a.click('#form .btn:not(.ghost)'); await a.waitForSelector('#lobby:not([hidden])'); await sleep(1800);
   const code = await a.textContent('#roomCode');
   const ctxC = await b.newContext(); const g = await tab(ctxC); await g.goto(U + '/?room=' + code); await ready(g);
   ok(await isOpen(g) && !(await g.evaluate(() => document.getElementById('dlg').open)), '초대 링크도 로그인 창이 먼저');

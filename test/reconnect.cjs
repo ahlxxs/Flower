@@ -15,7 +15,7 @@ const ok = (cond, label) => { if (!cond) failed++; console.log((cond ? 'PASS ' :
   const A = await b.newContext(), B = await b.newContext();
   const a = await tab(A);
   await a.goto(U); await sleep(3300);
-  await a.click('.cta'); await a.fill('#name', '방장'); await a.click('#form .btn:not(.ghost)');
+  await a.click('[data-open="create"]'); await a.fill('#name', '방장'); await a.click('#form .btn:not(.ghost)');
   await a.waitForSelector('#lobby:not([hidden])'); await sleep(1800);
   const code = await a.textContent('#roomCode');
 

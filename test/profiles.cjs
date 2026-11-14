@@ -49,11 +49,11 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   await g.click('[data-close="profile"]');
 
   // 4. 방: 프로필 사용자가 만들고, 게스트가 참가 → 서로 눌러 보기
-  await a.click('.cta'); await sleep(200);
+  await a.click('[data-open="create"]'); await sleep(200);
   ok(await a.evaluate(() => document.getElementById('name').readOnly && document.getElementById('name').value === '용사아린'), '프로필 닉네임으로 입장 (고정)');
   await a.click('#form .btn:not(.ghost)'); await a.waitForSelector('#lobby:not([hidden])'); await sleep(1800);
   const code = await a.textContent('#roomCode');
-  await g.click('.cta.join'); await g.fill('#name', '용사아린'); await g.fill('#code', code); await g.click('#form .btn:not(.ghost)'); await sleep(2200);
+  await g.click('[data-open="join"]'); await g.fill('#name', '용사아린'); await g.fill('#code', code); await g.click('#form .btn:not(.ghost)'); await sleep(2200);
   ok((await g.textContent('#err')).includes('프로필로 등록된'), '게스트는 등록된 닉네임을 못 씀');
   await g.fill('#name', '나그네'); await g.click('#form .btn:not(.ghost)'); await g.waitForSelector('#lobby:not([hidden])'); await sleep(1800);
   await g.click('.seat[data-name="용사아린"]'); await g.waitForSelector('#profile[open]'); await sleep(200);
@@ -84,7 +84,7 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   // 6. 도감: 칭호 목록·조건, 카드, 숨겨진 칭호 "반짝 반짝" 얻고 달기
   const d = await page(); await d.goto(U); await ready(d);
   await d.waitForSelector('#loginDlg[open]'); await d.fill('#lgId', 'arin'); await d.fill('#lgPw', 'secret12'); await d.click('#lgSubmit'); await sleep(600);
-  await d.click('#codexBtn'); await sleep(400);
+  await d.click('#hmCodex'); await sleep(400);
   ok(await d.evaluate(() => !document.getElementById('loader').classList.contains('done')), '도감도 로딩 화면 뒤에 열림'); await d.waitForSelector('#codex[open]'); await sleep(300);
   ok((await d.$$('#cxTitles li')).length === 25 && (await d.textContent('#cxTitles')).includes('부서지지 않는 신념'), '도감: 칭호 25개와 조건');
   ok((await d.textContent('#cxTitles')).includes('???') && !(await d.textContent('#cxTitles')).includes('반짝 반짝'), '숨겨진 칭호는 ???');
@@ -93,7 +93,7 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   await d.click('[data-close="codex"]'); await sleep(300);
   await d.evaluate(() => sealCycle(50)); await sleep(800);              // 마법진이 겹치는 순간을 앞당김
   ok((await d.textContent('#titleToast')).includes('반짝 반짝'), '홈에서 마법진이 겹치는 걸 보면 숨겨진 칭호 획득 알림');
-  await d.click('#codexBtn'); await d.waitForSelector('#codex[open]'); await sleep(200);
+  await d.click('#hmCodex'); await d.waitForSelector('#codex[open]'); await sleep(200);
   await d.click('[data-wear="sparkle"]'); await sleep(500);
   ok((await d.textContent('#cxTitles')).includes('달고 있음'), '도감에서 바로 칭호 달기');
   await d.click('[data-close="codex"]'); await d.click('#meBtn'); await d.waitForSelector('#profile[open]'); await sleep(200);
