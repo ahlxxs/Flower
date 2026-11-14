@@ -484,6 +484,13 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
 .pempty { margin: 1rem 0 0; text-align: center; font-size: .85rem; color: var(--dim); }
 .seat:not(.empty), .opp { cursor: pointer; }
 @media (max-width: 760px) { #profile { height: 92vh; padding: 1.6rem 1rem 1rem; } .me-btn .me-name { display: none; } .me-btn { padding: 0 .25rem; } }
+/* 로그인 창 */
+#loginDlg { width: min(100%, 24rem); }
+.login-sub { margin: 0 0 1rem; text-align: center; font-size: .85rem; color: var(--fog); line-height: 1.6; }
+.check { display: flex; align-items: center; gap: .5rem; margin: .1rem 0 1rem; font-size: .82rem; color: var(--fog); cursor: pointer; }
+.glass .check input { width: auto; margin: 0; accent-color: var(--amber); }
+.login-links { display: flex; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }
+.login-links .link { margin: 0; }
 #jobDlg { width: min(100%, 32.5rem); max-height: 84vh; overflow-y: auto; }
 #jobDlg .sum { margin: 0 0 0.875rem; text-align: center; color: var(--amber); font-size: .9rem; line-height: 1.6; }
 #jobDlg .txt { margin: 0 0 1.25rem; white-space: pre-line; font-size: .85rem; line-height: 1.8; color: var(--fog); }
@@ -945,6 +952,27 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
     </section>
   </div>
 </dialog>
+<dialog id="loginDlg" class="glass ornate" aria-labelledby="loginTitle">
+  <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
+  <form id="loginForm">
+    <h2 id="loginTitle">로그인</h2>
+    <svg class="divider"><use href="#divider"/></svg>
+    <p class="login-sub" id="loginSub"></p>
+    <label for="lgId">아이디</label>
+    <input id="lgId" name="username" autocomplete="username" maxlength="16" autocapitalize="off" spellcheck="false" required>
+    <label for="lgPw">비밀번호</label>
+    <input id="lgPw" name="password" type="password" autocomplete="current-password" minlength="6" maxlength="100" required>
+    <div id="signupRows" hidden>
+      <label for="lgPw2">비밀번호 확인</label>
+      <input id="lgPw2" type="password" autocomplete="new-password" maxlength="100">
+      <div id="nickRow"><label for="lgNick">닉네임 (게임에서 보이는 이름)</label><input id="lgNick" maxlength="12" autocomplete="nickname"></div>
+    </div>
+    <label class="check"><input type="checkbox" id="lgRemember" checked> 아이디 기억하기</label>
+    <button class="btn" id="lgSubmit" style="width:100%">로그인</button>
+    <p class="err" id="lgErr" role="alert"></p>
+    <div class="login-links"><button type="button" class="link" id="lgToggle"></button><button type="button" class="link" id="lgGuest">게스트로 시작</button></div>
+  </form>
+</dialog>
 <dialog id="profile" class="glass ornate" aria-labelledby="pfTitle">
   <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
   <div class="st-head"><h2 id="pfTitle">프로필</h2><button class="st-close" type="button" data-close="profile" aria-label="닫기">×</button></div>
@@ -954,6 +982,10 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
   </div>
   <div class="panes">
     <section class="pane" id="ptab-mine" role="tabpanel">
+      <div id="pGuest" hidden style="text-align:center;padding:2rem 0">
+        <p style="margin:0 0 1rem;color:var(--fog)">로그인하면 내 프로필을 만들고 꾸밀 수 있습니다.</p>
+        <button class="btn" type="button" id="pLogin">로그인 / 회원가입</button>
+      </div>
       <div id="pPreview"></div>
       <form class="pform" id="pForm">
         <div><label for="pName">닉네임</label><input type="text" id="pName" maxlength="12" autocomplete="nickname" placeholder="2~12자" required></div>
@@ -963,7 +995,8 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
         <fieldset class="picks" id="pColors"><legend>색</legend></fieldset>
         <p class="pmsg" id="pMsg" role="status"></p>
         <button class="btn" id="pSave">저장</button>
-        <p class="pnote" id="pKeyNote">프로필은 이 기기에 연결됩니다. 브라우저 데이터를 지우면 다시 찾을 수 없으니 주의하세요.</p>
+        <p class="pnote" id="pKeyNote"></p>
+        <button class="btn ghost" type="button" id="logoutBtn">로그아웃</button>
       </form>
     </section>
     <section class="pane" id="ptab-find" role="tabpanel" hidden>
@@ -1106,7 +1139,8 @@ Promise.all([firstWelcome, document.fonts.ready, cardsLoaded]).then(() => pendin
     renderGame(mockGame(room.players, room.you)); view('game');
   } else {
     setTimeout(playLogo, 450); // 로딩 화면이 걷히는 동안 기다렸다가
-    if (invited) { $('code').value = invited; open('join'); } // 초대 링크로 왔으면 바로 참가 창
+    if (!loggedThisTab()) openLogin('login'); // 처음 접속: 로그인 창부터
+    else if (invited) { $('code').value = invited; open('join'); } // 초대 링크로 왔으면 바로 참가 창
   }
 }));
 
@@ -1901,7 +1935,10 @@ const EMBLEM_NAME = { sword: '검', shield: '방패', star: '별', moon: '달', 
 const COLOR_NAME = { amber: '금빛', jade: '옥빛', crimson: '진홍', violet: '보랏빛', silver: '은빛' };
 const medal = (emblem, color) => `<span class="medal c-${color}"><svg viewBox="0 0 24 24">${EMBLEM[emblem] || EMBLEM.star}</svg></span>`;
 let myProfile = null;
-const profileKey = () => { try { return localStorage.getItem('arcana-profile') || ''; } catch { return ''; } };
+// 로그인하면 받는 세션 열쇠: 이 탭에만 둔다 (새로 접속하면 다시 로그인)
+const profileKey = () => { try { return sessionStorage.getItem('arcana-session') || ''; } catch { return ''; } };
+// 로그인 기능 전에 이 기기에서 만든 프로필 열쇠: 회원가입 때 그 프로필에 계정을 붙인다
+const legacyKey = () => { try { return localStorage.getItem('arcana-profile') || ''; } catch { return ''; } };
 
 function profileCard(p) {
   if (!p) return '';
@@ -1948,7 +1985,9 @@ function fillProfileForm() {
   $('pTitle').value = p.titleId || ''; $('pTitleRow').hidden = !myProfile;
   document.querySelector(`[name=pEmblem][value=${p.emblem}]`).checked = true;
   document.querySelector(`[name=pColor][value=${p.color}]`).checked = true;
-  $('pSave').textContent = myProfile ? '저장' : '프로필 만들기';
+  $('pSave').textContent = '저장';
+  $('pGuest').hidden = !!myProfile; $('pPreview').hidden = $('pForm').hidden = !myProfile;
+  $('pKeyNote').textContent = myProfile?.login ? `로그인 아이디: ${myProfile.login}` : '';
   $('pMsg').textContent = ''; $('pMsg').className = 'pmsg';
   previewProfile();
 }
@@ -1964,7 +2003,10 @@ function showPTab(name) {
   if (name === 'find') $('pSearch').focus();
 }
 document.querySelectorAll('[data-ptab]').forEach(t => t.onclick = () => showPTab(t.dataset.ptab));
-$('meBtn').onclick = () => { fillProfileForm(); showPTab('mine'); $('profile').showModal(); };
+$('meBtn').onclick = () => { // 게스트는 프로필 찾기만 (내 프로필 탭에서 로그인 안내)
+  fillProfileForm(); showPTab(myProfile ? 'mine' : 'find'); $('profile').showModal();
+};
+$('pLogin').onclick = () => { $('profile').close(); openLogin('login'); };
 let searchT;
 $('pSearch').oninput = () => {
   clearTimeout(searchT);
@@ -1989,10 +2031,65 @@ document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dat
   if (e.target === $(id) && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) $(id).close();
 }));
 
+/* ---------- 로그인 / 회원가입 ----------
+   접속하면 로그인 창이 가장 먼저 뜬다 (아이디는 기억해 두었다가 채움). 같은 탭에서 새로고침하면 다시 묻지 않는다. */
+let loginMode = 'login';
+const loggedThisTab = () => { try { return !!sessionStorage.getItem('arcana-authed'); } catch { return false; } };
+function openLogin(mode) {
+  loginMode = mode;
+  const signup = mode === 'signup', legacy = signup && !!legacyKey();
+  $('loginTitle').textContent = signup ? '회원가입' : '로그인';
+  $('loginSub').textContent = !signup ? 'ARCANA에 오신 것을 환영합니다. 아이디와 비밀번호를 입력하세요.'
+    : legacy ? '이 기기에서 만든 프로필에 아이디와 비밀번호를 붙여 이어서 씁니다.' : '아이디와 비밀번호, 게임에서 쓸 닉네임을 정하세요.';
+  $('signupRows').hidden = !signup; $('nickRow').hidden = legacy;
+  $('lgPw2').required = signup; $('lgNick').required = signup && !legacy;
+  $('lgPw').autocomplete = signup ? 'new-password' : 'current-password';
+  $('lgSubmit').textContent = signup ? '가입하고 시작하기' : '로그인';
+  $('lgToggle').textContent = signup ? '이미 계정이 있나요? 로그인' : '계정이 없나요? 회원가입';
+  try { if (!$('lgId').value) $('lgId').value = localStorage.getItem('arcana-login-id') || ''; } catch {}
+  $('lgErr').textContent = ''; $('lgSubmit').disabled = false;
+  if (!$('loginDlg').open) $('loginDlg').showModal();
+  ($('lgId').value ? $('lgPw') : $('lgId')).focus();
+}
+$('loginDlg').addEventListener('cancel', e => e.preventDefault()); // Esc로 닫지 않기 (로그인하거나 게스트로 시작)
+$('lgToggle').onclick = () => openLogin(loginMode === 'login' ? 'signup' : 'login');
+$('lgGuest').onclick = () => finishLogin(null);
+$('loginForm').onsubmit = e => {
+  e.preventDefault();
+  const login = $('lgId').value.trim().toLowerCase(), password = $('lgPw').value;
+  if (loginMode === 'signup' && password !== $('lgPw2').value) { $('lgErr').textContent = '비밀번호 확인이 일치하지 않습니다.'; return; }
+  if (ws.readyState !== WebSocket.OPEN) { $('lgErr').textContent = '서버와 연결 중입니다. 잠시 뒤 다시 눌러 주세요.'; return; }
+  $('lgErr').textContent = ''; $('lgSubmit').disabled = true;
+  ws.send(JSON.stringify(loginMode === 'login' ? { type: 'auth:login', login, password }
+    : { type: 'auth:signup', login, password, nickname: $('lgNick').value.trim(), legacyKey: legacyKey() }));
+};
+function onAuth(msg) {
+  $('lgSubmit').disabled = false;
+  if (msg.type === 'auth:error') { $('lgErr').textContent = msg.message; $('lgPw').select(); return; }
+  try {
+    sessionStorage.setItem('arcana-session', msg.key);
+    if ($('lgRemember').checked) localStorage.setItem('arcana-login-id', msg.profile.login); else localStorage.removeItem('arcana-login-id');
+    if (msg.signup) localStorage.removeItem('arcana-profile'); // 예전 기기 열쇠는 이제 계정으로 옮겨졌다
+  } catch {}
+  $('lgPw').value = $('lgPw2').value = '';
+  myProfile = msg.profile; renderMeBtn(); $('name').value = myProfile.nickname;
+  finishLogin(myProfile);
+}
+function finishLogin(profile) {
+  try { sessionStorage.setItem('arcana-authed', profile ? 'user' : 'guest'); } catch {}
+  $('loginDlg').close();
+  banner(null, profile ? `${profile.nickname}님, 환영합니다` : '게스트로 시작합니다');
+  if (invited && !room) { $('code').value = invited; open('join'); }
+}
+$('logoutBtn').onclick = () => {
+  try { sessionStorage.removeItem('arcana-session'); sessionStorage.removeItem('arcana-authed'); } catch {}
+  myProfile = null; renderMeBtn(); $('profile').close();
+  openLogin('login');
+};
+
 function onProfileMessage(msg) {
   if (msg.type === 'profile:me') {
-    if (msg.key) try { localStorage.setItem('arcana-profile', msg.key); } catch {}
-    if (!msg.profile && profileKey()) try { localStorage.removeItem('arcana-profile'); } catch {} // 서버에 없는 열쇠
+    if (!msg.profile && profileKey()) try { sessionStorage.removeItem('arcana-session'); } catch {} // 서버에 없는 열쇠
     myProfile = msg.profile; renderMeBtn();
     if (msg.saved) { fillProfileForm(); $('pMsg').textContent = '저장했습니다.'; $('pMsg').className = 'pmsg good'; }
   }
@@ -2019,6 +2116,7 @@ function onMessage(e) {
     welcomed();
   }
   if (msg.type.startsWith('profile:')) return onProfileMessage(msg);
+  if (msg.type.startsWith('auth:')) return onAuth(msg);
   if (msg.type === 'replaced') replaced = true;
   if (msg.type === 'error') {
     if (pending) { pending.cancel(); pending = null; open(mode); }

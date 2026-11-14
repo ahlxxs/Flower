@@ -10,7 +10,8 @@ const ok = (c, l) => { if (!l) return; if (!c) failed++; console.log((c ? 'PASS 
 (async () => {
   await sleep(800);
   const b = await chromium.launch(); const errs = [];
-  const page = async () => { const p = await (await b.newContext({ viewport: { width: 1440, height: 860 } })).newPage(); p.on('pageerror', e => errs.push(e.message)); return p; };
+  const page = async () => { const p = await (await b.newContext({ viewport: { width: 1440, height: 860 } })).newPage(); // 로그인 창은 건너뛰고 게스트로
+    await p.addInitScript(() => { try { sessionStorage.setItem('arcana-authed', 'guest'); } catch {} }); p.on('pageerror', e => errs.push(e.message)); return p; };
   const A = await page(); await A.goto(U); await A.waitForFunction(() => document.getElementById('loader').classList.contains('done'));
   await A.click('.cta'); await A.fill('#name', 'A'); await A.click('#form .btn:not(.ghost)'); await A.waitForSelector('#lobby:not([hidden])'); await sleep(1800);
   const code = await A.textContent('#roomCode');

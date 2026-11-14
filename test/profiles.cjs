@@ -11,25 +11,33 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   const b = await chromium.launch(); const errs = [];
   const page = async (w = 1440, h = 860) => { const p = await (await b.newContext({ viewport: { width: w, height: h } })).newPage(); p.on('pageerror', e => errs.push(e.message)); return p; };
   const ready = p => p.waitForFunction(() => document.getElementById('loader').classList.contains('done'), null, { timeout: 15000 });
+  const signup = async (p, id, nick) => {
+    await p.waitForSelector('#loginDlg[open]'); await p.click('#lgToggle');
+    await p.fill('#lgId', id); await p.fill('#lgPw', 'secret12'); await p.fill('#lgPw2', 'secret12'); await p.fill('#lgNick', nick);
+    await p.click('#lgSubmit'); await sleep(500);
+  };
+  const guest = async p => { await p.waitForSelector('#loginDlg[open]'); await p.click('#lgGuest'); await sleep(200); };
 
-  // 1. 프로필 만들기
+  // 1. 회원가입 → 프로필 꾸미기
   const a = await page(); await a.goto(U); await ready(a);
+  await signup(a, 'arin', '용사아린');
+  ok(!(await a.evaluate(() => document.getElementById('loginDlg').open)), '회원가입하면 로그인 창이 닫힘');
   await a.click('#meBtn'); await sleep(200);
-  await a.fill('#pName', '용사아린'); await a.fill('#pIntro', '봉인은 내가 막는다.');
+  await a.fill('#pIntro', '봉인은 내가 막는다.');
   await a.click('[name=pEmblem][value=sword] + .medal'); await a.click('[name=pColor][value=crimson] + .swatch');
   await a.click('#pSave'); await sleep(500);
   ok((await a.textContent('#pMsg')) === '저장했습니다.', '프로필 만들기');
   ok((await a.textContent('#meBtn')).includes('용사아린'), '오른쪽 위에 내 프로필 표시');
   await a.click('[data-close="profile"]');
 
-  // 2. 다른 기기에서 같은 닉네임으로 프로필 → 거절, 게스트로 그 닉네임 → 거절
+  // 2. 다른 기기에서 같은 닉네임으로 가입 → 거절, 그다음 게스트로
   const g = await page(390, 800); await g.goto(U); await ready(g);
-  await g.click('#meBtn'); await g.fill('#pName', '용사아린'); await g.click('#pSave'); await sleep(400);
-  ok((await g.textContent('#pMsg')).includes('이미 다른 사람'), '중복 닉네임 거절');
-  await g.click('[data-close="profile"]');
+  await signup(g, 'other', '용사아린');
+  ok((await g.textContent('#lgErr')).includes('이미 다른 사람'), '중복 닉네임 거절');
+  await g.click('#lgGuest'); await sleep(200);
 
-  // 3. 검색 → 보기
-  await g.click('#meBtn'); await g.click('[data-ptab="find"]'); await g.fill('#pSearch', '용사'); await sleep(600);
+  // 3. 게스트도 검색 → 보기
+  await g.click('#meBtn'); await sleep(200); await g.fill('#pSearch', '용사'); await sleep(600);
   ok((await g.textContent('#pResults')).includes('용사아린'), '닉네임 일부로 검색');
   await g.click('#pResults button'); await sleep(400);
   ok((await g.textContent('#pviewBody')).includes('봉인은 내가 막는다.'), '검색 결과 눌러 프로필 보기');
@@ -52,7 +60,7 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   // 5. 수정 → 서버 재시작 후에도 유지
   await a.click('#meBtn'); await a.fill('#pIntro', '수정된 소개말'); await a.click('[name=pColor][value=violet] + .swatch'); await a.click('#pSave'); await sleep(1200);
   srv.kill(); await sleep(300); srv = start(); await sleep(1000);
-  const c = await page(); await c.goto(U); await ready(c);
+  const c = await page(); await c.goto(U); await ready(c); await guest(c);
   await c.click('#meBtn'); await c.click('[data-ptab="find"]'); await c.fill('#pSearch', '아린'); await sleep(600);
   await c.click('#pResults button'); await sleep(400);
   ok((await c.textContent('#pviewBody')).includes('수정된 소개말'), '수정 내용이 서버 재시작 뒤에도 남아 있음');

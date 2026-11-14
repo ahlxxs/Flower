@@ -10,7 +10,8 @@ const ok = (cond, label) => { if (!cond) failed++; console.log((cond ? 'PASS ' :
 (async () => {
   await sleep(800);
   const b = await chromium.launch(); const errs = [];
-  const tab = async ctx => { const p = await ctx.newPage(); p.on('pageerror', e => errs.push(e.message)); return p; };
+  const tab = async ctx => { const p = await ctx.newPage(); // 로그인 창은 건너뛰고 게스트로
+    await p.addInitScript(() => { try { sessionStorage.setItem('arcana-authed', 'guest'); } catch {} }); p.on('pageerror', e => errs.push(e.message)); return p; };
   const A = await b.newContext(), B = await b.newContext();
   const a = await tab(A);
   await a.goto(U); await sleep(3300);

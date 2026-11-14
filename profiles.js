@@ -5,7 +5,7 @@
 import { readFileSync, mkdirSync } from 'node:fs';
 import pg from 'pg';
 import { writeFile, rename } from 'node:fs/promises';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { join } from 'node:path';
 
 const DIR = process.env.DATA_DIR || new URL('./data', import.meta.url).pathname;
@@ -22,6 +22,7 @@ export const TITLES = [
 
 const byKey = new Map();  // key -> profile
 const byName = new Map(); // 소문자 닉네임 -> key
+const byLogin = new Map(); // 소문자 로그인 아이디 -> key
 const db = process.env.DATABASE_URL ? new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 }) : null;
 let loaded;
 export const storage = db ? 'database' : 'file'; // /health에서 보여 줌
@@ -32,7 +33,7 @@ if (db) {
 } else {
   try { loaded = JSON.parse(readFileSync(FILE, 'utf8')); } catch { loaded = []; } // 첫 실행: 파일 없음
 }
-for (const p of loaded) { byKey.set(p.key, p); byName.set(p.nickname.toLowerCase(), p.key); }
+for (const p of loaded) { byKey.set(p.key, p); byName.set(p.nickname.toLowerCase(), p.key); if (p.login) byLogin.set(p.login, p.key); }
 
 let saveTimer, dbQueue = Promise.resolve();
 function persist(p) {
@@ -60,7 +61,7 @@ export function publicView(p) {
   return { nickname: p.nickname, intro: p.intro, emblem: p.emblem, color: p.color, title: title?.name || '', stats: p.stats, createdAt: p.createdAt };
 }
 // 본인에게 보여 줄 정보 (+ 고를 수 있는 칭호)
-export const ownView = p => ({ ...publicView(p), titleId: p.title, titles: titlesOf(p).map(({ id, name, desc }) => ({ id, name, desc })) });
+export const ownView = p => ({ ...publicView(p), login: p.login || '', titleId: p.title, titles: titlesOf(p).map(({ id, name, desc }) => ({ id, name, desc })) });
 
 export function search(q) {
   q = String(q ?? '').trim().toLowerCase();
@@ -88,4 +89,41 @@ export function save(key, input) {
   byKey.set(next.key, next); byName.set(nickname.toLowerCase(), next.key);
   persist(next);
   return { profile: next };
+}
+
+/* ---------- 계정: 아이디 + 비밀번호 ----------
+   비밀번호는 원문을 저장하지 않고 scrypt 해시만 저장한다. 로그인에 성공하면 프로필 key(세션 열쇠)를 돌려준다. */
+const LOGIN = /^[a-z0-9_]{3,16}$/; // 영문 소문자·숫자·밑줄 3~16자
+const hash = (password, salt) => scryptSync(String(password), salt, 32).toString('hex');
+const loginErr = (login, password) => {
+  if (!LOGIN.test(login)) return '아이디는 영문·숫자·밑줄(_) 3~16자로 정해 주세요.';
+  if (String(password ?? '').length < 6) return '비밀번호는 6자 이상으로 정해 주세요.';
+  if (String(password).length > 100) return '비밀번호가 너무 깁니다.';
+  return '';
+};
+// 가입: 이 기기에 비밀번호 없는 예전 프로필(legacyKey)이 있으면 그 프로필에 계정을 붙인다
+export function signup({ login, password, nickname, legacyKey }) {
+  login = String(login ?? '').trim().toLowerCase();
+  const e = loginErr(login, password); if (e) return { error: e };
+  if (byLogin.has(login)) return { error: '이미 사용 중인 아이디입니다.' };
+  let p = getByKey(legacyKey);
+  if (p && p.login) p = null; // 이미 계정이 있는 프로필은 이어받지 않는다
+  if (!p) {
+    const res = save(null, { nickname, emblem: 'star', color: 'amber' });
+    if (res.error) return res;
+    p = res.profile;
+  }
+  const salt = randomBytes(16).toString('hex');
+  Object.assign(p, { login, salt, pass: hash(password, salt) });
+  byLogin.set(login, p.key);
+  persist(p);
+  return { profile: p };
+}
+export function login({ login, password }) {
+  login = String(login ?? '').trim().toLowerCase();
+  const p = byKey.get(byLogin.get(login));
+  const fail = { error: '아이디 또는 비밀번호가 맞지 않습니다.' };
+  if (!p) { hash(password, 'x'.repeat(32)); return fail; } // 없는 아이디도 같은 시간이 걸리게
+  const a = Buffer.from(hash(password, p.salt), 'hex'), b = Buffer.from(p.pass, 'hex');
+  return a.length === b.length && timingSafeEqual(a, b) ? { profile: p } : fail;
 }

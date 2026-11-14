@@ -16,6 +16,8 @@ const MIN_PLAYERS = 2; // ponytail: 테스트용 최소 인원. 규칙이 정해
 const GRACE_MS = Number(process.env.GRACE_MS) || 10 * 60 * 1000; // 연결이 끊긴 자리를 지켜 주는 시간
 // ponytail: 방과 플레이어는 메모리에만 있다. 서버가 재시작되면 모두 사라진다. 필요해지면 Redis/DB로.
 const rooms = new Map();   // code -> { code, host, players: [player], started }
+// ponytail: 로그인 실패 횟수는 메모리에만 (서버 재시작 시 초기화). 서버를 여러 대로 늘리면 공용 저장소로
+const authTries = new Map(); // ip -> { fails, lock }
 const players = new Map(); // token -> { id, token, name, room, ready, ws, timer, job, role }
 // ponytail: 마왕군 수는 임시로 4명당 1명(최소 1명). 규칙이 정해지면 바꾼다.
 const demonCount = n => Math.max(1, Math.floor(n / 4));
@@ -131,8 +133,9 @@ function remove(p) {
   broadcast(room);
 }
 
-new WebSocketServer({ server: http }).on('connection', ws => {
+new WebSocketServer({ server: http }).on('connection', (ws, req) => {
   let me = null;
+  const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 
   ws.on('close', () => {
     if (!me || me.ws !== ws) return; // 이미 새 연결로 바뀐 경우
@@ -171,7 +174,21 @@ new WebSocketServer({ server: http }).on('connection', ws => {
       const prof = profiles.getByKey(msg.key);
       return send(me, { type: 'profile:me', profile: prof && profiles.ownView(prof) });
     }
+    // ---------- 로그인 / 회원가입 ----------
+    if (msg.type === 'auth:login' || msg.type === 'auth:signup') {
+      const tries = authTries.get(ip) || { fails: 0, lock: 0 };
+      if (tries.lock > Date.now()) return send(me, { type: 'auth:error', message: `로그인 시도가 너무 많습니다. ${Math.ceil((tries.lock - Date.now()) / 1000)}초 뒤에 다시 해 주세요.` });
+      const res = msg.type === 'auth:login' ? profiles.login(msg) : profiles.signup(msg);
+      if (res.error) {
+        if (msg.type === 'auth:login' && ++tries.fails >= 5) { tries.fails = 0; tries.lock = Date.now() + 30000; } // 같은 곳에서 5번 틀리면 30초 쉬기
+        authTries.set(ip, tries);
+        return send(me, { type: 'auth:error', message: res.error });
+      }
+      authTries.delete(ip);
+      return send(me, { type: 'auth:ok', key: res.profile.key, profile: profiles.ownView(res.profile), signup: msg.type === 'auth:signup' });
+    }
     if (msg.type === 'profile:save') {
+      if (!profiles.getByKey(msg.key)) return send(me, { type: 'profile:error', message: '로그인하면 프로필을 고칠 수 있습니다.' });
       const res = profiles.save(msg.key, msg);
       if (res.error) return send(me, { type: 'profile:error', message: res.error });
       return send(me, { type: 'profile:me', key: res.profile.key, profile: profiles.ownView(res.profile), saved: true });
