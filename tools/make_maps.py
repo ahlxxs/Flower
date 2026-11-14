@@ -183,7 +183,20 @@ def m_cover(B, F, rnd):
              + rect('#c4283c', 40, 400, 12, 120) + rect('#ececef', 1548, 300, 12, 120))
     return back, front
 
-@mapdef('planet')  # 행성 고리: 짙은 우주, 고리 두른 큰 행성, 보랏빛 성운 물감
+@mapdef('planet')  # 행성 고리: 짙은 우주, 보랏빛 성운, 빛 고리를 두른 블랙홀(사진) — 빛 번짐이 숨 쉬듯, 별이 반짝
+def m_planet(B, F, rnd):
+    neb = lambda x, y, w, h, c, o: path(f'M{x} {y}c{w * .3}-{h} {w * .7}-{h * .2} {w} 0s-{w * .2} {h} -{w * .5} {h * .6}-{w * .6}-{h * .1}-{w * .5}-{h * .6}z', c, f' opacity="{o}"')
+    back = (rect(B.lin('sky', [(0, '#0c0b1a'), (.6, '#14123a'), (1, '#1c1a48')])) + twinkles(rnd, 160, '#c8d0ff', 0, 900)
+            + g(neb(100, 300, 500, 200, '#6a4ad8', .22) + neb(200, 700, 600, 220, '#4b5fd6', .2) + neb(1100, 120, 400, 160, '#e08ad8', .16), f' filter="{B.blur("nb", 34)}"')
+            + circle(1150, 420, 300, B.rad('glow', [(0, '#ff8af0', .5), (.5, '#8a4ae0', .2), (1, '#8a4ae0', 0)]), anim('opacity', '.65;1;.65', 9))
+            + '<mask id="planet-fade"><rect width="1600" height="900" fill="url(#planet-edge)"/></mask>'
+            + g(img_tag('blackhole.jpg', 600, 60, 1100, 762), ' mask="url(#planet-fade)" style="mix-blend-mode:screen"'))
+    B.rad('edge', [(0, '#fff'), (.35, '#fff'), (.66, '#000')], .72, .5, .5)  # 사진 가장자리를 부드럽게 지운다
+    front = (shade_center(F, '#06051a', .5)
+             + ''.join(neb(x, y, w, h, '#8a6ad8', .5) for x, y, w, h in [(1380, 840, 300, 70), (-40, 860, 340, 70), (-20, 80, 220, 60)])
+             + falling(rnd, 5, '#fff7c8', 'star', 0, 1600, 16))
+    return back, front
+
 def m_planet(B, F, rnd):
     neb = lambda x, y, w, h, c, o: path(f'M{x} {y}c{w * .3}-{h} {w * .7}-{h * .2} {w} 0s-{w * .2} {h} -{w * .5} {h * .6}-{w * .6}-{h * .1}-{w * .5}-{h * .6}z', c, f' opacity="{o}"')
     back = (rect(B.lin('sky', [(0, '#14153a'), (1, '#2a2b5a')])) + stars(rnd, 180, '#e6e6ff', 0, 900)
@@ -311,7 +324,21 @@ def m_waterfall(B, F, rnd):
              + ''.join(g(path(f'M{x} 920V{y}', 'none', ' stroke="#2a1e48" stroke-width="3"') + circle(x, y, 9, '#2a1e48')) for x, y in [(540, 800), (580, 780), (1240, 790), (1280, 810), (700, 820)]))
     return back, front
 
-@mapdef('ruins')  # 부유 폐허: 분홍 하늘, 공중에 뜬 기계 도시 조각들, 흘러내리는 잔해, 푸른 구름
+@mapdef('ruins')  # 부유 폐허: 구름 속에 뜬 하늘 섬(사진)을 분홍 노을빛으로 — 섬이 천천히 떠오르내리고, 구름이 흘러간다
+def m_ruins(B, F, rnd):
+    back = (rect('#e8b8c8') + animg(img_tag('island.jpg', -20, -10, 1640, 1057), anim_t('translate', '0 0;0 -14;0 0', 14))
+            + rect(B.lin('tint', [(0, '#ff6a9a', .85), (.5, '#f6a8c0', .7), (1, '#b8a0f0', .75)]), 0, 0, 1600, 900, ' style="mix-blend-mode:color"')
+            + rect(B.lin('tint2', [(0, '#e87aa0', .4), (.55, '#f6c8d8', .1), (1, '#9a88d0', .35)]), 0, 0, 1600, 900, ' style="mix-blend-mode:multiply"')
+            + rect(B.lin('haze', [(0, '#ffe0ea', .25), (1, '#ffe0ea', 0)]), 0, 0, 1600, 500)
+            + circle(1320, 140, 260, B.rad('sun', [(0, '#fff4f0', .7), (1, '#fff4f0', 0)])))
+    blur = F.blur('wisp', 18)
+    def wisp(x0, y, w, o):
+        return g(''.join(circle(x0 + i * w * .22, y + rnd.uniform(-20, 20), rnd.uniform(w * .12, w * .2), '#fff6fa') for i in range(5)), f' opacity="{o}" filter="{blur}"')
+    front = (shade_center(F, '#3a1430', .35)
+             + drift_g(wisp(-100, 820, 700, .75), 120, 40) + drift_g(wisp(900, 860, 800, .8), -140, 46) + drift_g(wisp(-200, 120, 500, .45), 160, 50)
+             + falling(rnd, 10, '#ffd0e0', 'petal', 0, 1600, 18))
+    return back, front
+
 def m_ruins(B, F, rnd):
     def plat(x, y, w, h, c):
         out = [path(f'M{x} {y}H{x + w}L{x + w * .85} {y + h}H{x + w * .15}Z', c)]
@@ -349,7 +376,24 @@ def m_shrine(B, F, rnd):
              + ''.join(hang(x, -10, l, '#122a2c', 6, rnd) for x, l in [(200, 300), (300, 200), (1300, 260), (1420, 360)]))
     return back, front
 
-@mapdef('sunset')  # 노을 성 (픽셀): 붉은 하늘, 큰 노란 해, 오른쪽 성, 날아가는 새, 붉은 숲과 물
+@mapdef('sunset')  # 노을 성 (픽셀): 붉은 하늘과 큰 해, 성과 숲은 그림자로만 — 새가 날고 물빛이 일렁인다
+def m_sunset(B, F, rnd):
+    c = 10
+    shimmer = ''.join(f'<rect x="{f(500 + rnd.uniform(-60, 60))}" y="{y}" width="{f(rnd.uniform(40, 120))}" height="6" fill="#ffd86a" shape-rendering="crispEdges" opacity=".5">{anim("opacity", ".15;.75;.15", rnd.uniform(3, 6))}</rect>' for y in range(700, 860, 24))
+    back = (pix_bands([(0, '#7a1e3a'), (160, '#a83048'), (320, '#d85a50'), (480, '#f08a5a'), (640, '#c06070'), (900, '#c06070')])
+            + ''.join(drift_g(rect('#f0a080', x, y, w, 10, ' opacity=".6" shape-rendering="crispEdges"'), d, 50) for x, y, w, d in [(100, 140, 260, 40), (900, 120, 300, -50), (400, 260, 200, 30), (1200, 300, 260, -40)])
+            + circle(560, 470, 260, B.rad('sun', [(0, '#ffe08a', .55), (1, '#ffe08a', 0)])) + pix_circle(560, 470, 150, c, '#ffd86a')
+            + ''.join(rect('#f08a5a', 420, y, 280, 8, ' shape-rendering="crispEdges"') for y in (500, 540, 580))
+            + pix_poly([(200, 640), (420, 540), (600, 600), (820, 550), (1100, 620), (1400, 570), (1600, 640), (1600, 700), (200, 700)], c, '#7a3a5a')
+            + rect('#d86a6a', 0, 680, 1600, 220, ' shape-rendering="crispEdges"') + shimmer)
+    sil = '#2a1226'
+    castle = pix_poly([(1080, 920), (1080, 520), (1120, 520), (1120, 440), (1160, 380), (1200, 440), (1200, 500), (1300, 500), (1300, 300), (1340, 220), (1380, 300), (1380, 460), (1460, 460), (1460, 380), (1500, 320), (1540, 380), (1540, 520), (1620, 520), (1620, 920)], c, sil)
+    trees = ''.join(pix_poly([(x - w, base), (x, base - h), (x + w, base)], c, sil) for x, base, w, h in [(40, 760, 60, 340), (120, 780, 50, 260), (220, 800, 70, 300), (980, 860, 50, 200), (1040, 880, 40, 150)])
+    front = (shade_center(F, '#2a0a18', .3) + castle + rect(sil, 1336, 170, 6, 50) + trees
+             + pix_poly([(-20, 920), (-20, 740), (300, 760), (520, 860), (600, 920)], c, sil) + pix_blobs([(980, 900, 90), (1140, 880, 80)], c, sil)
+             + birds(rnd, sil, 7))
+    return back, front
+
 def m_sunset(B, F, rnd):
     c = 10
     bird = lambda x, y: pix_poly([(x, y), (x + 20, y + 8), (x + 40, y), (x + 20, y + 14)], 6, '#2a1430')
@@ -366,7 +410,27 @@ def m_sunset(B, F, rnd):
              + pix_blobs([(100, 780, 90), (260, 800, 80), (400, 860, 90), (980, 860, 80), (1140, 820, 70)], c, '#c03040') + pix_blobs([(80, 820, 60), (300, 840, 60), (1050, 880, 60)], c, '#e04a4a'))
     return back, front
 
-@mapdef('skycity')  # 구름 위 시계탑 (픽셀): 푸른 잿빛 하늘, 파스텔 구름, 시계탑과 첨탑들
+@mapdef('skycity')  # 구름 위 시계탑 (픽셀): 저녁빛 하늘 아래 탑들은 그림자로만 — 구름이 흐르고 새가 난다
+def m_skycity(B, F, rnd):
+    c = 10
+    def tower(x, base, w, h, col, clock=False):
+        out = pix_poly([(x - w / 2, base), (x - w / 2, base - h), (x + w / 2, base - h), (x + w / 2, base)], c, col)
+        out += pix_poly([(x - w / 2 - 10, base - h), (x, base - h - w * 1.1), (x + w / 2 + 10, base - h)], c, col)
+        if clock: out += pix_circle(x, base - h + 70, w * .36, c, col) + pix_poly([(x - w * .75, base - h * .45), (x + w * .75, base - h * .45), (x + w * .55, base - h * .38), (x - w * .55, base - h * .38)], c, col)
+        return out
+    far, mid, near = '#9a8fc0', '#615a8c', '#36325a'
+    back = (pix_bands([(0, '#3a4a78'), (180, '#5a6a98'), (360, '#a08ab0'), (520, '#e8b0a8'), (900, '#f2c8b0')])
+            + circle(1240, 420, 320, B.rad('sun', [(0, '#fff0d8', .8), (1, '#fff0d8', 0)]))
+            + drift_g(pix_cloud(260, 300, 460, 150, c, '#f6d8c8', '#c8a8c8', rnd), 60, 70) + drift_g(pix_cloud(1360, 220, 520, 160, c, '#f6d8c8', '#c8a8c8', rnd), -50, 80)
+            + tower(300, 700, 50, 300, far) + tower(470, 700, 70, 240, far) + tower(1080, 700, 60, 320, far) + tower(1460, 700, 56, 260, far)
+            + tower(380, 760, 70, 360, mid) + tower(600, 760, 90, 300, mid) + tower(800, 760, 60, 430, mid) + tower(1000, 760, 80, 340, mid)
+            + tower(1240, 790, 150, 540, near, True) + tower(1440, 780, 70, 320, near)
+            + drift_g(pix_cloud(800, 650, 1000, 180, c, '#f8e6d8', '#d8b8d0', rnd), 40, 60))
+    front = (shade_center(F, '#1a1830', .3)
+             + drift_g(pix_cloud(160, 820, 640, 230, c, '#fff0e6', '#d8c0d8', rnd), 50, 55) + drift_g(pix_cloud(1440, 840, 640, 230, c, '#fff0e6', '#d8c0d8', rnd), -50, 65)
+             + pix_cloud(800, 900, 900, 160, c, '#f2e2ee', '#c8b0d0', rnd) + birds(rnd, '#36325a', 4))
+    return back, front
+
 def m_skycity(B, F, rnd):
     c = 10
     def tower(x, base, w, h, col, roof=True, clock=False):
@@ -385,7 +449,26 @@ def m_skycity(B, F, rnd):
              + pix_cloud(800, 900, 900, 160, c, '#f2e2ee', '#c8b0d0', rnd) + pix_cloud(1480, 120, 360, 120, c, '#f6d8c8', '#c8a8c8', rnd))
     return back, front
 
-@mapdef('henge')  # 붉은 환상열석 (픽셀): 붉은 하늘과 구름, 선돌 고리, 빛나는 궤도와 붉은 별, 불그스름한 들판
+@mapdef('henge')  # 붉은 환상열석 (픽셀): 붉은 하늘에 흐르는 구름(사진), 선돌 고리, 천천히 도는 빛의 궤도와 붉은 별
+def m_henge(B, F, rnd):
+    c = 10
+    stone = lambda x, base, w, h: pix_poly([(x, base), (x + w * .1, base - h), (x + w * .9, base - h - 6), (x + w, base)], c, '#2e2030')
+    orbit = (f'<g fill="none" stroke="#ffe0c0" stroke-width="5" opacity=".9">{P("M560 220C700 120 980 140 1040 200S840 320 700 300 520 260 560 220Z")}{P("M600 160C760 260 1000 260 1040 200S860 100 720 120 560 120 600 160Z")}'
+             f'{anim_t("rotate", "0 800 210;360 800 210", 90)}</g>')
+    back = (pix_bands([(0, '#4a0818'), (120, '#7a1222'), (260, '#b02a2a'), (420, '#d8502e'), (520, '#e86a3a'), (900, '#e86a3a')])
+            + drift_g(img_tag('henge_cloud_b.png', 0, 70, 900, 242, PIX), 80, 70) + drift_g(img_tag('henge_cloud_b.png', 900, 150, 700, 188, PIX + ' opacity=".8"'), -60, 80)
+            + drift_g(img_tag('henge_cloud_a.png', -60, 280, 760, 248, PIX), 50, 60) + drift_g(img_tag('henge_cloud_a.png', 1000, 260, 700, 228, PIX), -50, 66)
+            + orbit + rect('#ffd0a0', 798, 0, 4, 520, ' opacity=".7"')
+            + circle(800, 210, 60, B.rad('star', [(0, '#ffe0a0'), (.4, '#ff6a3a', .8), (1, '#ff6a3a', 0)]), anim('r', '50;72;50', 5)) + pix_circle(800, 210, 12, 6, '#fff0c0')
+            + twinkles(rnd, 14, '#ffffff', 60, 330, 500, 1100)
+            + rect('#a83030', 0, 540, 1600, 360, ' shape-rendering="crispEdges"')
+            + ''.join(stone(x, 600 + d, w, h) for x, d, w, h in [(560, 0, 50, 90), (630, -6, 40, 70), (700, -8, 30, 60), (860, -8, 30, 60), (920, -6, 40, 70), (990, 0, 50, 90)]) + rect('#2e2030', 620, 520, 70, 14) + rect('#2e2030', 900, 520, 70, 14))
+    field = ''.join(rect(col, 0, y, 1600, 920 - y, ' shape-rendering="crispEdges"') for y, col in [(620, '#b8402a'), (700, '#9a3226'), (790, '#7a2420'), (860, '#5a1a1c')])
+    field += ''.join(rect(rnd.choice(['#e8803a', '#f0a050', '#d85a2a', '#6a2a3a']), int(rnd.uniform(0, 1600) / c) * c, int(rnd.uniform(620, 900) / c) * c, c * rnd.choice([1, 2, 3]), c, ' shape-rendering="crispEdges"') for _ in range(420))
+    front = (shade_center(F, '#2a0608', .35) + field + stone(120, 860, 150, 300) + stone(300, 900, 120, 240) + rect('#2e2030', 100, 540, 340, 30, ' shape-rendering="crispEdges"')
+             + stone(1300, 880, 140, 280) + stone(1460, 900, 130, 320) + drift_g(img_tag('henge_cloud_c.png', 1180, 40, 420, 156, PIX + ' opacity=".9"'), -40, 50))
+    return back, front
+
 def m_henge(B, F, rnd):
     c = 10
     stone = lambda x, base, w, h: pix_poly([(x, base), (x + w * .1, base - h), (x + w * .9, base - h - 6), (x + w, base)], c, '#3a2a3a')
@@ -402,7 +485,24 @@ def m_henge(B, F, rnd):
              + stone(1300, 880, 140, 280) + stone(1460, 900, 130, 320))
     return back, front
 
-@mapdef('goldtree')  # 황금 나무 (픽셀): 푸른 잿빛 밤, 큰 노란 나무, 이끼 낀 바위, 횃불 든 두건, 빛 고리
+@mapdef('goldtree')  # 황금 나무 (픽셀): 푸른 잿빛 밤, 큰 황금 나무(사진), 이끼 바위, 횃불 든 두건 — 잎이 지고 불빛이 흔들린다
+def m_goldtree(B, F, rnd):
+    c = 10
+    back = (pix_bands([(0, '#2e3a4c'), (300, '#3e4c5e'), (600, '#4c5c6e'), (900, '#4c5c6e')])
+            + drift_g(pix_cloud(200, 560, 500, 200, c, '#5e6e80', '#4e5e70', rnd), 40, 70) + drift_g(pix_cloud(1300, 520, 600, 220, c, '#5e6e80', '#4e5e70', rnd), -40, 80)
+            + circle(420, 190, 60, 'none', ' stroke="#a8d8ff" stroke-width="5" stroke-dasharray="300 80"') + twinkles(rnd, 50, '#dfe8f0', 0, 400)
+            + circle(1010, 420, 380, B.rad('treeglow', [(0, '#f8c848', .35), (1, '#f8c848', 0)]), anim('opacity', '.7;1;.7', 7))
+            + pix_poly([(-20, 720), (300, 700), (600, 720), (900, 700), (1200, 710), (1620, 700), (1620, 920), (-20, 920)], c, '#26343a'))
+    front = (shade_center(F, '#121a22', .3)
+             + img_tag('goldtree.png', 660, 120, 700, 640, PIX)
+             + pix_blobs([(1480, 640, 150), (1580, 580, 120), (1620, 720, 120)], c, '#2a4440') + pix_blobs([(1500, 580, 40), (1560, 660, 30)], c, '#36584a')
+             + pix_poly([(160, 720), (190, 600), (230, 580), (270, 600), (300, 720)], c, '#161a20') + rect('#ffd040', 214, 640, 8, 14) + rect('#4a3a2a', 320, 560, 6, 160)
+             + circle(323, 552, 44, '#ffb030', ' opacity=".2"' ) .replace('/>', f'>{anim("r", "38;50;40;46;38", 2.2)}</circle>')
+             + pix_circle(323, 552, 10, 6, '#ffb030')
+             + pix_poly([(-20, 760), (400, 740), (800, 760), (1200, 750), (1620, 760), (1620, 920), (-20, 920)], c, '#1a2428')
+             + falling(rnd, 16, '#f8b838', 'leaf', 700, 1340, 12) + fireflies(rnd, 26, ['#a0f070', '#ffd040', '#c080ff'], (100, 600, 1500, 880)))
+    return back, front
+
 def m_goldtree(B, F, rnd):
     c = 10
     back = (pix_bands([(0, '#3a4a5a'), (300, '#4a5a6a'), (600, '#566878'), (900, '#566878')])

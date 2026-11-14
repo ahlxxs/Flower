@@ -1507,7 +1507,10 @@ function setMap(m) { // 새 그림을 다 받으면 천천히 나타나고, 그 
   for (const [layer, part] of [['mapBack', 'back'], ['mapFront', 'front']]) {
     const box = $(layer), img = new Image(), old = [...box.children];
     img.alt = ''; img.decoding = 'async';
-    img.onload = () => { requestAnimationFrame(() => img.classList.add('on')); setTimeout(() => old.forEach(o => o.remove()), 1900); };
+    img.onload = () => { // 새 그림이 나타나는 동안 이전 그림은 사라진다 (앞 그림의 나무 등이 남지 않게)
+      requestAnimationFrame(() => { img.classList.add('on'); old.forEach(o => o.classList.remove('on')); });
+      setTimeout(() => old.forEach(o => o.remove()), 1900);
+    };
     img.src = `/maps/${m}-${part}.svg`; box.append(img);
   }
 }
