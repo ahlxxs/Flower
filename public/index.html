@@ -93,6 +93,10 @@ header nav { display: flex; gap: clamp(0.875rem, 3vw, 2.25rem); }
 .facts svg { width: 1.875rem; height: 1.875rem; flex: none; fill: none; stroke: var(--text); stroke-width: 1.4; }
 .seal { transform-box: view-box; transform-origin: 41.25rem 29.375rem; animation: spin 90s linear infinite; }
 .seal.rev { animation-direction: reverse; animation-duration: 140s; }
+/* 두 마법진(90초 정방향, 140초 역방향)의 각도가 같아지는 순간 = 1 / (1/90 + 1/140) = 54.7826초마다 한 번 겹쳐 완전한 마법진이 된다.
+   그 순간 반짝인다. 마법진 그룹 안에 있어서 함께 숨겨지고 함께 다시 시작하므로 박자가 어긋나지 않는다. */
+.seal .flash { opacity: 0; animation: sealFlash 54.7826s linear infinite; }
+@keyframes sealFlash { 0% { opacity: 1; } 1.2% { opacity: .85; } 3.5% { opacity: 0; } 98.4% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 .pulse { animation: pulse 5s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .4; } }
 @media (max-width: 680px) {
@@ -687,10 +691,19 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
         <circle cx="660" cy="470" r="222" stroke-width=".8" stroke-dasharray="4 10"/>
         <polygon points="660,230 868,590 452,590" stroke-width="1"/>
         <polygon points="660,710 452,350 868,350" stroke-width="1"/>
+        <g class="flash" stroke="#fff6d8" stroke-opacity="1">
+          <circle cx="660" cy="470" r="300" fill="url(#halo)" stroke="none"/>
+          <g filter="url(#b2)" stroke-width="4"><circle cx="660" cy="470" r="240"/><polygon points="660,230 868,590 452,590"/><polygon points="660,710 452,350 868,350"/></g>
+          <g stroke-width="1.6"><circle cx="660" cy="470" r="240"/><polygon points="660,230 868,590 452,590"/><polygon points="660,710 452,350 868,350"/></g>
+        </g>
       </g>
       <g class="seal rev">
         <circle cx="660" cy="470" r="160" stroke-width="1" stroke-dasharray="30 6 2 6"/>
         <circle cx="660" cy="470" r="140" stroke-width=".6"/>
+        <g class="flash" stroke="#fff6d8" stroke-opacity="1">
+          <g filter="url(#b2)" stroke-width="4"><circle cx="660" cy="470" r="160"/><circle cx="660" cy="470" r="140"/></g>
+          <circle cx="660" cy="470" r="160" stroke-width="1.4"/><circle cx="660" cy="470" r="140" stroke-width="1"/>
+        </g>
       </g>
     </g>
     <g fill="#060c09">
