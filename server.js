@@ -18,6 +18,7 @@ const GRACE_MS = Number(process.env.GRACE_MS) || 10 * 60 * 1000; // 연결이 �
 const rooms = new Map();   // code -> { code, host, players: [player], started }
 // ponytail: 로그인 실패 횟수는 메모리에만 (서버 재시작 시 초기화). 서버를 여러 대로 늘리면 공용 저장소로
 const authTries = new Map(); // ip -> { fails, lock }
+const MAPS = ['forest', 'redcloud', 'moon']; // 맵(배경). 그림은 클라이언트
 const players = new Map(); // token -> { id, token, name, room, ready, ws, timer, job, role, pkey(로그인한 프로필 key) }
 
 // 내 프로필 + 친구 목록(접속 여부, 들어가 있는 방). 친구의 key는 절대 내보내지 않는다
@@ -100,7 +101,7 @@ function broadcast(room) {
   const list = room.players.map(p => ({ id: p.id, name: p.name, host: p === room.host, ready: p.ready, online: !!p.ws, job: p.job, profile: !!p.profiled }));
   const jobs = room.started ? Object.fromEntries(JOBS.filter(j => room.players.some(p => p.job === j.name)).map(j => [j.name, j])) : null;
   for (const p of room.players) {
-    send(p, { type: 'room', code: room.code, players: list, you: p.id, minPlayers: MIN_PLAYERS, maxPlayers: JOBS.length,
+    send(p, { type: 'room', code: room.code, map: room.map || 'forest', players: list, you: p.id, minPlayers: MIN_PLAYERS, maxPlayers: JOBS.length,
       canStart: canStart(room), started: room.started, role: p.role, jobs });
   }
   pushGame(room); // 게임 중이면 게임 화면도 (재접속한 사람이 바로 이어서 볼 수 있게)
@@ -290,7 +291,7 @@ new WebSocketServer({ server: http, maxPayload: 512 * 1024 }) // 메시지 하�
       if (!name) return err(me, '닉네임을 입력하세요.');
       if (!prof && profiles.getByName(name)) return err(me, '프로필로 등록된 닉네임입니다. 다른 닉네임을 쓰거나 그 프로필로 접속하세요.');
       const code = msg.type === 'create' ? newCode() : String(msg.code ?? '').trim().toUpperCase();
-      const target = msg.type === 'create' ? { code, host: me, players: [], started: false } : rooms.get(code);
+      const target = msg.type === 'create' ? { code, host: me, players: [], started: false, map: 'forest' } : rooms.get(code);
       if (!target) return err(me, '존재하지 않는 방입니다.');
       if (target === room) return broadcast(room);
       // 같은 이름의 자리가 끊겨 있으면 그 자리를 이어받는다 (탭을 닫았다가 다시 들어온 경우)
@@ -312,6 +313,10 @@ new WebSocketServer({ server: http, maxPayload: 512 * 1024 }) // 메시지 하�
       }
       broadcast(target); // started 값으로 클라이언트가 게임 화면으로 바로 간다
       if (msg.type === 'create' && prof) for (const k of prof.friends || []) sendTo(k, { type: 'friend:room', from: prof.nickname, code }); // 친구에게 "방을 만들었어요" 알림
+    } else if (msg.type === 'map') { // 방장이 맵(배경)을 고른다. 게임 중에는 바꿀 수 없다
+      if (!room || room.host !== me || room.started || !MAPS.includes(msg.map)) return;
+      room.map = msg.map;
+      broadcast(room);
     } else if (msg.type === 'ready') {
       if (!room || room.started) return;
       me.ready = !!msg.ready;
