@@ -16,10 +16,37 @@ export const SKINS = ['leather', 'ebony', 'forest']; // 기록부 가죽 재질
 const NAME = /^[\p{L}\p{N}_ ]{2,12}$/u; // 글자·숫자·밑줄·띄어쓰기 2~12자
 const MAX_INTRO = 80;
 
-// 칭호: test(profile)가 참이면 얻는다. 조건은 stats를 보고 판단한다 (예: 5연승 → p.stats.bestStreak >= 5)
+// 칭호: 기획 원문의 "칭호 : 달성조건" 그대로. goal이 있으면 count(stats)가 goal 이상일 때, flag가 있으면 stats.flags[flag]가 켜졌을 때 얻는다.
+// hidden: 얻기 전에는 도감에서 이름과 조건을 가린다
+const jobWins = job => st => st.jobWins?.[job] || 0;
 export const TITLES = [
-  { id: 'novice', name: '새내기 모험가', desc: '프로필을 처음 만들었습니다.', test: () => true },
+  { id: 'novice', name: '새내기 모험가', desc: '프로필을 처음 만들었습니다.', goal: 0, count: () => 0 },
+  { id: 'seer', name: '선지자', desc: '아르카나로 게임 10회 이상 승리.', goal: 10, count: jobWins('아르카나') },
+  { id: 'chosen', name: '선택받은자', desc: '용사로 게임 10회 이상 승리.', goal: 10, count: jobWins('용사') },
+  { id: 'genesis', name: '천지창조', desc: '마법사로 게임 10회 이상 승리.', goal: 10, count: jobWins('마법사') },
+  { id: 'oracle', name: '신의 계시', desc: '사제로 게임 10회 이상 승리.', goal: 10, count: jobWins('사제') },
+  { id: 'faith', name: '부서지지 않는 신념', desc: '방패병으로 게임 10회 이상 승리.', goal: 10, count: jobWins('방패병') },
+  { id: 'tamer', name: '야수를 길들인자', desc: '비스트테이머로 게임 10회 이상 승리.', goal: 10, count: jobWins('비스트 테이머') },
+  { id: 'bullseye', name: '백발백중', desc: '궁수로 게임 10회 이상 승리.', goal: 10, count: jobWins('궁수') },
+  { id: 'fingers', name: '나쁜 손버릇', desc: '도적으로 게임 10회 이상 승리.', goal: 10, count: jobWins('도적') },
+  { id: 'dream', name: '일장춘몽', desc: '몽상가로 게임 10회 이상 승리.', goal: 10, count: jobWins('몽상가') },
+  { id: 'deal', name: '거래를 제안하지!', desc: '상인으로 게임 10회 이상 승리.', goal: 10, count: jobWins('상인') },
+  { id: 'bloody', name: '피범벅', desc: '버서커로 게임 10회 이상 승리.', goal: 10, count: jobWins('버서커') },
+  { id: 'rise', name: '일어나라', desc: '네크로맨서로 게임 10회 이상 승리.', goal: 10, count: jobWins('네크로맨서') },
+  { id: 'paradox', name: '모순 사랑꾼', desc: '박애주의자로 게임 10회 이상 승리.', goal: 10, count: jobWins('박애주의자') },
+  { id: 'alchemy', name: '무에서 유를 만들다', desc: '연금술사로 게임 10회 이상 승리.', goal: 10, count: jobWins('연금술사') },
+  { id: 'demonlord', name: '마왕', desc: '마왕군으로 게임 10회 이상 승리.', goal: 10, count: st => st.demonWins || 0 },
+  { id: 'lover', name: '연인', desc: '특정 플레이어와 연인계약 맺기.', flag: 'lover' },
+  { id: 'legend', name: '전설', desc: '게임 50회 이상 승리.', goal: 50, count: st => st.wins || 0 },
+  { id: 'sulky', name: '나 안삐졌어', desc: '3연패 이상 달성', goal: 3, count: st => st.bestLossStreak || 0 },
+  { id: 'doom', name: '종말 구도자', desc: '용사파티를 한명도 죽이지 않고 제단완성으로 승리. (마왕군일때만)', flag: 'doom' },
+  { id: 'network', name: '인맥', desc: '친구 10명 이상 보유', goal: 10, count: (st, p) => p.friends?.length || 0 },
+  { id: 'superstar', name: '슈퍼스타', desc: '친구 20명 이상 보유', goal: 20, count: (st, p) => p.friends?.length || 0 },
+  { id: 'flawless', name: '완전무결', desc: '게임 종료시 hp(소울하트 제외) 10 이상.', flag: 'flawless' },
+  { id: 'changer', name: '게임 체인저', desc: '게임 종료시 hp(소울하트 포함) 1 이하', flag: 'changer' },
+  { id: 'sparkle', name: '반짝 반짝', desc: '홈 화면의 마법진이 맞춰지는걸 목격', flag: 'sparkle', hidden: true },
 ];
+const hasTitle = (t, p) => { const st = p.stats || {}; return t.flag ? !!st.flags?.[t.flag] : t.count(st, p) >= t.goal; };
 
 const byKey = new Map();  // key -> profile
 const byName = new Map(); // 소문자 닉네임 -> key
@@ -54,7 +81,13 @@ function persist(p) {
 export const count = () => byKey.size;
 export const getByKey = key => byKey.get(String(key ?? '')) || null;
 export const getByName = name => byKey.get(byName.get(String(name ?? '').trim().toLowerCase())) || null;
-export const titlesOf = p => TITLES.filter(t => t.test(p));
+export const titlesOf = p => TITLES.filter(t => hasTitle(t, p));
+// 도감에 보여 줄 칭호 전체: 얻었는지, 진행도(cur / goal). 숨겨진 칭호는 얻기 전까지 가린다
+export const codexOf = p => TITLES.map(t => {
+  const got = !!p && hasTitle(t, p);
+  if (t.hidden && !got) return { id: t.id, name: '???', desc: '숨겨진 칭호입니다.', got, hidden: true };
+  return { id: t.id, name: t.name, desc: t.desc, got, goal: t.goal || 0, cur: t.goal && p ? Math.min(t.goal, t.count(p.stats || {}, p)) : 0 };
+});
 
 /* ---------- 경험치와 레벨 ----------
    한 판: 참가 40 + 승리 60 + 끝까지 살아남음 10 (보통 한 판에 40~110, 평균 약 75)
@@ -68,16 +101,24 @@ export function levelOf(xp = 0) {
   while (lv < MAX_LEVEL && into >= xpNeed(lv)) { into -= xpNeed(lv); lv++; }
   return { lv, xp, into, need: lv < MAX_LEVEL ? xpNeed(lv) : 0 };
 }
-const blankStats = () => ({ games: 0, wins: 0, heroGames: 0, heroWins: 0, demonGames: 0, demonWins: 0, streak: 0, bestStreak: 0, xp: 0, recent: [] });
+const blankStats = () => ({ games: 0, wins: 0, heroGames: 0, heroWins: 0, demonGames: 0, demonWins: 0, streak: 0, bestStreak: 0,
+  lossStreak: 0, bestLossStreak: 0, xp: 0, recent: [], jobWins: {}, flags: {} });
 // 게임이 끝나면 한 사람의 결과를 기록한다. camp: 'hero' | 'demon'. 얻은 경험치를 돌려준다
-export function recordGame(key, { camp, win, survived }) {
+// 칭호용: job(직업), hand(손패 = hp), soul(소울하트), sealWin(제단 완성으로 끝남), heroDeaths(죽은 용사 파티 수)
+export function recordGame(key, { camp, win, survived, job, hand = 0, soul = 0, sealWin = false, heroDeaths = 0 }) {
   const p = getByKey(key);
   if (!p) return 0;
   const st = p.stats = { ...blankStats(), ...p.stats };
   const gain = XP.play + (win ? XP.win : 0) + (survived ? XP.survive : 0);
   st.games++; st.xp += gain;
   if (camp === 'demon') { st.demonGames++; if (win) st.demonWins++; } else { st.heroGames++; if (win) st.heroWins++; }
-  if (win) { st.wins++; st.streak++; st.bestStreak = Math.max(st.bestStreak, st.streak); } else st.streak = 0;
+  if (win) { st.wins++; st.streak++; st.bestStreak = Math.max(st.bestStreak, st.streak); st.lossStreak = 0; }
+  else { st.streak = 0; st.lossStreak++; st.bestLossStreak = Math.max(st.bestLossStreak, st.lossStreak); }
+  st.jobWins = { ...st.jobWins }; st.flags = { ...st.flags };
+  if (win && job) st.jobWins[job] = (st.jobWins[job] || 0) + 1;
+  if (win && camp === 'demon' && sealWin && !heroDeaths) st.flags.doom = true;
+  if (survived && hand >= 10) st.flags.flawless = true;                // 살아서 끝났고 손패 10장 이상
+  if (survived && hand + soul <= 1) st.flags.changer = true;           // 살아서 끝났고 손패 + 소울하트 1 이하
   st.recent = [...st.recent, (camp === 'demon' ? 'd' : 'h') + (win ? 1 : 0)].slice(-24); // 최근 판 (진영 + 승패)
   persist(p);
   return gain;
@@ -90,7 +131,7 @@ export function publicView(p) {
   return { nickname: p.nickname, intro: p.intro, emblem: p.emblem, color: p.color, skin: p.skin || 'leather', title: title?.name || '', stats, level: levelOf(stats.xp), createdAt: p.createdAt };
 }
 // 본인에게 보여 줄 정보 (+ 고를 수 있는 칭호)
-export const ownView = p => ({ ...publicView(p), login: p.login || '', titleId: p.title, titles: titlesOf(p).map(({ id, name, desc }) => ({ id, name, desc })) });
+export const ownView = p => ({ ...publicView(p), login: p.login || '', titleId: p.title, titles: titlesOf(p).map(({ id, name, desc }) => ({ id, name, desc })), codex: codexOf(p) });
 
 export function search(q) {
   q = String(q ?? '').trim().toLowerCase();
@@ -146,6 +187,23 @@ export function signup({ login, password, nickname, legacyKey }) {
   Object.assign(p, { login, salt, pass: hash(password, salt) });
   byLogin.set(login, p.key);
   persist(p);
+  return { profile: p };
+}
+// 표시 플래그 켜기 (예: 홈 화면 마법진 목격). 새로 켜졌으면 true
+export function setFlag(key, flag) {
+  const p = getByKey(key);
+  if (!p || !['sparkle'].includes(flag)) return false;
+  p.stats = { ...blankStats(), ...p.stats }; p.stats.flags = { ...p.stats.flags };
+  if (p.stats.flags[flag]) return false;
+  p.stats.flags[flag] = true; persist(p);
+  return true;
+}
+// 대표 칭호 바꾸기 (얻은 칭호만)
+export function setTitle(key, id) {
+  const p = getByKey(key);
+  if (!p) return { error: '로그인하면 칭호를 달 수 있습니다.' };
+  if (!titlesOf(p).some(t => t.id === id)) return { error: '아직 얻지 못한 칭호입니다.' };
+  p.title = id; persist(p);
   return { profile: p };
 }
 export function login({ login, password }) {

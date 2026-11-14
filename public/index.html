@@ -459,18 +459,18 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
 /* ---------- 원정 기록부 (프로필 전용 화면) ----------
    화면 전체를 덮는 페이지. 열 때 책이 펼쳐지며 책장이 넘어가고(.book), 그 뒤로 기록부가 떠오른다.
    왼쪽 = 가죽 상태판 + 진영별 양피지 전적, 오른쪽 = 책갈피 달린 양피지 장부(꾸미기 / 모험가 찾기) */
-#profile {
+.lp-dlg {
   --lp-stone: #2c2a27; --leather: #1d1c1a; --leather-hi: #282623; --bronze: #8a6d45; --bronze-hi: #c9a46a;
   --parch: #e4d9c1; --parch-lo: #cdbd9c; --ink: #2b2219; --ink-dim: #6d5d48; --lp-text: #efe7d6; --lp-dim: #a79c88;
   --hero: #d0643f; --hero-hi: #f0a36b; --demon: #8f7ae0; --demon-hi: #c3b6ff; --serif: 'Nanum Myeongjo', serif;
   width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; color: var(--lp-text); overflow: hidden;
   background: radial-gradient(ellipse at 30% 0%, #3a3732 0%, transparent 60%), var(--lp-stone);
 }
-#profile::backdrop { background: #000; }
-#profile[open] { display: block; }
+.lp-dlg::backdrop { background: #000; }
+.lp-dlg[open] { display: block; }
 .lp { position: absolute; inset: 0; overflow-y: auto; padding: 1.2rem clamp(1rem, 4vw, 3rem) 3rem; }
 .lp-in { max-width: 72rem; margin: 0 auto; }
-#profile.opening .lp { animation: lpIn .9s cubic-bezier(.2, .7, .2, 1) .75s both; }
+.lp-dlg.opening .lp { animation: lpIn .9s cubic-bezier(.2, .7, .2, 1) .75s both; }
 @keyframes lpIn { from { opacity: 0; transform: perspective(60rem) rotateX(6deg) translateY(1.5rem) scale(.97); } }
 .lp-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.3rem; }
 .lp-back { display: inline-flex; align-items: center; gap: .5rem; background: none; border: 1px solid #8a6d4566; color: var(--lp-dim); padding: .5rem .9rem; border-radius: 2rem; cursor: pointer; font-size: .85rem; }
@@ -508,7 +508,7 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
 .lp-bar .lbl b { color: var(--lp-text); font-weight: 500; }
 .lp-track { height: .42rem; background: #0d0c0b; border-radius: 1rem; box-shadow: inset 0 1px 2px #000; overflow: hidden; }
 .lp-fill { height: 100%; width: var(--w); border-radius: inherit; }
-#profile.opening .lp-fill { animation: lpFill 1s cubic-bezier(.2, .7, .2, 1) 1.3s both; } @keyframes lpFill { from { width: 0; } }
+.lp-dlg.opening .lp-fill { animation: lpFill 1s cubic-bezier(.2, .7, .2, 1) 1.3s both; } @keyframes lpFill { from { width: 0; } }
 .f-hero { background: linear-gradient(90deg, #7e2f1b, var(--hero), var(--hero-hi)); }
 .f-demon { background: linear-gradient(90deg, #3b2f78, var(--demon), var(--demon-hi)); }
 .f-xp { background: linear-gradient(90deg, #8a6d45, var(--amber)); }
@@ -586,7 +586,7 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
 }
 /* 책 펼치기: 표지가 열리고 책장 다섯 장이 촤라락 넘어간 뒤 사라진다 */
 .book { position: absolute; left: 50%; top: 50%; width: min(18rem, 40vw); aspect-ratio: 3 / 4; translate: 0 -50%; perspective: 120rem; pointer-events: none; z-index: 5; opacity: 0; }
-#profile.opening .book { animation: bookLife 1.6s ease both; }
+.lp-dlg.opening .book { animation: bookLife 1.6s ease both; }
 @keyframes bookLife { 0% { opacity: 0; transform: translateX(-50%) scale(.8); } 12% { opacity: 1; transform: translateX(-25%) scale(1); } 70% { opacity: 1; transform: translateX(0) scale(1.05); } 100% { opacity: 0; transform: translateX(0) scale(1.35); } }
 .book > * { position: absolute; inset: 0; transform-origin: left center; transform-style: preserve-3d; }
 .b-back { background: linear-gradient(90deg, #d9cdb2, #e8dec8); box-shadow: inset .3rem 0 1rem #0004, 0 1rem 2rem #000a; border-radius: 0 .3rem .3rem 0; }
@@ -594,10 +594,42 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
   background-image: repeating-linear-gradient(transparent 0 1.1rem, #8a6d4522 1.1rem 1.15rem), linear-gradient(90deg, #cfc2a4, #ebe1cc 30%, #e4d9c1); background-clip: content-box; padding: 1.4rem 1.2rem; }
 .b-cover { background: linear-gradient(135deg, #3a2a1c, #1d150e); border-radius: 0 .3rem .3rem 0; box-shadow: inset 0 0 0 .3rem #1d150e, inset 0 0 0 .38rem #c9a46a88, 0 1rem 2rem #000a; display: grid; place-items: center; }
 .b-cover svg { width: 40%; fill: none; stroke: #c9a46a; stroke-width: 1.2; }
-#profile.opening .b-cover { animation: flip .55s cubic-bezier(.4, 0, .3, 1) .15s both; }
-#profile.opening .b-page { animation: flip .42s cubic-bezier(.4, 0, .3, 1) calc(.42s + var(--i) * .09s) both; }
+.lp-dlg.opening .b-cover { animation: flip .55s cubic-bezier(.4, 0, .3, 1) .15s both; }
+.lp-dlg.opening .b-page { animation: flip .42s cubic-bezier(.4, 0, .3, 1) calc(.42s + var(--i) * .09s) both; }
 @keyframes flip { to { transform: rotateY(-178deg); } }
-@media (prefers-reduced-motion: reduce) { #profile.opening :is(.lp, .book, .b-cover, .b-page, .lp-fill) { animation: none; } .book { display: none; } }
+@media (prefers-reduced-motion: reduce) { .lp-dlg.opening :is(.lp, .book, .b-cover, .b-page, .lp-fill) { animation: none; } .book { display: none; } }
+/* 도감: 기록부와 같은 화면 틀(.lp-dlg). 탭 = 칭호 / 카드 / 문장 */
+.cx-tabs { display: flex; gap: 1.6rem; border-bottom: 1px solid #8a6d4566; margin-bottom: .9rem; }
+.cx-tabs button { background: none; border: 0; padding: .4rem 0 .6rem; font-family: var(--serif); font-weight: 800; font-size: 1.15rem; color: var(--lp-dim); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.cx-tabs button[aria-selected="true"] { color: var(--parch); border-color: var(--hero); }
+.cx-sum { margin: 0 0 1rem; font-size: .82rem; color: var(--lp-dim); }
+.cx-titles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: .9rem; }
+.cx-t { position: relative; padding: 1rem 1.1rem .95rem 3.4rem; display: grid; gap: .3rem; align-content: start; }
+.cx-t::before { content: ''; position: absolute; left: 1rem; top: 1.05rem; width: 1.5rem; height: 1.5rem; background: var(--leather); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); }
+.cx-t.got::before { background: linear-gradient(135deg, #f3dca2, #a8803e); }
+.cx-t h3 { margin: 0; font-family: var(--serif); font-weight: 800; font-size: 1.02rem; }
+.cx-t p { margin: 0; font-size: .8rem; color: var(--ink-dim); line-height: 1.5; }
+.cx-t:not(.got) { filter: saturate(.4) brightness(.86); }
+.cx-t.hidden h3 { letter-spacing: .3em; }
+.cx-prog { display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: center; font-size: .72rem; color: var(--ink-dim); font-variant-numeric: tabular-nums; margin-top: .2rem; }
+.cx-prog .lp-track { height: .35rem; background: #00000022; box-shadow: none; } .cx-prog .lp-fill { background: linear-gradient(90deg, #8a6d45, #b4502f); }
+.cx-act { justify-self: start; margin-top: .35rem; padding: .35rem .8rem; font: inherit; font-size: .78rem; border: 1px solid var(--leather); background: var(--leather); color: var(--amber); cursor: pointer; }
+.cx-act:hover { background: #000; } .cx-act:disabled { cursor: default; background: none; color: var(--ink-dim); border-color: #8a6d4588; }
+.cx-act.on { background: #9b3c1f; border-color: #9b3c1f; color: #fbe7d8; }
+.cx-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: 1.2rem 1rem; }
+.cx-cards .ac { --cw: 10.5rem; margin: 0 auto; }
+.cx-cards figure { margin: 0; display: grid; gap: .45rem; justify-items: center; text-align: center; }
+.cx-cards figcaption { font-size: .72rem; color: var(--lp-dim); }
+.cx-cards h3 { grid-column: 1 / -1; margin: .6rem 0 -.2rem; font-family: var(--serif); font-weight: 800; font-size: 1rem; color: var(--parch); border-bottom: 1px solid #8a6d4544; padding-bottom: .3rem; }
+.cx-marks { display: grid; gap: 1.4rem; }
+.cx-marks h3 { margin: 0 0 .7rem; font-family: var(--serif); font-weight: 800; font-size: 1rem; color: var(--parch); }
+.cx-row { display: flex; flex-wrap: wrap; gap: 1rem; }
+.cx-row figure { margin: 0; display: grid; gap: .4rem; justify-items: center; font-size: .78rem; color: var(--lp-dim); min-width: 4.5rem; }
+.cx-row .medal { width: 3.4rem; height: 3.4rem; } .cx-row .medal svg { width: 1.6rem; }
+.cx-skin { width: 4.5rem; height: 3rem; background: linear-gradient(var(--lh), var(--lb)); box-shadow: inset 0 0 0 1px var(--bz), inset 0 0 0 4px var(--lb), 0 .3rem .6rem #0007; }
+.title-toast { inset: auto; top: 12%; left: 50%; translate: -50% 0; margin: 0; border: 1px solid #e8c27a; background: #1b1610f2; color: var(--amber); padding: .8rem 1.6rem; border-radius: 2rem; font-family: 'Nanum Myeongjo', serif; font-weight: 800; box-shadow: 0 0 2rem #e8c27a55; }
+.title-toast:popover-open { animation: toastIn 3.6s ease forwards; }
+@keyframes toastIn { 0% { opacity: 0; transform: translateY(-1rem); } 10%, 85% { opacity: 1; transform: none; } 100% { opacity: 0; } }
 /* 로그인 창 */
 #loginDlg { width: min(100%, 24rem); }
 .login-sub { margin: 0 0 1rem; text-align: center; font-size: .85rem; color: var(--fog); line-height: 1.6; }
@@ -824,7 +856,7 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
   <header>
     <div class="brand"><img class="brand-mark" src="/brand/mark-small.svg" alt="">ARCANA</div>
     <div class="h-right">
-      <nav aria-label="메인 메뉴"><button class="mi" data-settings="rules">게임 방법</button></nav>
+      <nav aria-label="메인 메뉴"><button class="mi" type="button" id="codexBtn">도감</button><button class="mi" data-settings="rules">게임 방법</button></nav>
       <button class="icon-btn me-btn" type="button" id="meBtn" aria-label="내 프로필" title="내 프로필"></button>
       <button class="icon-btn gear" type="button" aria-label="설정" title="설정"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
       <button class="icon-btn fs" type="button" aria-label="전체 화면" title="전체 화면"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
@@ -1096,7 +1128,7 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
     <div class="login-links"><button type="button" class="link" id="lgToggle"></button><button type="button" class="link" id="lgGuest">게스트로 시작</button></div>
   </form>
 </dialog>
-<dialog id="profile" aria-labelledby="pfTitle">
+<dialog id="profile" class="lp-dlg" aria-labelledby="pfTitle">
   <div class="book" aria-hidden="true">
     <div class="b-back"></div>
     <div class="b-page" style="--i:4"></div><div class="b-page" style="--i:3"></div><div class="b-page" style="--i:2"></div><div class="b-page" style="--i:1"></div><div class="b-page" style="--i:0"></div>
@@ -1125,7 +1157,7 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
             <div class="lp-row"><span class="lab">문장</span><div class="lp-opts" id="pEmblems"></div></div>
             <div class="lp-row"><span class="lab">문장 색</span><div class="lp-opts" id="pColors"></div></div>
             <div class="lp-row"><span class="lab">가죽 재질</span><div class="lp-opts" id="pSkins"></div></div>
-            <div class="lp-row" id="pTitleRow"><label for="pTitle">대표 칭호 <small>얻은 칭호 중 하나</small></label><select class="lp-in-field" id="pTitle"></select></div>
+            <div class="lp-row" id="pTitleRow"><label for="pTitle">대표 칭호 <small>얻은 칭호 중 하나</small></label><select class="lp-in-field" id="pTitle"></select><button class="lp-link" type="button" id="pCodex" style="margin:.5rem 0 0">도감에서 모든 칭호와 조건 보기</button></div>
             <div class="lp-row"><label for="pIntro">소개말 <span class="lp-count" id="pCount"></span></label><textarea class="lp-in-field" id="pIntro" maxlength="80" placeholder="다른 모험가에게 보여 줄 한마디"></textarea></div>
             <button class="lp-save" id="pSave">기록부에 남기기</button>
             <p class="pmsg" id="pMsg" role="status"></p>
@@ -1142,6 +1174,29 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
     </div>
   </div></div>
 </dialog>
+<dialog id="codex" class="lp-dlg" aria-labelledby="cxTitle">
+  <div class="book" aria-hidden="true">
+    <div class="b-back"></div>
+    <div class="b-page" style="--i:4"></div><div class="b-page" style="--i:3"></div><div class="b-page" style="--i:2"></div><div class="b-page" style="--i:1"></div><div class="b-page" style="--i:0"></div>
+    <div class="b-cover"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4Z"/></svg></div>
+  </div>
+  <div class="lp"><div class="lp-in">
+    <div class="lp-top">
+      <button class="lp-back" type="button" data-close="codex"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>돌아가기</button>
+      <h2 id="cxTitle">도감</h2>
+    </div>
+    <div class="cx-tabs" role="tablist">
+      <button role="tab" type="button" data-ctab="titles">칭호</button>
+      <button role="tab" type="button" data-ctab="cards">카드</button>
+      <button role="tab" type="button" data-ctab="marks">문장</button>
+    </div>
+    <p class="cx-sum" id="cxSum"></p>
+    <ul class="cx-titles" id="cxTitles" role="tabpanel"></ul>
+    <div class="cx-cards" id="cxCards" role="tabpanel" hidden></div>
+    <div class="cx-marks" id="cxMarks" role="tabpanel" hidden></div>
+  </div></div>
+</dialog>
+<div class="title-toast" id="titleToast" popover="manual" aria-live="polite"></div>
 <dialog id="jobDlg" class="glass ornate">
   <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
   <h2 id="jobName"></h2>
@@ -1588,7 +1643,12 @@ const SFX = {
 function sfx(name) { if (actx && sfxLevel() > 0) { actx.resume(); SFX[name](); } }
 // 배경 마법진이 겹치는 순간(주기 시작 + 54.78초)에 지잉. 마법진은 게임 중 숨겨지고 다시 보일 때 처음부터 시작한다
 const SEAL_MEET_MS = 54782.6, SEAL_CYCLE_MS = 59182.6; let sealTimer;
-const sealCycle = (wait = SEAL_MEET_MS) => { clearTimeout(sealTimer); if (wait > 0) sealTimer = setTimeout(() => { if (!document.hidden && $('frame').dataset.view !== 'game') sfx('seal'); }, wait); };
+const sealCycle = (wait = SEAL_MEET_MS) => { clearTimeout(sealTimer); if (wait > 0) sealTimer = setTimeout(() => {
+  if (document.hidden || $('frame').dataset.view === 'game') return;
+  sfx('seal');
+  // 숨겨진 칭호 "반짝 반짝": 홈 화면에서 (다른 창 없이) 마법진이 겹치는 순간을 봄
+  if (myProfile && $('frame').dataset.view === 'home' && !document.querySelector('dialog[open]') && !myProfile.codex?.find(t => t.id === 'sparkle')?.got) send({ type: 'title:sparkle', key: profileKey() });
+}, wait); };
 for (const ev of ['animationstart', 'animationiteration']) document.querySelector('.seals').addEventListener(ev, e => { if (e.animationName === 'sealFade') sealCycle(); });
 { const a = document.querySelector('.seals').getAnimations()[0]; if (a) sealCycle(SEAL_MEET_MS - a.currentTime % SEAL_CYCLE_MS); } // 이미 돌기 시작했으면 맞춰 잡기
 document.addEventListener('click', e => {
@@ -2195,7 +2255,6 @@ function showPTab(name) {
 }
 document.querySelectorAll('[data-ptab]').forEach(t => t.onclick = () => showPTab(t.dataset.ptab));
 // 기록부 열기: 이미 열려 있으면 내용만 바꾸고, 아니면 책이 펼쳐지며 열린다
-let openT;
 function openProfile(p, tab) {
   viewing = p;
   showRecord();
@@ -2203,9 +2262,7 @@ function openProfile(p, tab) {
   dlg.querySelector('.lp').scrollTop = 0;
   if (dlg.open) return;
   fillProfileForm(); showRecord(); showPTab(tab || (myProfile ? 'mine' : 'find'));
-  dlg.classList.remove('opening'); void dlg.offsetWidth; dlg.classList.add('opening');
-  dlg.showModal(); sfx('pages');
-  clearTimeout(openT); openT = setTimeout(() => dlg.classList.remove('opening'), 2400);
+  bookOpen(dlg);
 }
 $('meBtn').onclick = () => openProfile(null);
 $('pRecord').addEventListener('click', e => { if (e.target.closest('[data-mine]')) { viewing = null; showRecord(); } });
@@ -2229,6 +2286,59 @@ $('opps').addEventListener('click', e => {
   viewPlayer(e.target.closest('.opp'));
 });
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dataset.close).close());
+
+/* ---------- 도감: 칭호(조건·진행도·달기) / 카드 / 문장 ---------- */
+let codexTab = 'titles', guestCodex = [];
+function bookOpen(dlg) { // 기록부와 같은 책 펼치기 연출로 연다
+  dlg.querySelector('.lp').scrollTop = 0;
+  dlg.classList.remove('opening'); void dlg.offsetWidth; dlg.classList.add('opening');
+  dlg.showModal(); sfx('pages');
+  clearTimeout(dlg.openT); dlg.openT = setTimeout(() => dlg.classList.remove('opening'), 2400);
+}
+function renderCodex() {
+  document.querySelectorAll('[data-ctab]').forEach(t => t.setAttribute('aria-selected', t.dataset.ctab === codexTab));
+  $('cxTitles').hidden = codexTab !== 'titles'; $('cxCards').hidden = codexTab !== 'cards'; $('cxMarks').hidden = codexTab !== 'marks';
+  if (codexTab === 'titles') {
+    const list = myProfile?.codex || guestCodex, got = list.filter(t => t.got).length;
+    $('cxSum').textContent = myProfile ? `얻은 칭호 ${got} / ${list.length} · 얻은 칭호는 바로 달 수 있습니다.` : `칭호 ${list.length}개 · 로그인하면 칭호를 모으고 달 수 있습니다.`;
+    $('cxTitles').innerHTML = list.map(t => {
+      const on = myProfile?.titleId === t.id;
+      const btn = !myProfile ? '' : on ? '<button class="cx-act on" type="button" disabled>달고 있음</button>'
+        : t.got ? `<button class="cx-act" type="button" data-wear="${t.id}">칭호 달기</button>` : '<button class="cx-act" type="button" disabled>미획득</button>';
+      return `<li class="lp-parch cx-t${t.got ? ' got' : ''}${t.hidden ? ' hidden' : ''}"><h3>${esc(t.name)}</h3><p>${esc(t.desc)}</p>
+        ${t.goal ? `<div class="cx-prog"><div class="lp-track"><div class="lp-fill" style="--w:${Math.round(t.cur / t.goal * 100)}%"></div></div><span>${t.cur} / ${t.goal}</span></div>` : ''}${btn}</li>`;
+    }).join('');
+  } else if (codexTab === 'cards') {
+    $('cxSum').textContent = `카드 ${CARD_DB.length}종 · 덱 한 벌 ${CARD_DB.reduce((n, c) => n + (c.count || 0), 0)}장`;
+    const kinds = [...new Set(CARD_DB.map(c => c.kind))];
+    $('cxCards').innerHTML = kinds.map(k => `<h3>${esc(k)}</h3>` + CARD_DB.filter(c => c.kind === k)
+      .map(c => `<figure>${cardHTML(c)}<figcaption>덱에 ${c.count || 0}장</figcaption></figure>`).join('')).join('');
+  } else {
+    $('cxSum').textContent = '문장, 문장 색, 가죽 재질은 모두 기록부의 꾸미기에서 고를 수 있습니다.';
+    const skins = { leather: ['#282623', '#1d1c1a', '#8a6d45'], ebony: ['#1c2026', '#121417', '#6f7c8c'], forest: ['#1a2e25', '#11201a', '#7f8f63'] };
+    $('cxMarks').innerHTML = `<section><h3>문장</h3><div class="cx-row">${Object.keys(EMBLEM).map(k => `<figure>${medal(k, myProfile?.color || 'amber')}${EMBLEM_NAME[k]}</figure>`).join('')}</div></section>
+      <section><h3>문장 색</h3><div class="cx-row">${Object.keys(COLOR_NAME).map(k => `<figure>${medal(myProfile?.emblem || 'star', k)}${COLOR_NAME[k]}</figure>`).join('')}</div></section>
+      <section><h3>가죽 재질</h3><div class="cx-row">${Object.entries(skins).map(([k, [h, b, z]]) => `<figure><span class="cx-skin" style="--lh:${h};--lb:${b};--bz:${z}"></span>${SKIN_NAME[k]}</figure>`).join('')}</div></section>`;
+  }
+}
+function openCodex(tab = 'titles') {
+  codexTab = tab;
+  if (!myProfile) send({ type: 'codex', key: profileKey() });
+  cardsLoaded.then(renderCodex); renderCodex();
+  if (!$('codex').open) bookOpen($('codex'));
+}
+document.querySelectorAll('[data-ctab]').forEach(t => t.onclick = () => { codexTab = t.dataset.ctab; renderCodex(); });
+$('codexBtn').onclick = () => openCodex();
+$('pCodex').onclick = () => { $('profile').close(); openCodex(); };
+$('cxTitles').onclick = e => { const b = e.target.closest('[data-wear]'); if (b) { b.disabled = true; send({ type: 'profile:title', key: profileKey(), id: b.dataset.wear }); } };
+function titleToast(names) { // 칭호를 새로 얻으면 위쪽에 잠깐 알림
+  if (!names?.length) return;
+  const el = $('titleToast');
+  el.textContent = `✦ 칭호 획득: ${names.join(', ')}`;
+  try { el.hidePopover(); el.showPopover(); } catch {}
+  sfx('chime');
+  clearTimeout(el.t); el.t = setTimeout(() => { try { el.hidePopover(); } catch {} }, 3600);
+}
 
 /* ---------- 로그인 / 회원가입 ----------
    접속하면 로그인 창이 가장 먼저 뜬다 (아이디는 기억해 두었다가 채움). 같은 탭에서 새로고침하면 다시 묻지 않는다. */
@@ -2292,9 +2402,12 @@ function onProfileMessage(msg) {
     myProfile = msg.profile; renderMeBtn();
     if (msg.gained) { lastGain = `경험치 +${msg.gained} · 레벨 ${msg.profile.level.lv}`; if (game?.over) renderOver(); }
     if ($('profile').open && !viewing) showRecord();
+    if ($('codex').open) renderCodex();
+    titleToast(msg.newTitles);
+    if (msg.titled && $('profile').open) fillProfileForm();
     if (msg.saved) { fillProfileForm(); $('pMsg').textContent = '저장했습니다.'; $('pMsg').className = 'pmsg good'; }
   }
-  if (msg.type === 'profile:error') { $('pMsg').textContent = msg.message; $('pMsg').className = 'pmsg bad'; }
+  if (msg.type === 'profile:error') { $('pMsg').textContent = msg.message; $('pMsg').className = 'pmsg bad'; if ($('codex').open) renderCodex(); }
   if (msg.type === 'profile:list' && msg.q === $('pSearch').value) {
     $('pResults').innerHTML = msg.results.map(p => `<li><button type="button" data-name="${esc(p.nickname)}" class="c-${p.color}">${medal(p.emblem, p.color)}
       <span>${esc(p.nickname)}<small>${esc(p.title)}</small></span></button></li>`).join('');
@@ -2316,6 +2429,7 @@ function onMessage(e) {
     welcomed();
   }
   if (msg.type.startsWith('profile:')) return onProfileMessage(msg);
+  if (msg.type === 'codex') { guestCodex = msg.titles; if ($('codex').open) renderCodex(); return; }
   if (msg.type.startsWith('auth:')) return onAuth(msg);
   if (msg.type === 'replaced') replaced = true;
   if (msg.type === 'error') {

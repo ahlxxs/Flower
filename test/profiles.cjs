@@ -79,6 +79,24 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   await c.click('#meBtn'); await c.click('[data-ptab="find"]'); await c.fill('#pSearch', '아린'); await sleep(600);
   await c.click('#pResults button'); await sleep(400);
   ok((await c.textContent('#pRecord')).includes('수정된 소개말') && (await c.textContent('.lp-sub')).includes('1판 참가'), '수정 내용과 전적이 서버 재시작 뒤에도 남아 있음');
+
+  // 6. 도감: 칭호 목록·조건, 카드, 숨겨진 칭호 "반짝 반짝" 얻고 달기
+  const d = await page(); await d.goto(U); await ready(d);
+  await d.waitForSelector('#loginDlg[open]'); await d.fill('#lgId', 'arin'); await d.fill('#lgPw', 'secret12'); await d.click('#lgSubmit'); await sleep(600);
+  await d.click('#codexBtn'); await sleep(400);
+  ok(await d.evaluate(() => document.getElementById('codex').classList.contains('opening')), '도감도 책 펼치기로 열림');
+  ok((await d.$$('#cxTitles li')).length === 25 && (await d.textContent('#cxTitles')).includes('부서지지 않는 신념'), '도감: 칭호 25개와 조건');
+  ok((await d.textContent('#cxTitles')).includes('???') && !(await d.textContent('#cxTitles')).includes('반짝 반짝'), '숨겨진 칭호는 ???');
+  await d.click('[data-ctab="cards"]'); await sleep(300);
+  ok((await d.$$('#cxCards .ac')).length === 61, '도감: 카드 61종');
+  await d.click('[data-close="codex"]'); await sleep(300);
+  await d.evaluate(() => sealCycle(50)); await sleep(800);              // 마법진이 겹치는 순간을 앞당김
+  ok((await d.textContent('#titleToast')).includes('반짝 반짝'), '홈에서 마법진이 겹치는 걸 보면 숨겨진 칭호 획득 알림');
+  await d.click('#codexBtn'); await sleep(300);
+  await d.click('[data-wear="sparkle"]'); await sleep(500);
+  ok((await d.textContent('#cxTitles')).includes('달고 있음'), '도감에서 바로 칭호 달기');
+  await d.click('[data-close="codex"]'); await d.click('#meBtn'); await sleep(300);
+  ok((await d.textContent('.lp-tag .tt')) === '반짝 반짝' && (await d.$eval('#pTitle', s => s.value)) === 'sparkle', '기록부에도 단 칭호가 보이고 고를 수 있음');
   ok(!errs.length, '페이지 오류 없음 ' + errs.join(' / '));
   await b.close(); srv.kill(); process.exit(failed ? 1 : 0);
 })().catch(e => { console.error(e); spawn('fuser', ['-k', '3123/tcp']); setTimeout(() => process.exit(1), 300); });

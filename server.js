@@ -122,6 +122,7 @@ function apply(room, action, who) {
   schedule(room);
   if (g.over && !room.recorded) recordResults(room);
 }
+const newTitles = (prof, before) => profiles.titlesOf(prof).filter(t => !before.has(t.id)).map(t => t.name);
 // 게임이 끝나면 로그인한 사람마다 전적과 경험치를 남기고, 바뀐 프로필을 보낸다 (게스트는 기록 없음)
 function recordResults(room) {
   const g = room.game, o = g.over;
@@ -130,9 +131,11 @@ function recordResults(room) {
     const s = g.seats.find(x => x.id === p.id);
     if (!p.pkey || !s) continue;
     const win = o.winner === 'eater' ? s.id === o.id : !s.eater && s.role === o.winner;
-    const gain = profiles.recordGame(p.pkey, { camp: s.role, win, survived: s.alive });
+    const before = new Set(profiles.titlesOf(profiles.getByKey(p.pkey)).map(t => t.id));
+    const gain = profiles.recordGame(p.pkey, { camp: s.role, win, survived: s.alive, job: s.job, hand: s.hand.length, soul: s.soul,
+      sealWin: !!o.seal, heroDeaths: g.seats.filter(x => x.role === 'hero' && !x.eater && !x.alive).length });
     const prof = profiles.getByKey(p.pkey);
-    if (prof) send(p, { type: 'profile:me', profile: profiles.ownView(prof), gained: gain });
+    if (prof) send(p, { type: 'profile:me', profile: profiles.ownView(prof), gained: gain, newTitles: newTitles(prof, before) });
   }
 }
 
@@ -208,6 +211,17 @@ new WebSocketServer({ server: http }).on('connection', (ws, req) => {
       if (res.error) return send(me, { type: 'profile:error', message: res.error });
       return send(me, { type: 'profile:me', key: res.profile.key, profile: profiles.ownView(res.profile), saved: true });
     }
+    if (msg.type === 'profile:title') { // 도감이나 기록부에서 칭호 달기
+      const res = profiles.setTitle(msg.key, String(msg.id ?? ''));
+      if (res.error) return send(me, { type: 'profile:error', message: res.error });
+      return send(me, { type: 'profile:me', profile: profiles.ownView(res.profile), titled: true });
+    }
+    if (msg.type === 'title:sparkle') { // 홈 화면 마법진이 겹치는 순간을 봄 (숨겨진 칭호)
+      const prof = profiles.getByKey(msg.key);
+      if (prof && profiles.setFlag(msg.key, 'sparkle')) send(me, { type: 'profile:me', profile: profiles.ownView(prof), newTitles: ['반짝 반짝'] });
+      return;
+    }
+    if (msg.type === 'codex') return send(me, { type: 'codex', titles: profiles.codexOf(profiles.getByKey(msg.key)) }); // 게스트도 도감은 볼 수 있음
     if (msg.type === 'profile:find') return send(me, { type: 'profile:list', q: msg.q, results: profiles.search(msg.q) });
     if (msg.type === 'profile:view') {
       const prof = profiles.getByName(msg.nickname);
