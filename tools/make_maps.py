@@ -410,43 +410,18 @@ def m_sunset(B, F, rnd):
              + pix_blobs([(100, 780, 90), (260, 800, 80), (400, 860, 90), (980, 860, 80), (1140, 820, 70)], c, '#c03040') + pix_blobs([(80, 820, 60), (300, 840, 60), (1050, 880, 60)], c, '#e04a4a'))
     return back, front
 
-@mapdef('skycity')  # 구름 위 시계탑 (픽셀): 저녁빛 하늘 아래 탑들은 그림자로만 — 구름이 흐르고 새가 난다
+@mapdef('skycity')  # 구름 위 시계탑: 저녁빛 하늘에 겹겹이 떠가는 픽셀 구름(사진) — 층마다 다른 속도로 흐르고 새가 난다
 def m_skycity(B, F, rnd):
     c = 10
-    def tower(x, base, w, h, col, clock=False):
-        out = pix_poly([(x - w / 2, base), (x - w / 2, base - h), (x + w / 2, base - h), (x + w / 2, base)], c, col)
-        out += pix_poly([(x - w / 2 - 10, base - h), (x, base - h - w * 1.1), (x + w / 2 + 10, base - h)], c, col)
-        if clock: out += pix_circle(x, base - h + 70, w * .36, c, col) + pix_poly([(x - w * .75, base - h * .45), (x + w * .75, base - h * .45), (x + w * .55, base - h * .38), (x - w * .55, base - h * .38)], c, col)
-        return out
-    far, mid, near = '#9a8fc0', '#615a8c', '#36325a'
-    back = (pix_bands([(0, '#3a4a78'), (180, '#5a6a98'), (360, '#a08ab0'), (520, '#e8b0a8'), (900, '#f2c8b0')])
-            + circle(1240, 420, 320, B.rad('sun', [(0, '#fff0d8', .8), (1, '#fff0d8', 0)]))
-            + drift_g(pix_cloud(260, 300, 460, 150, c, '#f6d8c8', '#c8a8c8', rnd), 60, 70) + drift_g(pix_cloud(1360, 220, 520, 160, c, '#f6d8c8', '#c8a8c8', rnd), -50, 80)
-            + tower(300, 700, 50, 300, far) + tower(470, 700, 70, 240, far) + tower(1080, 700, 60, 320, far) + tower(1460, 700, 56, 260, far)
-            + tower(380, 760, 70, 360, mid) + tower(600, 760, 90, 300, mid) + tower(800, 760, 60, 430, mid) + tower(1000, 760, 80, 340, mid)
-            + tower(1240, 790, 150, 540, near, True) + tower(1440, 780, 70, 320, near)
-            + drift_g(pix_cloud(800, 650, 1000, 180, c, '#f8e6d8', '#d8b8d0', rnd), 40, 60))
-    front = (shade_center(F, '#1a1830', .3)
-             + drift_g(pix_cloud(160, 820, 640, 230, c, '#fff0e6', '#d8c0d8', rnd), 50, 55) + drift_g(pix_cloud(1440, 840, 640, 230, c, '#fff0e6', '#d8c0d8', rnd), -50, 65)
-             + pix_cloud(800, 900, 900, 160, c, '#f2e2ee', '#c8b0d0', rnd) + birds(rnd, '#36325a', 4))
-    return back, front
-
-def m_skycity(B, F, rnd):
-    c = 10
-    def tower(x, base, w, h, col, roof=True, clock=False):
-        out = pix_poly([(x - w / 2, base), (x - w / 2, base - h), (x + w / 2, base - h), (x + w / 2, base)], c, col)
-        if roof: out += pix_poly([(x - w / 2 - 10, base - h), (x, base - h - w * 1.1), (x + w / 2 + 10, base - h)], c, col)
-        for i in range(int(h / 60)): out += rect('#ffe0a0', x - 4, base - h + 30 + i * 60, 8, 12, ' opacity=".8" shape-rendering="crispEdges"')
-        if clock: out += pix_circle(x, base - h + 70, w * .3, c, '#f0c88a') + rect('#5a3a2a', x - 2, base - h + 52, 4, 18) + rect('#5a3a2a', x - 2, base - h + 68, 16, 4)
-        return out
-    back = (pix_bands([(0, '#3a5a78'), (200, '#4a6a88'), (400, '#6a88a8'), (900, '#6a88a8')])
-            + pix_cloud(200, 380, 420, 160, c, '#f6d8c8', '#c8a8c8', rnd) + pix_cloud(1300, 300, 500, 180, c, '#f6d8c8', '#c8a8c8', rnd)
-            + tower(380, 760, 70, 360, '#8a7aa8') + tower(560, 760, 90, 300, '#7a6a98') + tower(760, 760, 60, 420, '#8a7aa8') + tower(980, 760, 80, 340, '#7a6a98')
-            + tower(1240, 780, 150, 520, '#b07a5a', True, True) + tower(1440, 760, 70, 300, '#8a7aa8')
-            + pix_cloud(800, 640, 900, 180, c, '#f8e6d8', '#d8b8d0', rnd))
-    front = (shade_center(F, '#1a2236', .3)
-             + pix_cloud(160, 820, 600, 220, c, '#fff0e6', '#d8c0d8', rnd) + pix_cloud(1440, 840, 600, 220, c, '#fff0e6', '#d8c0d8', rnd)
-             + pix_cloud(800, 900, 900, 160, c, '#f2e2ee', '#c8b0d0', rnd) + pix_cloud(1480, 120, 360, 120, c, '#f6d8c8', '#c8a8c8', rnd))
+    cl = lambda n, x, y, w, extra='': img_tag(f'sky_cloud_{n}.png', x, y, w, w * {'a': 61 / 207, 'b': 57 / 221, 'c': 43 / 125}[n], PIX + extra, 'xMidYMid meet')
+    back = (pix_bands([(0, '#3e4e7e'), (160, '#566a9a'), (320, '#8a86b4'), (470, '#d0a8bc'), (600, '#f0c4b8'), (900, '#f6d6c4')])
+            + circle(1180, 470, 360, B.rad('sun', [(0, '#fff2dc', .85), (1, '#fff2dc', 0)]), anim('opacity', '.75;1;.75', 10)) + twinkles(rnd, 40, '#e8ecff', 0, 260)
+            + drift_g(cl('b', -40, 90, 700, ' opacity=".55"'), 120, 90) + drift_g(cl('b', 900, 150, 640, ' opacity=".5"'), -100, 100)
+            + drift_g(cl('a', 60, 250, 760, ' opacity=".85"'), 90, 70) + drift_g(cl('a', 860, 300, 820, ' opacity=".9"'), -80, 76)
+            + drift_g(cl('c', 640, 470, 420), 60, 60))
+    front = (shade_center(F, '#2a2440', .28)
+             + drift_g(cl('c', -80, 600, 640), 70, 50) + drift_g(cl('c', 1060, 620, 640), -70, 56) + drift_g(cl('a', 300, 720, 1100), 50, 64)
+             + drift_g(cl('a', -200, 800, 1000), 60, 58) + drift_g(cl('a', 900, 790, 1000), -60, 62) + birds(rnd, '#4a4470', 4))
     return back, front
 
 @mapdef('henge')  # 붉은 환상열석 (픽셀): 붉은 하늘에 흐르는 구름(사진), 선돌 고리, 천천히 도는 빛의 궤도와 붉은 별
@@ -494,7 +469,8 @@ def m_goldtree(B, F, rnd):
             + circle(1010, 420, 380, B.rad('treeglow', [(0, '#f8c848', .35), (1, '#f8c848', 0)]), anim('opacity', '.7;1;.7', 7))
             + pix_poly([(-20, 720), (300, 700), (600, 720), (900, 700), (1200, 710), (1620, 700), (1620, 920), (-20, 920)], c, '#26343a'))
     front = (shade_center(F, '#121a22', .3)
-             + img_tag('goldtree.png', 660, 120, 700, 640, PIX)
+             + circle(1010, 720, 300, F.rad('pool', [(0, '#f8b838', .3), (1, '#f8b838', 0)]))
+             + img_tag('goldtree.png', 1010 - 57 * 6, 776 - 43 * 12, 57 * 12, 43 * 12, PIX, 'xMidYMax meet')  # 원래 비율(57×43칸) 그대로, 땅에 닿게
              + pix_blobs([(1480, 640, 150), (1580, 580, 120), (1620, 720, 120)], c, '#2a4440') + pix_blobs([(1500, 580, 40), (1560, 660, 30)], c, '#36584a')
              + pix_poly([(160, 720), (190, 600), (230, 580), (270, 600), (300, 720)], c, '#161a20') + rect('#ffd040', 214, 640, 8, 14) + rect('#4a3a2a', 320, 560, 6, 160)
              + circle(323, 552, 44, '#ffb030', ' opacity=".2"' ) .replace('/>', f'>{anim("r", "38;50;40;46;38", 2.2)}</circle>')

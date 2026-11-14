@@ -49,6 +49,10 @@ for name, box in {'cloud_a': (225, 270, 655, 410), 'cloud_b': (220, 100, 672, 22
         a = max(0, min(255, (l - 120) * 4)) if blueish < 70 or l > 150 else 0   # 밝은 구름만 남긴다
         out.append((*gradient_map(min(1, max(0, (l - 120) / 135)), HENGE), int(a)))
     c.putdata(out); c.crop(c.getbbox()).save(D / f'henge_{name}.png')
+    SKY = [(0, (150, 130, 190)), (.45, (206, 176, 214)), (.75, (246, 214, 214)), (1, (255, 246, 238))]  # 구름 위 시계탑용 파스텔
+    c.putdata([(*gradient_map(min(1, max(0, (lum((r, g, b)) - 120) / 135)), SKY), al) for (r, g, b, al), (r0, g0, b0, _) in zip(out, grid_sample(clouds.crop(box), (box[2] - box[0]) // 2).convert('RGBA').get_flattened_data())] if False else
+              [(*gradient_map(min(1, max(0, (lum(px0[:3]) - 120) / 135)), SKY), o[3]) for o, px0 in zip(out, grid_sample(clouds.crop(box), (box[2] - box[0]) // 2).convert('RGB').get_flattened_data())])
+    c.crop(c.getbbox()).save(D / f'sky_{name}.png')
 
 # 3. 행성 고리 → 블랙홀: 어두운 우주 그대로 (맵에서 screen 섞기로 바탕에 녹인다)
 Image.open(SRC / 'blackhole.jpg').convert('RGB').save(D / 'blackhole.jpg', quality=86)

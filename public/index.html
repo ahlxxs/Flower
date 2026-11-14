@@ -2394,7 +2394,7 @@ const BANNERS = {
     right: `<circle cx="24" cy="26" r="9" fill="#2b2350" stroke="#f2c6ee" stroke-width="1.4"/><path d="M24 19v14M17 26h14" stroke="#f2c6ee" stroke-width="1.2"/>${twinkle(36, 10, 4, '#f2c6ee')}` },
 };
 const bannerHTML = (id, inner) => { const b = BANNERS[id] || BANNERS.none, sv = (cls, d, vb) => d ? `<svg class="bn-${cls}" viewBox="${vb}" aria-hidden="true">${d}</svg>` : '';
-  const bg = b.photo ? `<span class="bn-photo" style="background-image:url(/maps/${id}-front.svg),url(/maps/${id}-back.svg);background-position:${b.pos || 'center 70%'}"></span>`
+  const bg = b.photo ? `<span class="bn-photo" style="background-image:${b.edge ? b.edge + ',' : ''}url(/maps/${id}-front.svg),url(/maps/${id}-back.svg);background-position:${b.edge ? '0 0,' : ''}${b.pos || 'center 70%'}${b.size ? `;background-size:${b.edge ? '100% 100%,' : ''}${b.size};background-repeat:no-repeat;background-color:${b.fill}` : ''}"></span>`
     : b.bg ? `<svg class="bn-bg" viewBox="0 0 400 64" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${b.bg}</svg>` : '';
   return `<div class="pbanner pb-${BANNERS[id] ? id : 'none'}">${bg}${sv('l', b.left, '0 0 40 40')}${sv('r', b.right, '0 0 40 40')}${sv('t', b.top, '0 0 40 16')}${sv('h', b.hang, '0 0 200 50')}${inner}</div>`; };
 // 칭호 배너: 칭호 글자를 감싸는 작은 띠. 왼쪽에 작은 장식 하나
@@ -2452,9 +2452,9 @@ Object.assign(BANNERS, {
   ruins: { name: '부유 폐허', photo: true, pos: '40% 50%' },
   shrine: { name: '잠든 수호상', photo: true, pos: '50% 42%' },
   sunset: { name: '노을 성', photo: true, pos: '38% 52%' },
-  skycity: { name: '구름 위 시계탑', photo: true, pos: '78% 34%' },
+  skycity: { name: '구름 위 시계탑', photo: true, pos: '30% 32%' },
   henge: { name: '붉은 환상열석', photo: true, pos: '50% 24%' },
-  goldtree: { name: '황금 나무', photo: true, pos: '62% 30%' },
+  goldtree: { name: '황금 나무', photo: true, pos: '88% 62%', size: 'auto 175%', fill: '#3a4858', edge: 'linear-gradient(90deg, #3a4858 56%, transparent 64%, transparent 86%, #3a4858 93%)' }, // 나무 전체가 띠에 들어오게
 });
 Object.assign(TB_DECO, {
   thicket: twinkle(8, 8, 6, '#ff8cc6'),
@@ -2464,7 +2464,7 @@ Object.assign(TB_DECO, {
   ruins: '<path d="M2 13h12l-2-4H4z" fill="#4a3a6a"/><rect x="5" y="3" width="3" height="6" fill="#4a3a6a"/><rect x="9" y="5" width="3" height="4" fill="#4a3a6a"/>',
   shrine: '<circle cx="8" cy="8" r="6" fill="none" stroke="#3a6a68" stroke-width="1.6"/><rect x="6" y="6" width="4" height="4" fill="#3a6a68"/>',
   sunset: '<circle cx="8" cy="8" r="6" fill="#ffd86a"/>',
-  skycity: '<rect x="6" y="3" width="4" height="12" fill="#b07a5a"/><path d="M5 3l3-3 3 3z" fill="#b07a5a"/><circle cx="8" cy="7" r="1.4" fill="#f0c88a"/>',
+  skycity: '<path d="M2 12h12v-2a3 3 0 0 0-3-3 4 4 0 0 0-7 1 2.5 2.5 0 0 0-2 4z" fill="#fff4ee" stroke="#c8a8c8"/>',
   henge: '<rect x="2" y="6" width="3" height="9" fill="#ffe0c0"/><rect x="11" y="6" width="3" height="9" fill="#ffe0c0"/><rect x="1" y="4" width="14" height="2" fill="#ffe0c0"/>',
   goldtree: '<circle cx="8" cy="6" r="6" fill="#f0a828"/><rect x="7" y="9" width="2" height="6" fill="#5a3a2a"/>',
 });
