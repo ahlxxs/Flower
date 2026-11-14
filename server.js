@@ -23,13 +23,14 @@ const players = new Map(); // token -> { id, token, name, room, ready, ws, timer
 const demonCount = n => Math.max(1, Math.floor(n / 4));
 
 const http = createServer(async (req, res) => {
-  // 정적 파일: 배경 음악 /audio/이름.mp3, 카드 그림 /cards/이름.jpg (아이폰 사파리는 Range 요청을 지원해야 음악이 재생된다)
-  const asset = req.url.match(/^\/(audio|cards)\/([\w-]+\.(mp3|jpg))$/);
+  // 정적 파일: 배경 음악 /audio/이름.mp3, 카드 그림 /cards/이름.jpg, 아이콘 /favicon.svg·/brand/이름.svg 등
+  // (아이폰 사파리는 Range 요청을 지원해야 음악이 재생된다)
+  const asset = req.url.match(/^\/((?:audio|cards|brand)\/)?([\w-]+\.(mp3|jpg|png|svg))$/);
   if (asset) {
-    const file = new URL(`./public/${asset[1]}/${asset[2]}`, import.meta.url);
+    const file = new URL(`./public/${asset[1] || ''}${asset[2]}`, import.meta.url);
     const size = await stat(file).then(s => s.size, () => 0);
     if (!size) { res.writeHead(404); return res.end(); }
-    const head = { 'content-type': asset[3] === 'mp3' ? 'audio/mpeg' : 'image/jpeg', 'accept-ranges': 'bytes', 'cache-control': 'public, max-age=86400' };
+    const head = { 'content-type': { mp3: 'audio/mpeg', jpg: 'image/jpeg', png: 'image/png', svg: 'image/svg+xml' }[asset[3]], 'accept-ranges': 'bytes', 'cache-control': 'public, max-age=86400' };
     const m = (req.headers.range || '').match(/bytes=(\d*)-(\d*)/);
     if (!m) { res.writeHead(200, { ...head, 'content-length': size }); return createReadStream(file).pipe(res); }
     const start = m[1] ? +m[1] : size - +m[2], end = m[1] && m[2] ? Math.min(+m[2], size - 1) : size - 1;

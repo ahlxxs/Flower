@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><defs><radialGradient id="bg" cx=".5" cy=".42" r=".75"><stop offset="0" stop-color="#1d2440"/><stop offset=".6" stop-color="#0d1322"/><stop offset="1" stop-color="#070a12"/></radialGradient></defs><defs>
+  <linearGradient id="moon" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#d9e1ff"/>
+    <stop offset=".8" stop-color="#a9b6ff"/><stop offset="1" stop-color="#f3c9e8"/>
+  </linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff3d6"/><stop offset="1" stop-color="#e8c27a"/>
+  </linearGradient>
+  <radialGradient id="glow"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#c9d3ff" stop-opacity="0"/></radialGradient>
+  <mask id="cut"><rect x="0" y="0" width="512" height="512" fill="#fff"/><circle cx="292" cy="214" r="84" fill="#000"/></mask>
+</defs><rect width="512" height="512" rx="112" fill="url(#bg)"/>
+<clipPath id="r"><rect width="512" height="512" rx="112"/></clipPath><g clip-path="url(#r)"><g transform="translate(256 256) scale(1.75) translate(-256 -258)">
+  <g transform="rotate(-16 256 262)"><path d="M50 262 A206 42 0 0 1 462 262" fill="none" stroke="#f3ead2" stroke-width="7" opacity=".5"/></g>
+  <circle cx="256" cy="262" r="96" fill="url(#moon)" mask="url(#cut)"/>
+  <g transform="rotate(-16 256 262)"><path d="M50 262 A206 42 0 0 0 462 262" fill="none" stroke="#f3ead2" stroke-width="8" stroke-linecap="round"/></g>
+  <path d="M276 162 Q283 229 322 236 Q283 243 276 310 Q269 243 230 236 Q269 229 276 162Z" fill="url(#gold)"/>
+</g></g></svg>

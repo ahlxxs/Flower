@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ARCANA</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/icon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#070c0a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;500&family=Playfair+Display:wght@400;500&family=Nanum+Myeongjo:wght@800&display=swap">
 <style>
@@ -37,6 +41,7 @@ body {
   mix-blend-mode: screen; filter: blur(0.5rem);
 }
 header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.375rem clamp(1.125rem, 4vw, 2.75rem); }
+.brand-mark { height: 1.9em; margin: -.5em 0 -.5em -.3em; }
 .brand { display: flex; align-items: center; gap: 0.625rem; font-family: var(--didone); font-weight: 500; font-size: 1.1rem; letter-spacing: .28em; }
 header nav { display: flex; gap: clamp(0.875rem, 3vw, 2.25rem); }
 .mi { border: 0; background: none; cursor: pointer; padding: 0.75rem 0; font-weight: 300; font-size: .95rem; color: var(--text); position: relative; }
@@ -699,7 +704,7 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
   <div class="rays" aria-hidden="true"></div>
   <canvas id="cv" aria-hidden="true"></canvas>
   <header>
-    <div class="brand">ARCANA</div>
+    <div class="brand"><img class="brand-mark" src="/brand/mark-small.svg" alt="">ARCANA</div>
     <div class="h-right">
       <nav aria-label="메인 메뉴"><button class="mi" data-settings="rules">게임 방법</button></nav>
       <button class="icon-btn me-btn" type="button" id="meBtn" aria-label="내 프로필" title="내 프로필"></button>
@@ -756,7 +761,7 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
 
   <section id="game" class="screen" hidden aria-label="게임">
     <div class="g-bar">
-      <div class="brand">ARCANA</div>
+      <div class="brand"><img class="brand-mark" src="/brand/mark-small.svg" alt="">ARCANA</div>
       <div class="g-phase"><b id="gRound"></b><span id="gPhase"></span></div>
       <div class="g-turn" id="gTurn" aria-live="polite"></div>
       <button class="icon-btn gear" type="button" aria-label="설정" title="설정"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
