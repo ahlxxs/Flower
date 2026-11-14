@@ -26,22 +26,22 @@ const ok = (c, l) => { if (!c) failed++; console.log((c ? 'PASS ' : 'FAIL ') + l
   await a.click('#lgSubmit'); await sleep(200);
   ok((await a.textContent('#lgErr')).includes('일치하지 않습니다'), '비밀번호 확인이 다르면 거절');
   await a.fill('#lgPw2', 'abc123'); await a.click('#lgSubmit'); await sleep(600);
-  ok(!(await isOpen(a)) && (await a.textContent('#meBtn')).includes('용사'), '가입 → 로그인 완료, 오른쪽 위에 내 프로필');
+  ok(!(await isOpen(a)) && (await a.evaluate(() => myProfile?.nickname || '')).includes('용사'), '가입 → 로그인 완료');
   const saved = readFileSync(join(DATA, 'profiles.json'), 'utf8');
   ok(saved.includes('"login":"hero_01"') && !saved.includes('abc123'), '비밀번호 원문은 저장하지 않음 (해시만)');
 
   // 3. 같은 탭 새로고침은 다시 묻지 않음
   await a.reload(); await ready(a); await sleep(300);
-  ok(!(await isOpen(a)) && (await a.textContent('#meBtn')).includes('용사'), '같은 탭 새로고침: 로그인 유지');
+  ok(!(await isOpen(a)) && (await a.evaluate(() => myProfile?.nickname || '')).includes('용사'), '같은 탭 새로고침: 로그인 유지');
 
   // 4. 새로 접속(같은 브라우저, 새 탭): 아이디는 채워져 있고 비밀번호를 물음
   await a.close(); a = await tab(ctxA); await a.goto(U); await ready(a);
   ok(await isOpen(a) && (await a.inputValue('#lgId')) === 'hero_01', '새로 접속: 기억한 아이디가 채워진 로그인 창');
-  ok(!(await a.textContent('#meBtn')).includes('용사'), '비밀번호 전에는 로그인 안 된 상태');
+  ok(!(await a.evaluate(() => myProfile?.nickname || '')).includes('용사'), '비밀번호 전에는 로그인 안 된 상태');
   await a.fill('#lgPw', 'wrong1'); await a.click('#lgSubmit'); await sleep(400);
   ok((await a.textContent('#lgErr')).includes('맞지 않습니다'), '틀린 비밀번호 거절');
   await a.fill('#lgPw', 'abc123'); await a.click('#lgSubmit'); await sleep(500);
-  ok(!(await isOpen(a)) && (await a.textContent('#meBtn')).includes('용사'), '맞는 비밀번호로 로그인 → 내 프로필');
+  ok(!(await isOpen(a)) && (await a.evaluate(() => myProfile?.nickname || '')).includes('용사'), '맞는 비밀번호로 로그인 → 내 프로필');
 
   // 5. 다른 곳에서 같은 아이디로 가입 → 거절, 틀린 비밀번호 5번 → 잠시 잠김
   const ctxB = await b.newContext(); const c = await tab(ctxB); await c.goto(U); await ready(c);
@@ -64,8 +64,8 @@ const ok = (c, l) => { if (!c) failed++; console.log((c ? 'PASS ' : 'FAIL ') + l
   ok((await a.textContent('#seats')).includes('나그네'), '게스트가 방에 들어옴');
 
   // 7. 로그아웃 → 로그인 창
-  await a.click('#meBtn'); await a.click('#logoutBtn'); await sleep(300);
-  ok(await isOpen(a) && !(await a.textContent('#meBtn')).includes('용사'), '로그아웃하면 로그인 창');
+  await a.click('.seat[data-name="용사"]'); await a.waitForSelector('#profile[open]'); await a.click('#logoutBtn'); await sleep(300);
+  ok(await isOpen(a) && !(await a.evaluate(() => myProfile?.nickname || '')).includes('용사'), '로그아웃하면 로그인 창');
   ok(!errs.length, '페이지 오류 없음 ' + errs.join(' / '));
   await b.close();
 })().catch(e => { console.error(e); failed++; }).finally(() => { server.kill(); process.exit(failed ? 1 : 0); });

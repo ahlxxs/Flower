@@ -12,7 +12,6 @@ const DIR = process.env.DATA_DIR || new URL('./data', import.meta.url).pathname;
 const FILE = join(DIR, 'profiles.json');
 export const EMBLEMS = ['king', 'queen', 'bishop', 'blade', 'feather', 'infinity', 'tide', 'key', 'lantern']; // 문장 (이름과 그림은 클라이언트의 MARKS)
 export const COLORS = ['amber', 'jade', 'crimson', 'violet', 'silver'];
-export const SKINS = ['leather', 'ebony', 'forest']; // 기록부 가죽 재질
 export const BANNERS = ['none', 'gold', 'dusk', 'sakura', 'rosechain', 'violet', 'bluesmoke', 'starsmoke', 'sunforest', 'moongeese', 'redcloud',
   'butterfly', 'curtain', 'crow', 'cover', 'planet']; // 프로필 배너·칭호 배너 (그림은 클라이언트)
 // 관리자 계정: 모든 칭호와 모든 배너를 가진다. 환경 변수 ADMIN_LOGINS(쉼표로 구분)로 바꿀 수 있음
@@ -136,7 +135,7 @@ export function recordGame(key, { camp, win, survived, job, hand = 0, soul = 0, 
 export function publicView(p) {
   const title = TITLES.find(t => t.id === p.title);
   const stats = { ...blankStats(), ...p.stats };
-  return { nickname: p.nickname, intro: p.intro, emblem: EMBLEMS.includes(p.emblem) ? p.emblem : EMBLEMS[0], color: p.color, skin: p.skin || 'leather', banner: bannersOf(p).includes(p.banner) ? p.banner : 'none', tbanner: bannersOf(p).includes(p.tbanner) ? p.tbanner : 'none', title: title?.name || '', stats, level: levelOf(stats.xp), createdAt: p.createdAt };
+  return { nickname: p.nickname, intro: p.intro, emblem: EMBLEMS.includes(p.emblem) ? p.emblem : EMBLEMS[0], color: p.color, banner: bannersOf(p).includes(p.banner) ? p.banner : 'none', tbanner: bannersOf(p).includes(p.tbanner) ? p.tbanner : 'none', title: title?.name || '', stats, level: levelOf(stats.xp), createdAt: p.createdAt };
 }
 // 본인에게 보여 줄 정보 (+ 고를 수 있는 칭호)
 export const ownView = p => ({ ...publicView(p), login: p.login || '', titleId: p.title, titles: titlesOf(p).map(({ id, name, desc }) => ({ id, name, desc })), codex: codexOf(p), banners: bannersOf(p), admin: isAdmin(p) });
@@ -159,14 +158,13 @@ export function save(key, input) {
   const intro = String(input.intro ?? '').trim().slice(0, MAX_INTRO);
   const emblem = EMBLEMS.includes(input.emblem) ? input.emblem : EMBLEMS[0];
   const color = COLORS.includes(input.color) ? input.color : 'amber';
-  const skin = SKINS.includes(input.skin) ? input.skin : (p?.skin || 'leather');
   const owned = bannersOf(p); // 잠긴 배너는 고를 수 없다
   const banner = owned.includes(input.banner) ? input.banner : owned.includes(p?.banner) ? p.banner : 'none';
   const tbanner = owned.includes(input.tbanner) ? input.tbanner : owned.includes(p?.tbanner) ? p.tbanner : 'none';
   const next = p || { key: randomBytes(16).toString('hex'), createdAt: Date.now(), stats: blankStats() };
   const title = titlesOf(next).some(t => t.id === input.title) ? input.title : (p?.title || TITLES[0].id);
   if (p) byName.delete(p.nickname.toLowerCase());
-  Object.assign(next, { nickname, intro, emblem, color, skin, banner, tbanner, title });
+  Object.assign(next, { nickname, intro, emblem, color, banner, tbanner, title });
   byKey.set(next.key, next); byName.set(nickname.toLowerCase(), next.key);
   persist(next);
   return { profile: next };
