@@ -675,6 +675,39 @@ input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--in
 .lp-opts label.locked { opacity: .4; cursor: not-allowed; } .lp-opts label.locked > span { filter: grayscale(.6); }
 .cx-banners figure.locked, .cx-row figure.locked { opacity: .45; filter: grayscale(.5); }
 .cx-count { font-family: var(--sans); font-weight: 400; font-size: .75rem; color: var(--lp-dim); margin-left: .5rem; }
+/* 배너 테마: 고른 프로필 배너의 색이 기록부 전체(판·양피지·선·배경)에 스민다. 가죽 재질보다 우선 */
+.lp-dlg[data-bn="gold"], .lp-dlg[data-bn="gold"] .lp-rec { --leather: #2a2116; --leather-hi: #3a2d1a; --bronze: #c99a4a; --bronze-hi: #f2d58e; --parch: #f4e6c2; --parch-lo: #dcc38c; --ink: #3a2a10; --t-glow: #6a5222; }
+.lp-dlg[data-bn="dusk"], .lp-dlg[data-bn="dusk"] .lp-rec { --leather: #2a1620; --leather-hi: #3a1f2c; --bronze: #b98a8a; --bronze-hi: #e9d3c6; --parch: #f1dfe0; --parch-lo: #d9b9bd; --ink: #4a2030; --t-glow: #5e2c3d; }
+.lp-dlg[data-bn="sakura"], .lp-dlg[data-bn="sakura"] .lp-rec { --leather: #23223e; --leather-hi: #2e2c52; --bronze: #9c96e0; --bronze-hi: #dcdcff; --parch: #eeeeff; --parch-lo: #d4d2ff; --ink: #3b2f78; --t-glow: #4a4890; }
+.lp-dlg[data-bn="rosechain"], .lp-dlg[data-bn="rosechain"] .lp-rec { --leather: #17142f; --leather-hi: #221c44; --bronze: #8f7ae0; --bronze-hi: #d6c2ff; --parch: #e6dcff; --parch-lo: #c9b8f5; --ink: #2e2160; --t-glow: #4a2f8a; }
+.lp-dlg[data-bn="violet"], .lp-dlg[data-bn="violet"] .lp-rec { --leather: #1f1a3a; --leather-hi: #2b2350; --bronze: #a995f5; --bronze-hi: #e2dbff; --parch: #ece8ff; --parch-lo: #cfc4ff; --ink: #2b2350; --t-glow: #5a4aa0; }
+.lp-dlg[data-bn="bluesmoke"], .lp-dlg[data-bn="bluesmoke"] .lp-rec { --leather: #0d1820; --leather-hi: #173444; --bronze: #4fa8c8; --bronze-hi: #a9ecff; --parch: #dff3f8; --parch-lo: #b9dce6; --ink: #12303c; --t-glow: #1f5a70; }
+.lp-dlg[data-bn="starsmoke"], .lp-dlg[data-bn="starsmoke"] .lp-rec { --leather: #05070d; --leather-hi: #10162a; --bronze: #6b7894; --bronze-hi: #cfe0ff; --parch: #e4e8f0; --parch-lo: #c4cad8; --ink: #1b2236; --t-glow: #1b2440; }
+.lp-dlg[data-bn="sunforest"], .lp-dlg[data-bn="sunforest"] .lp-rec { --leather: #142a1a; --leather-hi: #1f3d26; --bronze: #7fb06a; --bronze-hi: #e9f5b8; --parch: #eef6d8; --parch-lo: #cfe0aa; --ink: #1f3a22; --t-glow: #4f8a3a; }
+.lp-dlg[data-bn="moongeese"], .lp-dlg[data-bn="moongeese"] .lp-rec { --leather: #173a3a; --leather-hi: #22504c; --bronze: #c9a85a; --bronze-hi: #efe6c2; --parch: #f1ead0; --parch-lo: #d9cc9e; --ink: #1d4a4a; --t-glow: #2e6a6a; }
+.lp-dlg[data-bn="redcloud"], .lp-dlg[data-bn="redcloud"] .lp-rec { --leather: #3a0f16; --leather-hi: #521820; --bronze: #e3b45a; --bronze-hi: #f0c76a; --parch: #fbe3c6; --parch-lo: #ecc39a; --ink: #6e1a22; --t-glow: #8e1c2c; }
+.lp-dlg[data-bn="butterfly"], .lp-dlg[data-bn="butterfly"] .lp-rec { --leather: #3a1220; --leather-hi: #4e1a2c; --bronze: #c2244a; --bronze-hi: #f2a0b4; --parch: #fbe6da; --parch-lo: #f0c8ba; --ink: #8e1030; --t-glow: #6e1a3a; }
+.lp-dlg[data-bn="curtain"], .lp-dlg[data-bn="curtain"] .lp-rec { --leather: #1e0a14; --leather-hi: #3a1526; --bronze: #c9a04e; --bronze-hi: #e9c27a; --parch: #f6e3cf; --parch-lo: #e0c4a8; --ink: #4a1528; --t-glow: #5e1a32; }
+.lp-dlg[data-bn="crow"], .lp-dlg[data-bn="crow"] .lp-rec { --leather: #0d0d10; --leather-hi: #1c0c12; --bronze: #8a2034; --bronze-hi: #d8264a; --parch: #e6e6ea; --parch-lo: #c9c9d0; --ink: #24090f; --t-glow: #4a0f1c; }
+.lp-dlg[data-bn="cover"], .lp-dlg[data-bn="cover"] .lp-rec { --leather: #1d1d22; --leather-hi: #2a2a32; --bronze: #c4283c; --bronze-hi: #ff7a8a; --parch: #ececef; --parch-lo: #d4d4da; --ink: #1d1d22; --t-glow: #5a1a24; }
+.lp-dlg[data-bn="planet"], .lp-dlg[data-bn="planet"] .lp-rec { --leather: #1c1d44; --leather-hi: #2a2b5a; --bronze: #8f7ae0; --bronze-hi: #c9c4ff; --parch: #ebe8ff; --parch-lo: #cdc6f5; --ink: #2a2b6a; --t-glow: #4b4fb0; }
+.lp-dlg[data-bn]:not([data-bn="none"]) { background: radial-gradient(ellipse 70% 55% at 25% 0%, color-mix(in srgb, var(--t-glow) 55%, transparent), transparent 70%), radial-gradient(ellipse 50% 40% at 100% 100%, color-mix(in srgb, var(--t-glow) 30%, transparent), transparent 70%), color-mix(in srgb, var(--leather) 70%, #2c2a27); transition: background .4s; }
+.lp-dlg[data-bn]:not([data-bn="none"]) .lp-sec i, .lp-dlg[data-bn]:not([data-bn="none"]) .lp-sec button { color: var(--bronze-hi); }
+.lp-dlg[data-bn]:not([data-bn="none"]) .lp-sec span { border-color: color-mix(in srgb, var(--bronze) 60%, transparent); }
+.lp-dlg[data-bn]:not([data-bn="none"]) .lp-parch { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bronze) 45%, transparent), inset 0 0 2.5rem color-mix(in srgb, var(--parch-lo) 70%, transparent), 3px 4px 0 -1px var(--parch-lo), 6px 8px 0 -2px color-mix(in srgb, var(--parch-lo) 75%, #000), 0 1rem 1.6rem #0007; }
+.lp-dlg[data-bn]:not([data-bn="none"]) .lp-tag { box-shadow: inset 0 0 0 1px var(--bronze), inset 0 0 0 4px var(--parch), inset 0 0 0 5px color-mix(in srgb, var(--bronze) 60%, transparent); }
+.lp-dlg[data-bn]:not([data-bn="none"]) .lp-tag::before { background: var(--bronze-hi); }
+.lp-dlg[data-bn]:not([data-bn="none"]) :is(.lp-tag small, .lp-camp p, .lp-row small, .lp-count, .pnote, .presults small) { color: color-mix(in srgb, var(--ink) 65%, transparent); }
+.lp-dlg[data-bn]:not([data-bn="none"]) :is(.lp-tabs button[aria-selected="true"], .lp-ribbon) { border-color: var(--bronze); }
+.lp-dlg[data-bn]:not([data-bn="none"]) .lp-ribbon { background: linear-gradient(var(--bronze), color-mix(in srgb, var(--bronze) 70%, #000)); }
+.lp-dlg[data-bn]:not([data-bn="none"]) :is(.lp-save, .lp-chip, .o-em) { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bronze) 60%, transparent); }
+.lp-dlg[data-bn]:not([data-bn="none"]) .lp-save { color: var(--bronze-hi); }
+.lp-dlg[data-bn]:not([data-bn="none"]) .f-xp { background: linear-gradient(90deg, var(--bronze), var(--bronze-hi)); }
+/* 배너 그림을 기록 뒤에 크게, 흐리게 */
+#pRecord { position: relative; isolation: isolate; }
+.lp-art { position: absolute; z-index: -1; left: -2rem; right: -2rem; top: -2.5rem; height: 13rem; opacity: .22; pointer-events: none;
+  -webkit-mask-image: linear-gradient(#000 40%, transparent); mask-image: linear-gradient(#000 40%, transparent); }
+.lp-art svg { width: 100%; height: 100%; display: block; }
 /* 로그인 창 */
 #loginDlg { width: min(100%, 24rem); }
 .login-sub { margin: 0 0 1rem; text-align: center; font-size: .85rem; color: var(--fog); line-height: 1.6; }
@@ -2349,7 +2382,9 @@ function showRecord() {
     p = { ...myProfile, ...v, nickname: v.nickname || myProfile.nickname, title: t?.name || myProfile.title };
   }
   if (!p) p = { guest: true, nickname: $('name').value.trim() || '나그네' };
-  $('pRecord').innerHTML = recordHTML(p, !viewing);
+  const bn = !p.guest && BANNERS[p.banner] ? p.banner : 'none', art = BANNERS[bn].bg || BANNERS[bn].hang;
+  $('profile').dataset.bn = bn; // 배너 테마가 기록부 전체에 퍼진다 (CSS .lp-dlg[data-bn])
+  $('pRecord').innerHTML = (art ? `<div class="lp-art" aria-hidden="true"><svg viewBox="${BANNERS[bn].bg ? '0 0 400 64' : '0 0 200 50'}" preserveAspectRatio="xMidYMin slice">${art}</svg></div>` : '') + recordHTML(p, !viewing);
 }
 function renderMeBtn() {
   $('meBtn').classList.toggle('empty', !myProfile);
