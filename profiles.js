@@ -10,7 +10,7 @@ import { join } from 'node:path';
 
 const DIR = process.env.DATA_DIR || new URL('./data', import.meta.url).pathname;
 const FILE = join(DIR, 'profiles.json');
-export const EMBLEMS = ['sword', 'shield', 'star', 'moon', 'heart', 'eye'];
+export const EMBLEMS = ['king', 'queen', 'bishop', 'blade', 'feather', 'infinity', 'tide', 'key', 'lantern']; // 문장 (이름과 그림은 클라이언트의 MARKS)
 export const COLORS = ['amber', 'jade', 'crimson', 'violet', 'silver'];
 export const SKINS = ['leather', 'ebony', 'forest']; // 기록부 가죽 재질
 const NAME = /^[\p{L}\p{N}_ ]{2,12}$/u; // 글자·숫자·밑줄·띄어쓰기 2~12자
@@ -128,7 +128,7 @@ export function recordGame(key, { camp, win, survived, job, hand = 0, soul = 0, 
 export function publicView(p) {
   const title = TITLES.find(t => t.id === p.title);
   const stats = { ...blankStats(), ...p.stats };
-  return { nickname: p.nickname, intro: p.intro, emblem: p.emblem, color: p.color, skin: p.skin || 'leather', title: title?.name || '', stats, level: levelOf(stats.xp), createdAt: p.createdAt };
+  return { nickname: p.nickname, intro: p.intro, emblem: EMBLEMS.includes(p.emblem) ? p.emblem : EMBLEMS[0], color: p.color, skin: p.skin || 'leather', title: title?.name || '', stats, level: levelOf(stats.xp), createdAt: p.createdAt };
 }
 // 본인에게 보여 줄 정보 (+ 고를 수 있는 칭호)
 export const ownView = p => ({ ...publicView(p), login: p.login || '', titleId: p.title, titles: titlesOf(p).map(({ id, name, desc }) => ({ id, name, desc })), codex: codexOf(p) });
@@ -149,7 +149,7 @@ export function save(key, input) {
   const owner = byName.get(nickname.toLowerCase());
   if (owner && owner !== p?.key) return { error: '이미 다른 사람이 쓰는 닉네임입니다.' };
   const intro = String(input.intro ?? '').trim().slice(0, MAX_INTRO);
-  const emblem = EMBLEMS.includes(input.emblem) ? input.emblem : 'star';
+  const emblem = EMBLEMS.includes(input.emblem) ? input.emblem : EMBLEMS[0];
   const color = COLORS.includes(input.color) ? input.color : 'amber';
   const skin = SKINS.includes(input.skin) ? input.skin : (p?.skin || 'leather');
   const next = p || { key: randomBytes(16).toString('hex'), createdAt: Date.now(), stats: blankStats() };
@@ -179,7 +179,7 @@ export function signup({ login, password, nickname, legacyKey }) {
   let p = getByKey(legacyKey);
   if (p && p.login) p = null; // 이미 계정이 있는 프로필은 이어받지 않는다
   if (!p) {
-    const res = save(null, { nickname, emblem: 'star', color: 'amber' });
+    const res = save(null, { nickname, emblem: EMBLEMS[0], color: 'amber' });
     if (res.error) return res;
     p = res.profile;
   }

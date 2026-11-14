@@ -23,10 +23,11 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   await signup(a, 'arin', '용사아린');
   ok(!(await a.evaluate(() => document.getElementById('loginDlg').open)), '회원가입하면 로그인 창이 닫힘');
   await a.click('#meBtn'); await sleep(300);
-  ok(await a.evaluate(() => document.getElementById('profile').classList.contains('opening')), '기록부를 열면 책 펼치기 연출');
+  ok(await a.evaluate(() => !document.getElementById('loader').classList.contains('done') && !document.getElementById('profile').open), '기록부를 열면 먼저 로딩 화면');
+  await a.waitForSelector('#profile[open]'); await sleep(300);
   ok((await a.textContent('#pRecord')).includes('LEVEL') && (await a.textContent('.lp-tag .lv')) === '1', '새 계정은 1레벨');
   await a.fill('#pIntro', '봉인은 내가 막는다.');
-  await a.click('[name=pEmblem][value=sword] + .o-em'); await a.click('[name=pColor][value=crimson] + .o-c'); await a.click('[name=pSkin][value=ebony] + .o-t');
+  await a.click('[name=pEmblem][value=blade] + .o-em'); await a.click('[name=pColor][value=crimson] + .o-c'); await a.click('[name=pSkin][value=ebony] + .o-t');
   ok((await a.getAttribute('.lp-rec', 'data-skin')) === 'ebony' && (await a.textContent('.lp-intro')).includes('봉인은 내가'), '꾸미는 대로 기록부가 바로 바뀜');
   await a.click('#pSave'); await sleep(500);
   ok((await a.textContent('#pMsg')) === '저장했습니다.', '프로필 만들기');
@@ -40,7 +41,7 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   await g.click('#lgGuest'); await sleep(200);
 
   // 3. 게스트도 검색 → 보기
-  await g.click('#meBtn'); await sleep(200); await g.fill('#pSearch', '용사'); await sleep(600);
+  await g.click('#meBtn'); await g.waitForSelector('#profile[open]'); await sleep(200); await g.fill('#pSearch', '용사'); await sleep(600);
   ok((await g.textContent('#pResults')).includes('용사아린'), '닉네임 일부로 검색');
   await g.click('#pResults button'); await sleep(400);
   ok((await g.textContent('#pRecord')).includes('봉인은 내가 막는다.') && (await g.textContent('#pRecord')).includes('용사아린의 기록'), '검색 결과 눌러 그 사람의 기록부 보기');
@@ -55,10 +56,10 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   await g.click('.cta.join'); await g.fill('#name', '용사아린'); await g.fill('#code', code); await g.click('#form .btn:not(.ghost)'); await sleep(2200);
   ok((await g.textContent('#err')).includes('프로필로 등록된'), '게스트는 등록된 닉네임을 못 씀');
   await g.fill('#name', '나그네'); await g.click('#form .btn:not(.ghost)'); await g.waitForSelector('#lobby:not([hidden])'); await sleep(1800);
-  await g.click('.seat[data-name="용사아린"]'); await sleep(400);
+  await g.click('.seat[data-name="용사아린"]'); await g.waitForSelector('#profile[open]'); await sleep(200);
   ok(await g.evaluate(() => document.getElementById('profile').open) && (await g.textContent('#pRecord')).includes('봉인은 내가 막는다.'), '대기실에서 프로필 사용자 눌러 기록부 보기');
   await g.click('[data-close="profile"]');
-  await a.click('.seat[data-name="나그네"]'); await sleep(300);
+  await a.click('.seat[data-name="나그네"]'); await a.waitForSelector('#profile[open]'); await sleep(200);
   ok((await a.textContent('#pRecord')).includes('게스트'), '게스트는 게스트 기록');
   await a.click('[data-close="profile"]');
 
@@ -68,15 +69,15 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   await a.evaluate(() => send({ type: 'debugOver', winner: 'hero' })); await sleep(800);
   const gain = myRole === 'hero' ? 110 : 50, lvAfter = myRole === 'hero' ? '2' : '1'; // 1→2레벨에 60 필요
   ok((await a.textContent('#overMe')).includes(`경험치 +${gain}`), `게임 결과 화면에 얻은 경험치 (${myRole}) → ` + await a.textContent('#overMe'));
-  await a.evaluate(() => document.getElementById('meBtn').click()); await sleep(300);
+  await a.evaluate(() => document.getElementById('meBtn').click()); await a.waitForSelector('#profile[open]'); await sleep(200);
   ok((await a.textContent('.lp-tag .lv')) === lvAfter && (await a.textContent('.lp-sub')).includes('1판 참가'), `기록부: 레벨 ${lvAfter}, 1판 참가 → ` + await a.textContent('.lp-xp'));
   await a.click('[data-close="profile"]'); await a.evaluate(() => send({ type: 'backToLobby' })); await sleep(800);
 
   // 5. 수정 → 서버 재시작 후에도 유지
-  await a.click('#meBtn'); await a.fill('#pIntro', '수정된 소개말'); await a.click('[name=pColor][value=violet] + .o-c'); await a.click('#pSave'); await sleep(1200);
+  await a.click('#meBtn'); await a.waitForSelector('#profile[open]'); await sleep(200); await a.fill('#pIntro', '수정된 소개말'); await a.click('[name=pColor][value=violet] + .o-c'); await a.click('#pSave'); await sleep(1200);
   srv.kill(); await sleep(300); srv = start(); await sleep(1000);
   const c = await page(); await c.goto(U); await ready(c); await guest(c);
-  await c.click('#meBtn'); await c.click('[data-ptab="find"]'); await c.fill('#pSearch', '아린'); await sleep(600);
+  await c.click('#meBtn'); await c.waitForSelector('#profile[open]'); await sleep(200); await c.click('[data-ptab="find"]'); await c.fill('#pSearch', '아린'); await sleep(600);
   await c.click('#pResults button'); await sleep(400);
   ok((await c.textContent('#pRecord')).includes('수정된 소개말') && (await c.textContent('.lp-sub')).includes('1판 참가'), '수정 내용과 전적이 서버 재시작 뒤에도 남아 있음');
 
@@ -84,7 +85,7 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   const d = await page(); await d.goto(U); await ready(d);
   await d.waitForSelector('#loginDlg[open]'); await d.fill('#lgId', 'arin'); await d.fill('#lgPw', 'secret12'); await d.click('#lgSubmit'); await sleep(600);
   await d.click('#codexBtn'); await sleep(400);
-  ok(await d.evaluate(() => document.getElementById('codex').classList.contains('opening')), '도감도 책 펼치기로 열림');
+  ok(await d.evaluate(() => !document.getElementById('loader').classList.contains('done')), '도감도 로딩 화면 뒤에 열림'); await d.waitForSelector('#codex[open]'); await sleep(300);
   ok((await d.$$('#cxTitles li')).length === 25 && (await d.textContent('#cxTitles')).includes('부서지지 않는 신념'), '도감: 칭호 25개와 조건');
   ok((await d.textContent('#cxTitles')).includes('???') && !(await d.textContent('#cxTitles')).includes('반짝 반짝'), '숨겨진 칭호는 ???');
   await d.click('[data-ctab="cards"]'); await sleep(300);
@@ -92,10 +93,10 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   await d.click('[data-close="codex"]'); await sleep(300);
   await d.evaluate(() => sealCycle(50)); await sleep(800);              // 마법진이 겹치는 순간을 앞당김
   ok((await d.textContent('#titleToast')).includes('반짝 반짝'), '홈에서 마법진이 겹치는 걸 보면 숨겨진 칭호 획득 알림');
-  await d.click('#codexBtn'); await sleep(300);
+  await d.click('#codexBtn'); await d.waitForSelector('#codex[open]'); await sleep(200);
   await d.click('[data-wear="sparkle"]'); await sleep(500);
   ok((await d.textContent('#cxTitles')).includes('달고 있음'), '도감에서 바로 칭호 달기');
-  await d.click('[data-close="codex"]'); await d.click('#meBtn'); await sleep(300);
+  await d.click('[data-close="codex"]'); await d.click('#meBtn'); await d.waitForSelector('#profile[open]'); await sleep(200);
   ok((await d.textContent('.lp-tag .tt')) === '반짝 반짝' && (await d.$eval('#pTitle', s => s.value)) === 'sparkle', '기록부에도 단 칭호가 보이고 고를 수 있음');
   ok(!errs.length, '페이지 오류 없음 ' + errs.join(' / '));
   await b.close(); srv.kill(); process.exit(failed ? 1 : 0);

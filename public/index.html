@@ -446,7 +446,7 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
 /* ---------- 프로필 ---------- */
 .me-btn { width: auto; min-width: 2.25rem; padding: 0 .7rem 0 .25rem; gap: .45rem; display: flex; border-radius: 1.2rem; font-size: .82rem; color: var(--text); }
 .me-btn .medal { width: 1.75rem; height: 1.75rem; border-width: 1px; }
-.me-btn .medal svg { width: 1rem; }
+.me-btn .medal svg { width: 1.35rem; }
 .me-btn.empty { padding: 0; width: 2.25rem; justify-content: center; }
 .medal {
   --pc: var(--amber); flex: none; width: 4.5rem; height: 4.5rem; border-radius: 50%; display: grid; place-items: center;
@@ -454,10 +454,14 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
   box-shadow: 0 0 1.2rem color-mix(in srgb, var(--pc) 35%, transparent), inset 0 0 0 .2rem #050907, inset 0 0 0 .26rem color-mix(in srgb, var(--pc) 45%, transparent);
 }
 .medal svg { width: 2.2rem; fill: none; stroke: var(--pc); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.medal svg.mark { width: 74%; }
+/* 문장: 선과 .s는 문장 색, .a/.al은 문장 고유 빛깔, .b는 보조 분홍 */
+.mark { overflow: visible; fill: none; stroke: var(--pc, currentColor); } .mark .s { fill: var(--pc, currentColor); stroke: none; } .mark .a { fill: var(--ac); stroke: none; }
+.mark .al { stroke: var(--ac); stroke-width: 2.6; } .mark .b { fill: #f0a8c8; stroke: none; }
 .c-amber { --pc: #e8c27a; } .c-jade { --pc: #7fbfa5; } .c-crimson { --pc: #e86a76; } .c-violet { --pc: #b3a6f5; } .c-silver { --pc: #cfd8d4; }
 .seat:not(.empty), .opp { cursor: pointer; }
 /* ---------- 원정 기록부 (프로필 전용 화면) ----------
-   화면 전체를 덮는 페이지. 열 때 책이 펼쳐지며 책장이 넘어가고(.book), 그 뒤로 기록부가 떠오른다.
+   화면 전체를 덮는 페이지. 열 때 잠깐 로딩 화면(팁 포함)을 띄운 뒤 기록부가 떠오른다.
    왼쪽 = 가죽 상태판 + 진영별 양피지 전적, 오른쪽 = 책갈피 달린 양피지 장부(꾸미기 / 모험가 찾기) */
 .lp-dlg {
   --lp-stone: #2c2a27; --leather: #1d1c1a; --leather-hi: #282623; --bronze: #8a6d45; --bronze-hi: #c9a46a;
@@ -470,7 +474,7 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
 .lp-dlg[open] { display: block; }
 .lp { position: absolute; inset: 0; overflow-y: auto; padding: 1.2rem clamp(1rem, 4vw, 3rem) 3rem; }
 .lp-in { max-width: 72rem; margin: 0 auto; }
-.lp-dlg.opening .lp { animation: lpIn .9s cubic-bezier(.2, .7, .2, 1) .75s both; }
+.lp-dlg.opening .lp { animation: lpIn .7s cubic-bezier(.2, .7, .2, 1) both; }
 @keyframes lpIn { from { opacity: 0; transform: perspective(60rem) rotateX(6deg) translateY(1.5rem) scale(.97); } }
 .lp-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.3rem; }
 .lp-back { display: inline-flex; align-items: center; gap: .5rem; background: none; border: 1px solid #8a6d4566; color: var(--lp-dim); padding: .5rem .9rem; border-radius: 2rem; cursor: pointer; font-size: .85rem; }
@@ -494,7 +498,7 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
   background: linear-gradient(170deg, var(--parch), var(--parch-lo)); box-shadow: inset 0 0 0 1px #8a6d4588, inset 0 0 0 4px var(--parch), inset 0 0 0 5px #8a6d4555;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 1.1rem), 50% 100%, 0 calc(100% - 1.1rem)); display: grid; gap: .3rem; justify-items: center; align-content: start; filter: drop-shadow(0 .4rem .6rem #0009); }
 .lp-tag::before { content: ''; position: absolute; top: 0; left: 50%; translate: -50% 0; width: 1.6rem; height: .7rem; background: var(--hero); clip-path: polygon(0 0, 100% 0, 50% 100%); }
-.lp-tag .medal { width: 2.6rem; height: 2.6rem; margin-top: .3rem; border-width: 1px; } .lp-tag .medal svg { width: 1.3rem; }
+.lp-tag .medal { width: 2.6rem; height: 2.6rem; margin-top: .3rem; border-width: 1px; } .lp-tag .medal svg { width: 2rem; }
 .lp-tag small { font-size: .66rem; letter-spacing: .14em; color: var(--ink-dim); }
 .lp-tag .lv { font-family: var(--didone); font-size: 2.6rem; line-height: 1; border-block: 1px solid #8a6d4588; padding: .25rem .4rem; width: 100%; font-variant-numeric: tabular-nums; }
 .lp-tag .tt { font-family: var(--serif); font-weight: 800; font-size: .78rem; line-height: 1.35; }
@@ -508,7 +512,7 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
 .lp-bar .lbl b { color: var(--lp-text); font-weight: 500; }
 .lp-track { height: .42rem; background: #0d0c0b; border-radius: 1rem; box-shadow: inset 0 1px 2px #000; overflow: hidden; }
 .lp-fill { height: 100%; width: var(--w); border-radius: inherit; }
-.lp-dlg.opening .lp-fill { animation: lpFill 1s cubic-bezier(.2, .7, .2, 1) 1.3s both; } @keyframes lpFill { from { width: 0; } }
+.lp-dlg.opening .lp-fill { animation: lpFill 1s cubic-bezier(.2, .7, .2, 1) .4s both; } @keyframes lpFill { from { width: 0; } }
 .f-hero { background: linear-gradient(90deg, #7e2f1b, var(--hero), var(--hero-hi)); }
 .f-demon { background: linear-gradient(90deg, #3b2f78, var(--demon), var(--demon-hi)); }
 .f-xp { background: linear-gradient(90deg, #8a6d45, var(--amber)); }
@@ -516,7 +520,7 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
 .lp-intro.none { opacity: .45; }
 .lp-side { display: grid; grid-template-rows: 1fr auto; gap: .5rem; padding: .5rem; }
 .lp-side .lp-panel { display: grid; place-items: center; text-align: center; }
-.lp-crest { min-height: 6rem; } .lp-crest svg { width: 3.2rem; height: 3.2rem; fill: none; stroke: var(--pc); stroke-width: 1.2; stroke-linejoin: round; filter: drop-shadow(0 0 .6rem color-mix(in srgb, var(--pc) 50%, transparent)); }
+.lp-crest { min-height: 6rem; } .lp-crest svg { width: 4.4rem; height: 4.4rem; filter: drop-shadow(0 0 .6rem color-mix(in srgb, var(--pc) 50%, transparent)); }
 .lp-all { padding: .6rem .3rem; } .lp-all small { display: block; font-size: .66rem; letter-spacing: .1em; color: var(--lp-dim); margin-bottom: .2rem; }
 .lp-all b { font-family: var(--didone); font-weight: 400; font-size: 1.8rem; color: var(--amber); line-height: 1; font-variant-numeric: tabular-nums; }
 .lp-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin: .7rem 0 0 8rem; }
@@ -555,9 +559,9 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
 .lp-opts { display: flex; flex-wrap: wrap; gap: .45rem; }
 .lp-opts input { position: absolute; opacity: 0; pointer-events: none; }
 .lp-opts label { cursor: pointer; }
-.o-em { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; background: var(--leather); border: 1px solid transparent; }
-.o-em svg { width: 1.2rem; height: 1.2rem; fill: none; stroke: var(--parch); stroke-width: 1.5; stroke-linejoin: round; }
-input:checked + .o-em { border-color: var(--amber); box-shadow: 0 0 0 2px var(--parch), 0 0 0 3px #9b3c1f; } input:checked + .o-em svg { stroke: var(--amber); }
+.o-em { --pc: var(--parch); width: 2.6rem; height: 2.6rem; display: grid; place-items: center; background: var(--leather); border: 1px solid transparent; }
+.o-em svg { width: 2rem; height: 2rem; }
+input:checked + .o-em { border-color: var(--amber); box-shadow: 0 0 0 2px var(--parch), 0 0 0 3px #9b3c1f; } input:checked + .o-em { --pc: var(--amber); }
 .o-c { width: 2rem; height: 2rem; border-radius: 50%; background: var(--pc); box-shadow: inset 0 0 0 2px #0003; display: block; }
 input:checked + .o-c { box-shadow: 0 0 0 2px var(--parch), 0 0 0 4px var(--ink); }
 .o-t { padding: .4rem .7rem; font-size: .8rem; border: 1px solid #8a6d4588; background: #fff3; display: block; }
@@ -576,7 +580,7 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
 .presults { list-style: none; margin: .8rem 0 0; padding: 0; display: grid; gap: .4rem; }
 .presults button { width: 100%; display: flex; align-items: center; gap: .8rem; padding: .5rem .6rem; border: 1px solid #8a6d4566; background: #fff3; color: var(--ink); cursor: pointer; text-align: left; font: inherit; }
 .presults button:hover { background: #fff6; border-color: #9b3c1f; }
-.presults .medal { width: 2.2rem; height: 2.2rem; border-width: 1px; } .presults .medal svg { width: 1.1rem; }
+.presults .medal { width: 2.2rem; height: 2.2rem; border-width: 1px; } .presults .medal svg { width: 1.6rem; }
 .presults small { display: block; font-size: .72rem; color: var(--ink-dim); }
 .pempty { margin: 1rem 0 0; text-align: center; font-size: .85rem; color: var(--ink-dim); }
 @media (max-width: 900px) { .lp-grid { grid-template-columns: minmax(0, 1fr); } }
@@ -584,20 +588,7 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
   .lp-cluster { grid-template-columns: 6rem minmax(0, 1fr); } .lp-side { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; grid-template-rows: none; padding: .5rem 0 0; }
   .lp-chips, .lp-xp { margin-left: 0; } .lp-tag .lv { font-size: 2rem; } .lp-camps { grid-template-columns: minmax(0, 1fr); }
 }
-/* 책 펼치기: 표지가 열리고 책장 다섯 장이 촤라락 넘어간 뒤 사라진다 */
-.book { position: absolute; left: 50%; top: 50%; width: min(18rem, 40vw); aspect-ratio: 3 / 4; translate: 0 -50%; perspective: 120rem; pointer-events: none; z-index: 5; opacity: 0; }
-.lp-dlg.opening .book { animation: bookLife 1.6s ease both; }
-@keyframes bookLife { 0% { opacity: 0; transform: translateX(-50%) scale(.8); } 12% { opacity: 1; transform: translateX(-25%) scale(1); } 70% { opacity: 1; transform: translateX(0) scale(1.05); } 100% { opacity: 0; transform: translateX(0) scale(1.35); } }
-.book > * { position: absolute; inset: 0; transform-origin: left center; transform-style: preserve-3d; }
-.b-back { background: linear-gradient(90deg, #d9cdb2, #e8dec8); box-shadow: inset .3rem 0 1rem #0004, 0 1rem 2rem #000a; border-radius: 0 .3rem .3rem 0; }
-.b-page { background: linear-gradient(90deg, #cfc2a4, #ebe1cc 30%, #e4d9c1); border-radius: 0 .3rem .3rem 0; box-shadow: inset .2rem 0 .6rem #0003;
-  background-image: repeating-linear-gradient(transparent 0 1.1rem, #8a6d4522 1.1rem 1.15rem), linear-gradient(90deg, #cfc2a4, #ebe1cc 30%, #e4d9c1); background-clip: content-box; padding: 1.4rem 1.2rem; }
-.b-cover { background: linear-gradient(135deg, #3a2a1c, #1d150e); border-radius: 0 .3rem .3rem 0; box-shadow: inset 0 0 0 .3rem #1d150e, inset 0 0 0 .38rem #c9a46a88, 0 1rem 2rem #000a; display: grid; place-items: center; }
-.b-cover svg { width: 40%; fill: none; stroke: #c9a46a; stroke-width: 1.2; }
-.lp-dlg.opening .b-cover { animation: flip .55s cubic-bezier(.4, 0, .3, 1) .15s both; }
-.lp-dlg.opening .b-page { animation: flip .42s cubic-bezier(.4, 0, .3, 1) calc(.42s + var(--i) * .09s) both; }
-@keyframes flip { to { transform: rotateY(-178deg); } }
-@media (prefers-reduced-motion: reduce) { .lp-dlg.opening :is(.lp, .book, .b-cover, .b-page, .lp-fill) { animation: none; } .book { display: none; } }
+@media (prefers-reduced-motion: reduce) { .lp-dlg.opening :is(.lp, .lp-fill) { animation: none; } }
 /* 도감: 기록부와 같은 화면 틀(.lp-dlg). 탭 = 칭호 / 카드 / 문장 */
 .cx-tabs { display: flex; gap: 1.6rem; border-bottom: 1px solid #8a6d4566; margin-bottom: .9rem; }
 .cx-tabs button { background: none; border: 0; padding: .4rem 0 .6rem; font-family: var(--serif); font-weight: 800; font-size: 1.15rem; color: var(--lp-dim); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
@@ -624,8 +615,8 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
 .cx-marks { display: grid; gap: 1.4rem; }
 .cx-marks h3 { margin: 0 0 .7rem; font-family: var(--serif); font-weight: 800; font-size: 1rem; color: var(--parch); }
 .cx-row { display: flex; flex-wrap: wrap; gap: 1rem; }
-.cx-row figure { margin: 0; display: grid; gap: .4rem; justify-items: center; font-size: .78rem; color: var(--lp-dim); min-width: 4.5rem; }
-.cx-row .medal { width: 3.4rem; height: 3.4rem; } .cx-row .medal svg { width: 1.6rem; }
+.cx-row figure { margin: 0; display: grid; gap: .4rem; justify-items: center; font-size: .78rem; color: var(--lp-dim); min-width: 5.5rem; }
+.cx-row .medal { width: 4.4rem; height: 4.4rem; }
 .cx-skin { width: 4.5rem; height: 3rem; background: linear-gradient(var(--lh), var(--lb)); box-shadow: inset 0 0 0 1px var(--bz), inset 0 0 0 4px var(--lb), 0 .3rem .6rem #0007; }
 .title-toast { inset: auto; top: 12%; left: 50%; translate: -50% 0; margin: 0; border: 1px solid #e8c27a; background: #1b1610f2; color: var(--amber); padding: .8rem 1.6rem; border-radius: 2rem; font-family: 'Nanum Myeongjo', serif; font-weight: 800; box-shadow: 0 0 2rem #e8c27a55; }
 .title-toast:popover-open { animation: toastIn 3.6s ease forwards; }
@@ -1129,11 +1120,6 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
   </form>
 </dialog>
 <dialog id="profile" class="lp-dlg" aria-labelledby="pfTitle">
-  <div class="book" aria-hidden="true">
-    <div class="b-back"></div>
-    <div class="b-page" style="--i:4"></div><div class="b-page" style="--i:3"></div><div class="b-page" style="--i:2"></div><div class="b-page" style="--i:1"></div><div class="b-page" style="--i:0"></div>
-    <div class="b-cover"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4Z"/></svg></div>
-  </div>
   <div class="lp"><div class="lp-in">
     <div class="lp-top">
       <button class="lp-back" type="button" data-close="profile"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>돌아가기</button>
@@ -1175,11 +1161,6 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
   </div></div>
 </dialog>
 <dialog id="codex" class="lp-dlg" aria-labelledby="cxTitle">
-  <div class="book" aria-hidden="true">
-    <div class="b-back"></div>
-    <div class="b-page" style="--i:4"></div><div class="b-page" style="--i:3"></div><div class="b-page" style="--i:2"></div><div class="b-page" style="--i:1"></div><div class="b-page" style="--i:0"></div>
-    <div class="b-cover"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4Z"/></svg></div>
-  </div>
   <div class="lp"><div class="lp-in">
     <div class="lp-top">
       <button class="lp-back" type="button" data-close="codex"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>돌아가기</button>
@@ -1607,14 +1588,7 @@ function tone(freq, { type = 'sine', at = 0, peak = .2, decay = .35, glideTo } =
   g.gain.exponentialRampToValueAtTime(.0001, t + decay);          // 자연스럽게 사라짐
   o.connect(g).connect(actx.destination); o.start(t); o.stop(t + decay + .05);
 }
-let sealBuf, noiseBuf;
-function noise(at, dur, peak, freq) { // 걸러 낸 백색소음: 종이 넘기는 소리
-  noiseBuf ??= (() => { const b = actx.createBuffer(1, actx.sampleRate * .5, actx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; })();
-  const t = actx.currentTime + at, src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
-  src.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.setValueAtTime(freq, t); f.frequency.exponentialRampToValueAtTime(freq * 1.8, t + dur); f.Q.value = .7;
-  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak * sfxLevel(), t + dur * .25); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-  src.connect(f).connect(g).connect(actx.destination); src.start(t, Math.random() * .3); src.stop(t + dur + .05);
-}
+let sealBuf;
 const SFX = {
   awaken() {
     tone(130.8, { peak: .22, decay: 1.6, glideTo: 261.6 }); tone(196, { type: 'triangle', peak: .08, decay: 1.6, glideTo: 392 });
@@ -1634,9 +1608,6 @@ const SFX = {
       const src = actx.createBufferSource(), g = actx.createGain();
       src.buffer = buf; g.gain.value = sfxLevel(); src.connect(g).connect(actx.destination); src.start();
     });
-  },
-  pages() { // 기록부 열기: 표지가 툭 열리고 책장이 촤라락
-    noise(0.15, .16, .5, 900); [0, 1, 2, 3, 4].forEach(i => noise(.42 + i * .09, .1, .32, 2200 + i * 250));
   },
   tick() { tone(1500, { type: 'triangle', peak: .09, decay: .07, glideTo: 750 }); },                 // 그 외: 틱
 };
@@ -2139,17 +2110,47 @@ function syncView() {
 }
 
 /* ---------- 프로필 ---------- */
-const EMBLEM = {
+// 문장: 48×48 선화. 선(stroke)과 .s(채움)는 문장 색(--pc), .a / .al은 문장마다 고유한 빛깔(--ac)
+const UI_ICON = { // 기록부의 진영 표시 등 화면 아이콘 (24×24)
   sword: '<path d="M14.5 4H20v5.5L9 20.5 3.5 15Z"/><path d="M6 12l6 6M3 21l3-3"/>',
-  shield: '<path d="M12 3l8 3v6c0 5-3.6 8-8 9-4.4-1-8-4-8-9V6Z"/>',
-  star: '<path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4Z"/>',
   moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/>',
-  heart: '<path d="M12 20 3.5 11.8A4.8 4.8 0 0 1 12 6.3a4.8 4.8 0 0 1 8.5 5.5Z"/>',
-  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+  star: '<path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4Z"/>',
 };
-const EMBLEM_NAME = { sword: '검', shield: '방패', star: '별', moon: '달', heart: '하트', eye: '눈' };
+const MARKS = {
+  king: { name: '별의 왕관', ac: '#6cc6e0', svg: `<path d="M24 1v4"/><path class="a" d="M24 4l1.3 4.7L30 10l-4.7 1.3L24 16l-1.3-4.7L18 10l4.7-1.3z"/>
+    <path class="s" d="M18 26l-1.6-8 3.8 3.2 3.8-5.4 3.8 5.4 3.8-3.2-1.6 8zM18 27.5h12v2H18zM20 31h8l1.8 9H18.2zM15.5 41h17l1.5 3H14z"/>
+    <ellipse cx="24" cy="30" rx="19" ry="5.5" transform="rotate(-16 24 30)"/><circle class="a" cx="41.6" cy="25" r="2.2"/><circle class="a" cx="7" cy="35.4" r="1.4"/>` },
+  queen: { name: '나비 여왕', ac: '#a98be0', svg: `<path d="M8 46C12 30 36 28 40 2"/><circle class="s" cx="24" cy="9.5" r="1.6"/>
+    <path class="s" d="M18 22l-2.5-8.5 4.6 3.6L24 11.5l3.9 5.6 4.6-3.6L30 22zM18.5 23.5h11v2h-11zM20.5 27h7l1.8 11h-10.6zM16 39h16l1.5 3.5h-19z"/>
+    <path class="a" d="M31 16c2-5 9-6 9-1 0 3-4 4-9 1zM31 17.5c4 0 6.5 3 4.5 5.5-2 1.5-4-1.5-4.5-5.5z"/><circle class="a" cx="15" cy="31" r="2.6"/><circle class="a" cx="33" cy="36" r="1.6"/>` },
+  bishop: { name: '날개 주교', ac: '#e65a52', svg: `<circle cx="24" cy="27" r="16" stroke-dasharray="1.5 3"/><circle class="s" cx="24" cy="7.5" r="1.7"/>
+    <path class="s" d="M24 10c4.5 3 6.5 7.5 4.3 12.5H19.7C17.5 17.5 19.5 13 24 10zM19.5 24h9v2h-9zM21 27.5h6l1.6 10.5h-9.2zM17 39h14l1.5 3.5h-17z"/>
+    <path class="a" d="M19.5 24C12 23 7.5 17 7.5 11.5c2.5 4 6 5.5 9.5 5.5-2 1-4.5 1.2-7 .5 2.5 4 6 5.5 9.5 6.5zM28.5 24c7.5-1 12-7 12-12.5-2.5 4-6 5.5-9.5 5.5 2 1 4.5 1.2 7 .5-2.5 4-6 5.5-9.5 6.5z"/>` },
+  blade: { name: '붉은 성검', ac: '#d93a3a', svg: `<circle cx="24" cy="12" r="7"/><path d="M24 1v4M35 12h-4M17 12h-4M31.5 4.5l-2.6 2.6M16.5 4.5l2.6 2.6M14 26l6-8M34 26l-6-8M10 34l9-12M38 34l-9-12"/>
+    <path class="s" d="M17 20.5h14l-1.2 2.3H18.2zM22.6 23h2.8l.6 15-2 7-2-7z"/><path class="s" d="M24 13.5l1.2 7h-2.4z"/>
+    <path class="a" d="M8 25h9v2.6H8zM29 30h11v2.6H29zM12 36h7v2.2h-7zM30 7h6v2.2h-6zM33 39h5v2h-5z"/>` },
+  feather: { name: '깃털 서약', ac: '#5fae9c', svg: `<path d="M24 1v3M24 44v3"/><circle cx="24" cy="9" r="4.5"/><circle cx="24" cy="39" r="4.5"/><circle cx="24" cy="24" r="11.5" stroke-dasharray="1.2 2.6"/>
+    <path class="s" d="M24 6.5l.8 1.7 1.7.8-1.7.8-.8 1.7-.8-1.7-1.7-.8 1.7-.8zM24 36.5l.8 1.7 1.7.8-1.7.8-.8 1.7-.8-1.7-1.7-.8 1.7-.8z"/>
+    <path class="a" d="M14 31c2.5-9.5 10-15.5 19.5-16.5-3.5 3-5.5 5.5-6.5 8.5 2-1 4.5-1.2 6-1-3.5 2.3-6 4.3-8.5 5.3 1.5 0 3.5.2 5 1-5 2.5-10 3-15.5 2.7z"/><path d="M14 31l12-11"/>` },
+  infinity: { name: '무한의 심장', ac: '#e98fc0', svg: `<path class="a" d="M24 11c-2.4-3.4-7.5-2.2-7.5 1.6 0 3.6 7.5 7.4 7.5 7.4s7.5-3.8 7.5-7.4c0-3.8-5.1-5-7.5-1.6z"/>
+    <path d="M24 21c5.5 2.5 6.5 7.5 0 10.5s-5.5 8 0 10.5c5.5-2.5 6.5-7.5 0-10.5S18.5 23.5 24 21z"/><path d="M24 1v5M24 42v5"/><ellipse cx="24" cy="44" rx="9" ry="1.8"/>
+    <path class="a" d="M20.5 30C15 29 10 30 4 26.5c4.5 0 7.5-1 9.5-3-2.5 0-4.5-.3-6.5-1.3 5.5-.7 10 1.3 13.5 7.8zM27.5 30c5.5-1 10.5 0 16.5-3.5-4.5 0-7.5-1-9.5-3 2.5 0 4.5-.3 6.5-1.3-5.5-.7-10 1.3-13.5 7.8z"/>` },
+  tide: { name: '파도의 지팡이', ac: '#3b74e0', svg: `<path d="M24 3v41"/><path class="s" d="M20.5 9l1.2-4.5 2.3 2.4 2.3-2.4L27.5 9z"/><circle cx="17" cy="15" r="7"/><circle cx="31" cy="34" r="7"/>
+    <path class="al" d="M4 21c7-5 13 4 20 0s12-6 20-2M4 32c7-5 13 4 20 0s12-6 20-2"/><path class="al" d="M24 24c-4.5-3-1.5-8.5 3.5-6.5"/>
+    <path class="s" d="M24 40l2 3.5-2 3.5-2-3.5z"/>` },
+  key: { name: '별빛 열쇠', ac: '#9b6fe0', svg: `<path d="M24 2v44"/><circle cx="24" cy="29" r="9" stroke-dasharray="1.4 2.4"/><circle class="s" cx="24" cy="29" r="2.6"/><circle class="s" cx="10" cy="9" r="2.4"/><circle class="s" cx="38.5" cy="30" r="1.4"/>
+    <path class="al" d="M17.5 14.5L34 37.5"/><path class="a" d="M14.5 5.5c3.8-.5 6.6 2.3 6.1 6.1-.5 3.6-4.6 6-8.1 4.5-3.5-1.5-4.4-6-1.9-8.6 1-1 2.4-1.8 3.9-2z"/><circle cx="14.5" cy="11" r="2"/>
+    <path class="a" d="M31 36l5.5-1.3-1.2 5.3 2.9 1.2-2.3 2.9-4.5-3.5zM40 5l.7 2.2 2.3.8-2.3.8L40 11l-.7-2.2L37 8l2.3-.8z"/>` },
+  lantern: { name: '등불 유리병', ac: '#69b3e8', svg: `<path class="s" d="M24 1l2.2 4L24 9l-2.2-4zM24 39l2.2 4L24 47l-2.2-4z"/><path d="M12 9v30M36 9v30M12 12c4-3.5 8-3.5 12-1 4-2.5 8-2.5 12 1M12 36c4 3.5 8 3.5 12 1 4 2.5 8 2.5 12-1"/>
+    <path class="s" d="M21 19.5h6v-2.3h-6z"/><path class="a" d="M24 16c-2.2-2.2 0-4.4 0-6.5 1.2 2.2 2.2 3.4 0 6.5zM19.5 35c-1.2-6.5.8-10.5 2.6-12.3v-2.4h3.8v2.4c1.8 1.8 3.8 5.8 2.6 12.3z"/>
+    <path class="b" d="M38 5h3.5v3.5H38zM6.5 39.5H10V43H6.5z"/>` },
+};
+const MARK_DEFAULT = 'king';
+const markSVG = (k, size = '') => { const m = MARKS[k] || MARKS[MARK_DEFAULT];
+  return `<svg class="mark" viewBox="0 0 48 48" aria-hidden="true" style="--ac:${m.ac};stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round${size}">${m.svg}</svg>`; };
+const markName = k => (MARKS[k] || MARKS[MARK_DEFAULT]).name;
 const COLOR_NAME = { amber: '금빛', jade: '옥빛', crimson: '진홍', violet: '보랏빛', silver: '은빛' };
-const medal = (emblem, color) => `<span class="medal c-${color}"><svg viewBox="0 0 24 24">${EMBLEM[emblem] || EMBLEM.star}</svg></span>`;
+const medal = (emblem, color) => `<span class="medal c-${color}">${markSVG(emblem)}</span>`;
 let myProfile = null;
 // 로그인하면 받는 세션 열쇠: 이 탭에만 둔다 (새로 접속하면 다시 로그인)
 const profileKey = () => { try { return sessionStorage.getItem('arcana-session') || ''; } catch { return ''; } };
@@ -2179,25 +2180,25 @@ function recordHTML(p, mine) {
       <div class="lp-panel lp-main">
         <h1 class="lp-name">${esc(p.nickname)}</h1>
         <p class="lp-sub"><b>${esc(p.title || '새내기 모험가')}</b> · ${st.games || 0}판 참가 · ${st.wins || 0}승</p>
-        <div class="lp-bar">${icon(EMBLEM.sword, ' style="stroke:var(--hero-hi)"')}<div class="lbl"><span>용사 파티 승률</span><b>${st.heroGames ? hp + '%' : '-'}</b></div>
+        <div class="lp-bar">${icon(UI_ICON.sword, ' style="stroke:var(--hero-hi)"')}<div class="lbl"><span>용사 파티 승률</span><b>${st.heroGames ? hp + '%' : '-'}</b></div>
           <div class="lp-track"><div class="lp-fill f-hero" style="--w:${hp}%"></div></div></div>
-        <div class="lp-bar">${icon(EMBLEM.moon, ' style="stroke:var(--demon-hi)"')}<div class="lbl"><span>마왕군 승률</span><b>${st.demonGames ? dp + '%' : '-'}</b></div>
+        <div class="lp-bar">${icon(UI_ICON.moon, ' style="stroke:var(--demon-hi)"')}<div class="lbl"><span>마왕군 승률</span><b>${st.demonGames ? dp + '%' : '-'}</b></div>
           <div class="lp-track"><div class="lp-fill f-demon" style="--w:${dp}%"></div></div></div>
         <p class="lp-intro${p.intro ? '' : ' none'}">${p.intro ? `“${esc(p.intro)}”` : '아직 소개말이 없습니다.'}</p>
       </div>
-      <div class="lp-side"><div class="lp-panel lp-crest">${icon(EMBLEM[p.emblem] || EMBLEM.star)}</div>
+      <div class="lp-side"><div class="lp-panel lp-crest">${markSVG(p.emblem)}</div>
         <div class="lp-panel lp-all"><small>통산 승률</small><b>${st.games ? pct(st.wins, st.games) + '%' : '-'}</b></div></div>
     </div>
     <div class="lp-chips">
-      <span class="lp-chip">${icon(EMBLEM.sword)}용사 ${st.heroGames || 0}판</span><span class="lp-chip">${icon(EMBLEM.moon)}마왕군 ${st.demonGames || 0}판</span>
-      <span class="lp-chip">${icon(EMBLEM.star)}최고 ${st.bestStreak || 0}연승</span>
+      <span class="lp-chip">${icon(UI_ICON.sword)}용사 ${st.heroGames || 0}판</span><span class="lp-chip">${icon(UI_ICON.moon)}마왕군 ${st.demonGames || 0}판</span>
+      <span class="lp-chip">${icon(UI_ICON.star)}최고 ${st.bestStreak || 0}연승</span>
     </div>
     <div class="lp-xp"><div class="lp-track"><div class="lp-fill f-xp" style="--w:${lv.need ? Math.round(lv.into / lv.need * 100) : 100}%"></div></div>
       <span>${lv.need ? `다음 레벨까지 ${lv.into.toLocaleString()} / ${lv.need.toLocaleString()} XP` : '최고 레벨'}</span></div>
     <div class="lp-camps">
-      <div class="lp-parch lp-camp hero"><span class="ic">${icon(EMBLEM.sword)}</span><h3>용사 파티일 때</h3>
+      <div class="lp-parch lp-camp hero"><span class="ic">${icon(UI_ICON.sword)}</span><h3>용사 파티일 때</h3>
         <div class="pct">${hp}<small>%</small></div><p>${st.heroGames || 0}판 · ${st.heroWins || 0}승 ${(st.heroGames || 0) - (st.heroWins || 0)}패</p><div class="lp-pips">${pips('h')}</div></div>
-      <div class="lp-parch lp-camp demon"><span class="ic">${icon(EMBLEM.moon)}</span><h3>마왕군일 때</h3>
+      <div class="lp-parch lp-camp demon"><span class="ic">${icon(UI_ICON.moon)}</span><h3>마왕군일 때</h3>
         <div class="pct">${dp}<small>%</small></div><p>${st.demonGames || 0}판 · ${st.demonWins || 0}승 ${(st.demonGames || 0) - (st.demonWins || 0)}패</p><div class="lp-pips">${pips('d')}</div></div>
     </div>
     <p class="lp-note">아래 칸은 최근 판 결과입니다(색칠 = 승리). 경험치: 한 판 참가 40 · 승리 +60 · 끝까지 살아남으면 +10.<br>20레벨까지는 금방 오르고, 그 뒤로는 레벨마다 필요한 경험치가 10%씩 늘어납니다.</p>
@@ -2221,20 +2222,20 @@ renderMeBtn();
 // 선택지 그리기
 const radioRow = (id, name, entries) => $(id).insertAdjacentHTML('beforeend', entries.map(([k, label, inner]) =>
   `<label title="${label}"><input type="radio" name="${name}" value="${k}" aria-label="${label}">${inner}</label>`).join(''));
-radioRow('pEmblems', 'pEmblem', Object.keys(EMBLEM).map(k => [k, EMBLEM_NAME[k], `<span class="o-em">${icon(EMBLEM[k])}</span>`]));
+radioRow('pEmblems', 'pEmblem', Object.keys(MARKS).map(k => [k, MARKS[k].name, `<span class="o-em">${markSVG(k)}</span>`]));
 radioRow('pColors', 'pColor', Object.keys(COLOR_NAME).map(k => [k, COLOR_NAME[k], `<span class="o-c c-${k}"></span>`]));
 radioRow('pSkins', 'pSkin', Object.keys(SKIN_NAME).map(k => [k, SKIN_NAME[k], `<span class="o-t">${SKIN_NAME[k]}</span>`]));
 const checked = name => document.querySelector(`[name=${name}]:checked`)?.value;
 const formValue = () => ({
   nickname: $('pName').value.trim(), intro: $('pIntro').value, title: $('pTitle').value,
-  emblem: checked('pEmblem') || 'star', color: checked('pColor') || 'amber', skin: checked('pSkin') || 'leather',
+  emblem: checked('pEmblem') || MARK_DEFAULT, color: checked('pColor') || 'amber', skin: checked('pSkin') || 'leather',
 });
 function fillProfileForm() {
-  const p = myProfile || { nickname: '', intro: '', emblem: 'star', color: 'amber', skin: 'leather', titles: [] };
+  const p = myProfile || { nickname: '', intro: '', emblem: MARK_DEFAULT, color: 'amber', skin: 'leather', titles: [] };
   $('pName').value = p.nickname; $('pIntro').value = p.intro;
   $('pTitle').innerHTML = (p.titles || []).map(t => `<option value="${t.id}" title="${esc(t.desc)}">${esc(t.name)}</option>`).join('');
   $('pTitle').value = p.titleId || '';
-  document.querySelector(`[name=pEmblem][value=${p.emblem}]`).checked = true;
+  (document.querySelector(`[name=pEmblem][value=${p.emblem}]`) || document.querySelector(`[name=pEmblem][value=${MARK_DEFAULT}]`)).checked = true;
   document.querySelector(`[name=pColor][value=${p.color}]`).checked = true;
   document.querySelector(`[name=pSkin][value=${p.skin || 'leather'}]`).checked = true;
   $('pGuest').hidden = !!myProfile; $('pForm').hidden = !myProfile;
@@ -2254,7 +2255,7 @@ function showPTab(name) {
   if (name === 'find') $('pSearch').focus();
 }
 document.querySelectorAll('[data-ptab]').forEach(t => t.onclick = () => showPTab(t.dataset.ptab));
-// 기록부 열기: 이미 열려 있으면 내용만 바꾸고, 아니면 책이 펼쳐지며 열린다
+// 기록부 열기: 이미 열려 있으면 내용만 바꾸고, 아니면 로딩 화면 뒤에 열린다
 function openProfile(p, tab) {
   viewing = p;
   showRecord();
@@ -2289,11 +2290,17 @@ document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dat
 
 /* ---------- 도감: 칭호(조건·진행도·달기) / 카드 / 문장 ---------- */
 let codexTab = 'titles', guestCodex = [];
-function bookOpen(dlg) { // 기록부와 같은 책 펼치기 연출로 연다
+let pageLoad; // 기록부·도감을 열 때 잠깐 로딩 화면을 띄운 뒤 연다
+function bookOpen(dlg) {
+  if (pageLoad) return;
   dlg.querySelector('.lp').scrollTop = 0;
-  dlg.classList.remove('opening'); void dlg.offsetWidth; dlg.classList.add('opening');
-  dlg.showModal(); sfx('pages');
-  clearTimeout(dlg.openT); dlg.openT = setTimeout(() => dlg.classList.remove('opening'), 2400);
+  pageLoad = loading(dlg.id === 'codex' ? ['도감을 펼치는 중', '기록을 모으는 중'] : ['기록부를 펼치는 중', '전적을 정리하는 중'], 900);
+  pageLoad.done(() => {
+    pageLoad = null;
+    dlg.classList.remove('opening'); void dlg.offsetWidth; dlg.classList.add('opening');
+    dlg.showModal();
+    clearTimeout(dlg.openT); dlg.openT = setTimeout(() => dlg.classList.remove('opening'), 1600);
+  });
 }
 function renderCodex() {
   document.querySelectorAll('[data-ctab]').forEach(t => t.setAttribute('aria-selected', t.dataset.ctab === codexTab));
@@ -2316,8 +2323,8 @@ function renderCodex() {
   } else {
     $('cxSum').textContent = '문장, 문장 색, 가죽 재질은 모두 기록부의 꾸미기에서 고를 수 있습니다.';
     const skins = { leather: ['#282623', '#1d1c1a', '#8a6d45'], ebony: ['#1c2026', '#121417', '#6f7c8c'], forest: ['#1a2e25', '#11201a', '#7f8f63'] };
-    $('cxMarks').innerHTML = `<section><h3>문장</h3><div class="cx-row">${Object.keys(EMBLEM).map(k => `<figure>${medal(k, myProfile?.color || 'amber')}${EMBLEM_NAME[k]}</figure>`).join('')}</div></section>
-      <section><h3>문장 색</h3><div class="cx-row">${Object.keys(COLOR_NAME).map(k => `<figure>${medal(myProfile?.emblem || 'star', k)}${COLOR_NAME[k]}</figure>`).join('')}</div></section>
+    $('cxMarks').innerHTML = `<section><h3>문장</h3><div class="cx-row">${Object.keys(MARKS).map(k => `<figure>${medal(k, myProfile?.color || 'amber')}${MARKS[k].name}</figure>`).join('')}</div></section>
+      <section><h3>문장 색</h3><div class="cx-row">${Object.keys(COLOR_NAME).map(k => `<figure>${medal(myProfile?.emblem || MARK_DEFAULT, k)}${COLOR_NAME[k]}</figure>`).join('')}</div></section>
       <section><h3>가죽 재질</h3><div class="cx-row">${Object.entries(skins).map(([k, [h, b, z]]) => `<figure><span class="cx-skin" style="--lh:${h};--lb:${b};--bz:${z}"></span>${SKIN_NAME[k]}</figure>`).join('')}</div></section>`;
   }
 }
