@@ -44,6 +44,15 @@ assert.ok(codexOf(adm).every(x => x.got) && codexOf(adm).find(x => x.id === 'spa
 save(adm.key, { nickname: '관리자', banner: 'planet', tbanner: 'crow' });
 assert.deepEqual([publicView(adm).banner, publicView(adm).tbanner], ['planet', 'crow']);
 assert.equal(setTitle(adm.key, 'legend').profile.title, 'legend');
+// 맵에서 10번 이기면 같은 이름 배너
+const mw = save(null, { nickname: '맵시험' }).profile;
+for (let i = 0; i < 9; i++) recordGame(mw.key, { camp: 'hero', win: true, map: 'swamp' });
+recordGame(mw.key, { camp: 'hero', win: false, map: 'swamp' }); recordGame(mw.key, { camp: 'hero', win: true, map: 'henge' });
+assert.ok(!bannersOf(getByKey(mw.key)).includes('swamp'));                                  // 9승 + 1패: 아직
+recordGame(mw.key, { camp: 'demon', win: true, map: 'swamp' });
+assert.ok(bannersOf(getByKey(mw.key)).includes('swamp') && !bannersOf(getByKey(mw.key)).includes('henge'));
+assert.equal(save(mw.key, { nickname: '맵시험', banner: 'swamp', tbanner: 'henge' }).profile.banner, 'swamp');
+assert.equal(getByKey(mw.key).tbanner, 'none');                                               // 잠긴 칭호 배너는 저장 안 됨
 // 친구: 서로 신청하면 바로 친구, 10명이면 "인맥"
 const hub = save(null, { nickname: '마당발' }).profile;
 for (let i = 0; i < 10; i++) {

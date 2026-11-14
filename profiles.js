@@ -13,13 +13,14 @@ const FILE = join(DIR, 'profiles.json');
 export const EMBLEMS = ['king', 'queen', 'bishop', 'blade', 'feather', 'infinity', 'tide', 'key', 'lantern']; // 문장 (이름과 그림은 클라이언트의 MARKS)
 export const COLORS = ['amber', 'jade', 'crimson', 'violet', 'silver'];
 export const BANNERS = ['none', 'gold', 'dusk', 'sakura', 'rosechain', 'violet', 'bluesmoke', 'starsmoke', 'sunforest', 'moongeese', 'redcloud',
-  'butterfly', 'curtain', 'crow', 'cover', 'planet']; // 프로필 배너·칭호 배너 (그림은 클라이언트)
+  'butterfly', 'curtain', 'crow', 'cover', 'planet', 'thicket', 'firefly', 'swamp', 'waterfall', 'ruins', 'shrine', 'sunset', 'skycity', 'henge', 'goldtree']; // 프로필 배너·칭호 배너 (그림은 클라이언트)
+export const BANNER_WINS = 10; // 같은 이름의 맵에서 이만큼 이기면 그 배너가 열린다
 // 관리자 계정: 모든 칭호와 모든 배너를 가진다. 환경 변수 ADMIN_LOGINS(쉼표로 구분)로 바꿀 수 있음
 const ADMINS = new Set((process.env.ADMIN_LOGINS ?? 'lliooli').split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
 export const isAdmin = p => !!p?.login && ADMINS.has(p.login);
-// 배너 잠금: 배너마다 여는 조건 test(p). 조건은 나중에 정한다 → 지금은 모두 잠김 ('none'은 항상)
-const BANNER_UNLOCK = {};
-export const bannersOf = p => BANNERS.filter(b => b === 'none' || isAdmin(p) || !!BANNER_UNLOCK[b]?.(p));
+// 배너 잠금: 배너와 같은 이름의 맵에서 BANNER_WINS번 이기면 열린다 ('none'은 항상, 맵이 없는 배너는 아직 조건 없음)
+const bannerWon = (b, p) => (p?.stats?.mapWins?.[b] || 0) >= BANNER_WINS;
+export const bannersOf = p => BANNERS.filter(b => b === 'none' || isAdmin(p) || bannerWon(b, p));
 const NAME = /^[\p{L}\p{N}_ ]{2,12}$/u; // 글자·숫자·밑줄·띄어쓰기 2~12자
 const MAX_INTRO = 80;
 
@@ -132,10 +133,10 @@ export function levelOf(xp = 0) {
   return { lv, xp, into, need: lv < MAX_LEVEL ? xpNeed(lv) : 0 };
 }
 const blankStats = () => ({ games: 0, wins: 0, heroGames: 0, heroWins: 0, demonGames: 0, demonWins: 0, streak: 0, bestStreak: 0,
-  lossStreak: 0, bestLossStreak: 0, xp: 0, recent: [], jobWins: {}, flags: {} });
+  lossStreak: 0, bestLossStreak: 0, xp: 0, recent: [], jobWins: {}, mapWins: {}, flags: {} });
 // 게임이 끝나면 한 사람의 결과를 기록한다. camp: 'hero' | 'demon'. 얻은 경험치를 돌려준다
 // 칭호용: job(직업), hand(손패 = hp), soul(소울하트), sealWin(제단 완성으로 끝남), heroDeaths(죽은 용사 파티 수)
-export function recordGame(key, { camp, win, survived, job, hand = 0, soul = 0, sealWin = false, heroDeaths = 0 }) {
+export function recordGame(key, { camp, win, survived, job, map, hand = 0, soul = 0, sealWin = false, heroDeaths = 0 }) {
   const p = getByKey(key);
   if (!p) return 0;
   const st = p.stats = { ...blankStats(), ...p.stats };
@@ -146,6 +147,7 @@ export function recordGame(key, { camp, win, survived, job, hand = 0, soul = 0, 
   else { st.streak = 0; st.lossStreak++; st.bestLossStreak = Math.max(st.bestLossStreak, st.lossStreak); }
   st.jobWins = { ...st.jobWins }; st.flags = { ...st.flags };
   if (win && job) st.jobWins[job] = (st.jobWins[job] || 0) + 1;
+  st.mapWins = { ...st.mapWins }; if (win && map) st.mapWins[map] = (st.mapWins[map] || 0) + 1; // 맵별 승리 → 같은 이름 배너
   if (win && camp === 'demon' && sealWin && !heroDeaths) st.flags.doom = true;
   if (survived && hand >= 10) st.flags.flawless = true;                // 살아서 끝났고 손패 10장 이상
   if (survived && hand + soul <= 1) st.flags.changer = true;           // 살아서 끝났고 손패 + 소울하트 1 이하

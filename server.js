@@ -18,7 +18,9 @@ const GRACE_MS = Number(process.env.GRACE_MS) || 10 * 60 * 1000; // 연결이 �
 const rooms = new Map();   // code -> { code, host, players: [player], started }
 // ponytail: 로그인 실패 횟수는 메모리에만 (서버 재시작 시 초기화). 서버를 여러 대로 늘리면 공용 저장소로
 const authTries = new Map(); // ip -> { fails, lock }
-const MAPS = ['forest', 'redcloud', 'moon']; // 맵(배경). 그림은 클라이언트
+// 맵(배경). 그림은 public/maps/<이름>-back.svg·-front.svg. 'forest' 말고는 같은 이름의 배너가 있다 (그 맵에서 10번 이기면 열림)
+const MAPS = ['forest', 'redcloud', 'moongeese', 'dusk', 'gold', 'sakura', 'rosechain', 'violet', 'cover', 'planet', 'crow', 'curtain', 'butterfly',
+  'thicket', 'firefly', 'swamp', 'waterfall', 'ruins', 'shrine', 'sunset', 'skycity', 'henge', 'goldtree'];
 const players = new Map(); // token -> { id, token, name, room, ready, ws, timer, job, role, pkey(로그인한 프로필 key) }
 
 // 내 프로필 + 친구 목록(접속 여부, 들어가 있는 방). 친구의 key는 절대 내보내지 않는다
@@ -46,7 +48,7 @@ const demonCount = n => Math.max(1, Math.floor(n / 4));
 const http = createServer(async (req, res) => {
   // 정적 파일: 배경 음악 /audio/이름.mp3, 카드 그림 /cards/이름.jpg, 아이콘 /favicon.svg·/brand/이름.svg 등
   // (아이폰 사파리는 Range 요청을 지원해야 음악이 재생된다)
-  const asset = req.url.match(/^\/((?:audio|cards|brand)\/)?([\w-]+\.(mp3|jpg|png|svg))$/);
+  const asset = req.url.match(/^\/((?:audio|cards|brand|maps)\/)?([\w-]+\.(mp3|jpg|png|svg))$/);
   if (asset) {
     const file = new URL(`./public/${asset[1] || ''}${asset[2]}`, import.meta.url);
     const size = await stat(file).then(s => s.size, () => 0);
@@ -161,7 +163,7 @@ function recordResults(room) {
     const win = o.winner === 'eater' ? s.id === o.id : !s.eater && s.role === o.winner;
     const before = new Set(profiles.titlesOf(profiles.getByKey(p.pkey)).map(t => t.id));
     const gain = profiles.recordGame(p.pkey, { camp: s.role, win, survived: s.alive, job: s.job, hand: s.hand.length, soul: s.soul,
-      sealWin: !!o.seal, heroDeaths: g.seats.filter(x => x.role === 'hero' && !x.eater && !x.alive).length });
+      map: room.map, sealWin: !!o.seal, heroDeaths: g.seats.filter(x => x.role === 'hero' && !x.eater && !x.alive).length });
     const prof = profiles.getByKey(p.pkey);
     if (prof) send(p, { type: 'profile:me', profile: ownView(prof), gained: gain, newTitles: newTitles(prof, before) });
   }
