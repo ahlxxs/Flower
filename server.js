@@ -120,6 +120,20 @@ function apply(room, action, who) {
   if (g.phase !== 'action' && !g.pending) room.turnEndsAt = Date.now() + G.TURN_MS;
   pushGame(room, fx);
   schedule(room);
+  if (g.over && !room.recorded) recordResults(room);
+}
+// 게임이 끝나면 로그인한 사람마다 전적과 경험치를 남기고, 바뀐 프로필을 보낸다 (게스트는 기록 없음)
+function recordResults(room) {
+  const g = room.game, o = g.over;
+  room.recorded = true;
+  for (const p of room.players) {
+    const s = g.seats.find(x => x.id === p.id);
+    if (!p.pkey || !s) continue;
+    const win = o.winner === 'eater' ? s.id === o.id : !s.eater && s.role === o.winner;
+    const gain = profiles.recordGame(p.pkey, { camp: s.role, win, survived: s.alive });
+    const prof = profiles.getByKey(p.pkey);
+    if (prof) send(p, { type: 'profile:me', profile: profiles.ownView(prof), gained: gain });
+  }
 }
 
 // 방에서 완전히 내보낸다 (직접 나가기, 또는 끊긴 채로 GRACE_MS가 지났을 때)
@@ -217,7 +231,7 @@ new WebSocketServer({ server: http }).on('connection', (ws, req) => {
       if (room) remove(me);
       if (target.players.length >= JOBS.length && !seat) return err(me, `방이 가득 찼습니다. (최대 ${JOBS.length}명)`);
       if (msg.type === 'create') rooms.set(code, target);
-      me.name = name; me.room = code; me.profiled = !!prof;
+      me.name = name; me.room = code; me.profiled = !!prof; me.pkey = prof?.key || null;
       if (seat) {
         clearTimeout(seat.timer); players.delete(seat.token);
         me.ready = seat.ready; me.job = seat.job; me.role = seat.role;
@@ -239,6 +253,7 @@ new WebSocketServer({ server: http }).on('connection', (ws, req) => {
       const jobs = shuffle(JOBS.map(j => j.name));
       const demons = new Set(shuffle([...room.players]).slice(0, demonCount(room.players.length)));
       room.players.forEach((p, i) => { p.job = jobs[i]; p.role = demons.has(p) ? 'demon' : 'hero'; });
+      room.recorded = false;
       room.game = G.newGame(room.players.map(p => ({ id: p.id, name: p.name, role: p.role, job: p.job })), shuffle);
       room.turnEndsAt = Date.now() + G.TURN_MS + 6000; // 시작 연출·운명 공개를 보는 시간만큼 더
       for (const p of room.players) send(p, { type: 'start' }); // 먼저 보내야 클라이언트가 로딩부터 띄운다
@@ -265,6 +280,9 @@ new WebSocketServer({ server: http }).on('connection', (ws, req) => {
       const st = room.game.seats.find(x => x.id === me.id);
       st.hand = msg.names.map(n => CARDS.find(c => c.name === n).id);
       pushGame(room);
+    } else if (msg.type === 'debugOver' && process.env.ARCANA_TEST && room?.game) { // 테스트 전용: 바로 게임 끝내기
+      room.game.over = { winner: msg.winner === 'demon' ? 'demon' : 'hero' };
+      apply(room, () => ({ fx: [{ kind: 'over' }] }));
     } else if (msg.type === 'backToLobby') { // 게임이 끝나면 같은 방 대기실로
       if (!room?.game?.over) return;
       clearTimeout(room.timer);

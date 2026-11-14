@@ -12,6 +12,7 @@ const DIR = process.env.DATA_DIR || new URL('./data', import.meta.url).pathname;
 const FILE = join(DIR, 'profiles.json');
 export const EMBLEMS = ['sword', 'shield', 'star', 'moon', 'heart', 'eye'];
 export const COLORS = ['amber', 'jade', 'crimson', 'violet', 'silver'];
+export const SKINS = ['leather', 'ebony', 'forest']; // 기록부 가죽 재질
 const NAME = /^[\p{L}\p{N}_ ]{2,12}$/u; // 글자·숫자·밑줄·띄어쓰기 2~12자
 const MAX_INTRO = 80;
 
@@ -55,10 +56,38 @@ export const getByKey = key => byKey.get(String(key ?? '')) || null;
 export const getByName = name => byKey.get(byName.get(String(name ?? '').trim().toLowerCase())) || null;
 export const titlesOf = p => TITLES.filter(t => t.test(p));
 
+/* ---------- 경험치와 레벨 ----------
+   한 판: 참가 40 + 승리 60 + 끝까지 살아남음 10 (보통 한 판에 40~110, 평균 약 75)
+   다음 레벨까지 필요한 경험치: 1~19레벨은 60에서 8씩 늘어남 (20레벨까지 합계 2,508 ≈ 33판)
+   20레벨부터는 레벨마다 10%씩 늘어남 (30레벨 ≈ 550/레벨, 40레벨 ≈ 1,430/레벨, 50레벨 ≈ 3,700/레벨). 최고 99레벨 */
+export const XP = { play: 40, win: 60, survive: 10 };
+export const MAX_LEVEL = 99;
+export const xpNeed = lv => lv < 20 ? 60 + 8 * (lv - 1) : Math.round(212 * 1.1 ** (lv - 19) / 5) * 5;
+export function levelOf(xp = 0) {
+  let lv = 1, into = Math.max(0, xp);
+  while (lv < MAX_LEVEL && into >= xpNeed(lv)) { into -= xpNeed(lv); lv++; }
+  return { lv, xp, into, need: lv < MAX_LEVEL ? xpNeed(lv) : 0 };
+}
+const blankStats = () => ({ games: 0, wins: 0, heroGames: 0, heroWins: 0, demonGames: 0, demonWins: 0, streak: 0, bestStreak: 0, xp: 0, recent: [] });
+// 게임이 끝나면 한 사람의 결과를 기록한다. camp: 'hero' | 'demon'. 얻은 경험치를 돌려준다
+export function recordGame(key, { camp, win, survived }) {
+  const p = getByKey(key);
+  if (!p) return 0;
+  const st = p.stats = { ...blankStats(), ...p.stats };
+  const gain = XP.play + (win ? XP.win : 0) + (survived ? XP.survive : 0);
+  st.games++; st.xp += gain;
+  if (camp === 'demon') { st.demonGames++; if (win) st.demonWins++; } else { st.heroGames++; if (win) st.heroWins++; }
+  if (win) { st.wins++; st.streak++; st.bestStreak = Math.max(st.bestStreak, st.streak); } else st.streak = 0;
+  st.recent = [...st.recent, (camp === 'demon' ? 'd' : 'h') + (win ? 1 : 0)].slice(-24); // 최근 판 (진영 + 승패)
+  persist(p);
+  return gain;
+}
+
 // 다른 사람에게 보여 줄 정보 (key는 절대 내보내지 않는다)
 export function publicView(p) {
   const title = TITLES.find(t => t.id === p.title);
-  return { nickname: p.nickname, intro: p.intro, emblem: p.emblem, color: p.color, title: title?.name || '', stats: p.stats, createdAt: p.createdAt };
+  const stats = { ...blankStats(), ...p.stats };
+  return { nickname: p.nickname, intro: p.intro, emblem: p.emblem, color: p.color, skin: p.skin || 'leather', title: title?.name || '', stats, level: levelOf(stats.xp), createdAt: p.createdAt };
 }
 // 본인에게 보여 줄 정보 (+ 고를 수 있는 칭호)
 export const ownView = p => ({ ...publicView(p), login: p.login || '', titleId: p.title, titles: titlesOf(p).map(({ id, name, desc }) => ({ id, name, desc })) });
@@ -81,11 +110,11 @@ export function save(key, input) {
   const intro = String(input.intro ?? '').trim().slice(0, MAX_INTRO);
   const emblem = EMBLEMS.includes(input.emblem) ? input.emblem : 'star';
   const color = COLORS.includes(input.color) ? input.color : 'amber';
-  const next = p || { key: randomBytes(16).toString('hex'), createdAt: Date.now(),
-    stats: { games: 0, wins: 0, heroWins: 0, demonWins: 0, streak: 0, bestStreak: 0 } };
+  const skin = SKINS.includes(input.skin) ? input.skin : (p?.skin || 'leather');
+  const next = p || { key: randomBytes(16).toString('hex'), createdAt: Date.now(), stats: blankStats() };
   const title = titlesOf(next).some(t => t.id === input.title) ? input.title : (p?.title || TITLES[0].id);
   if (p) byName.delete(p.nickname.toLowerCase());
-  Object.assign(next, { nickname, intro, emblem, color, title });
+  Object.assign(next, { nickname, intro, emblem, color, skin, title });
   byKey.set(next.key, next); byName.set(nickname.toLowerCase(), next.key);
   persist(next);
   return { profile: next };

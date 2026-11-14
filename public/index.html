@@ -455,49 +455,149 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
 }
 .medal svg { width: 2.2rem; fill: none; stroke: var(--pc); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .c-amber { --pc: #e8c27a; } .c-jade { --pc: #7fbfa5; } .c-crimson { --pc: #e86a76; } .c-violet { --pc: #b3a6f5; } .c-silver { --pc: #cfd8d4; }
-.pcard { display: grid; justify-items: center; text-align: center; gap: .55rem; padding: .4rem 0 .2rem; }
-.pcard .pname { font-size: 1.35rem; font-weight: 500; letter-spacing: .03em; }
-.ptitle { font-size: .75rem; letter-spacing: .12em; padding: .15rem .7rem; border-radius: 1rem; color: var(--pc, var(--amber)); border: 1px solid color-mix(in srgb, var(--pc, var(--amber)) 55%, transparent); }
-.pintro { margin: 0; max-width: 24rem; font-size: .88rem; line-height: 1.7; color: var(--fog); white-space: pre-line; overflow-wrap: anywhere; }
-.pintro.none { color: var(--dim); }
-.pstats { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin-top: .6rem; }
-.pstats div { padding: .6rem .3rem; border-radius: .4rem; background: #0006; border: 1px solid #e8c27a1f; display: grid; gap: .15rem; }
-.pstats b { font-family: var(--didone); font-weight: 400; font-size: 1.3rem; color: var(--amber); font-variant-numeric: tabular-nums; }
-.pstats span { font-size: .68rem; color: var(--dim); letter-spacing: .05em; }
-.pnote { margin: .2rem 0 0; font-size: .7rem; color: var(--dim); }
-#profile { width: min(100%, 36rem); height: min(90vh, 46rem); padding: 2rem 1.8rem 1.4rem; }
-#profile[open] { display: grid; grid-template-rows: auto auto 1fr; }
-#pview { width: min(100%, 26rem); }
-.pform { display: grid; gap: .9rem; margin-top: 1rem; }
-.pform label { margin: 0 0 .35rem; }
-.pform input[type=text], .pform textarea, .pform select, .psearch {
-  width: 100%; padding: .7rem .8rem; font: inherit; font-size: .95rem; color: var(--text); background: #0006; border: 1px solid #e8c27a40; border-radius: .4rem;
-}
-.pform textarea { resize: none; height: 4.6rem; line-height: 1.6; }
-.pform select option { background: #0a1410; }
-.pform :is(input, textarea, select):focus, .psearch:focus { outline: 1px solid var(--amber); border-color: var(--amber); }
-.counter { float: right; font-size: .72rem; color: var(--dim); font-variant-numeric: tabular-nums; }
-.picks { display: flex; gap: .5rem; flex-wrap: wrap; border: 0; padding: 0; margin: 0; }
-.picks legend { padding: 0; margin-bottom: .35rem; font-size: .78rem; color: var(--dim); letter-spacing: .08em; }
-.picks input { position: absolute; opacity: 0; pointer-events: none; }
-.picks label { margin: 0; cursor: pointer; }
-.picks .medal { width: 2.6rem; height: 2.6rem; opacity: .55; transition: opacity .15s, transform .15s; }
-.picks .medal svg { width: 1.3rem; }
-.picks input:checked + .medal { opacity: 1; transform: scale(1.08); }
-.picks input:focus-visible + .medal { outline: 2px solid var(--amber); outline-offset: 2px; }
-.swatch { width: 2rem; height: 2rem; border-radius: 50%; background: var(--pc); opacity: .5; transition: opacity .15s, transform .15s; display: block; }
-.picks input:checked + .swatch { opacity: 1; transform: scale(1.1); box-shadow: 0 0 0 2px #050907, 0 0 0 3px var(--pc); }
-.picks input:focus-visible + .swatch { outline: 2px solid var(--amber); outline-offset: 3px; }
-.pmsg { min-height: 1.2em; margin: 0; text-align: center; font-size: .85rem; }
-.pmsg.bad { color: #ff8f98; } .pmsg.good { color: #9fd1bd; }
-.presults { list-style: none; margin: .8rem 0 0; padding: 0; display: grid; gap: .4rem; }
-.presults button { width: 100%; display: flex; align-items: center; gap: .8rem; padding: .55rem .7rem; border-radius: .5rem; border: 1px solid #e8c27a26; background: #0a141099; color: var(--text); cursor: pointer; text-align: left; }
-.presults button:hover { border-color: var(--amber); }
-.presults .medal { width: 2.4rem; height: 2.4rem; border-width: 1px; } .presults .medal svg { width: 1.2rem; }
-.presults small { display: block; font-size: .72rem; color: var(--pc); }
-.pempty { margin: 1rem 0 0; text-align: center; font-size: .85rem; color: var(--dim); }
 .seat:not(.empty), .opp { cursor: pointer; }
-@media (max-width: 760px) { #profile { height: 92vh; padding: 1.6rem 1rem 1rem; } .me-btn .me-name { display: none; } .me-btn { padding: 0 .25rem; } }
+/* ---------- 원정 기록부 (프로필 전용 화면) ----------
+   화면 전체를 덮는 페이지. 열 때 책이 펼쳐지며 책장이 넘어가고(.book), 그 뒤로 기록부가 떠오른다.
+   왼쪽 = 가죽 상태판 + 진영별 양피지 전적, 오른쪽 = 책갈피 달린 양피지 장부(꾸미기 / 모험가 찾기) */
+#profile {
+  --lp-stone: #2c2a27; --leather: #1d1c1a; --leather-hi: #282623; --bronze: #8a6d45; --bronze-hi: #c9a46a;
+  --parch: #e4d9c1; --parch-lo: #cdbd9c; --ink: #2b2219; --ink-dim: #6d5d48; --lp-text: #efe7d6; --lp-dim: #a79c88;
+  --hero: #d0643f; --hero-hi: #f0a36b; --demon: #8f7ae0; --demon-hi: #c3b6ff; --serif: 'Nanum Myeongjo', serif;
+  width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; color: var(--lp-text); overflow: hidden;
+  background: radial-gradient(ellipse at 30% 0%, #3a3732 0%, transparent 60%), var(--lp-stone);
+}
+#profile::backdrop { background: #000; }
+#profile[open] { display: block; }
+.lp { position: absolute; inset: 0; overflow-y: auto; padding: 1.2rem clamp(1rem, 4vw, 3rem) 3rem; }
+.lp-in { max-width: 72rem; margin: 0 auto; }
+#profile.opening .lp { animation: lpIn .9s cubic-bezier(.2, .7, .2, 1) .75s both; }
+@keyframes lpIn { from { opacity: 0; transform: perspective(60rem) rotateX(6deg) translateY(1.5rem) scale(.97); } }
+.lp-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.3rem; }
+.lp-back { display: inline-flex; align-items: center; gap: .5rem; background: none; border: 1px solid #8a6d4566; color: var(--lp-dim); padding: .5rem .9rem; border-radius: 2rem; cursor: pointer; font-size: .85rem; }
+.lp-back:hover { color: var(--lp-text); border-color: var(--bronze-hi); }
+.lp-back svg { width: 1rem; fill: none; stroke: currentColor; stroke-width: 2; }
+.lp-top h2 { margin: 0; font-family: var(--didone); font-weight: 400; letter-spacing: .3em; font-size: .9rem; color: var(--lp-dim); }
+.lp-grid { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: 2rem; align-items: start; }
+.lp-sec { display: flex; align-items: baseline; gap: .7rem; margin: 0 0 .7rem; }
+.lp-sec i { font-family: var(--didone); font-size: 1.5rem; color: var(--bronze-hi); }
+.lp-sec span { flex: 1; font-size: .78rem; letter-spacing: .2em; border-bottom: 1px solid #8a6d4588; padding-bottom: .2rem; }
+.lp-sec button { background: none; border: 0; color: var(--bronze-hi); cursor: pointer; font-size: .78rem; padding: 0; }
+.lp-sec button:hover { text-decoration: underline; }
+/* 가죽 재질 */
+.lp-rec[data-skin="ebony"] { --leather: #121417; --leather-hi: #1c2026; --bronze: #6f7c8c; --bronze-hi: #a9b6c6; }
+.lp-rec[data-skin="forest"] { --leather: #11201a; --leather-hi: #1a2e25; --bronze: #7f8f63; --bronze-hi: #c2c98f; }
+/* 상태판 */
+.lp-cluster { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr) 7rem; }
+.lp-panel { background: linear-gradient(var(--leather-hi), var(--leather)); border: 1px solid #000;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bronze) 35%, transparent), inset 0 0 0 5px var(--leather), inset 0 0 0 6px color-mix(in srgb, var(--bronze) 20%, transparent), 0 .6rem 1.6rem #0008; }
+.lp-tag { position: relative; z-index: 2; margin: -.6rem -.4rem -.6rem 0; padding: 1.4rem .6rem 1.8rem; text-align: center; color: var(--ink);
+  background: linear-gradient(170deg, var(--parch), var(--parch-lo)); box-shadow: inset 0 0 0 1px #8a6d4588, inset 0 0 0 4px var(--parch), inset 0 0 0 5px #8a6d4555;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 1.1rem), 50% 100%, 0 calc(100% - 1.1rem)); display: grid; gap: .3rem; justify-items: center; align-content: start; filter: drop-shadow(0 .4rem .6rem #0009); }
+.lp-tag::before { content: ''; position: absolute; top: 0; left: 50%; translate: -50% 0; width: 1.6rem; height: .7rem; background: var(--hero); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.lp-tag .medal { width: 2.6rem; height: 2.6rem; margin-top: .3rem; border-width: 1px; } .lp-tag .medal svg { width: 1.3rem; }
+.lp-tag small { font-size: .66rem; letter-spacing: .14em; color: var(--ink-dim); }
+.lp-tag .lv { font-family: var(--didone); font-size: 2.6rem; line-height: 1; border-block: 1px solid #8a6d4588; padding: .25rem .4rem; width: 100%; font-variant-numeric: tabular-nums; }
+.lp-tag .tt { font-family: var(--serif); font-weight: 800; font-size: .78rem; line-height: 1.35; }
+.lp-main { padding: 1.3rem 1.4rem 1.2rem 1.6rem; min-width: 0; }
+.lp-name { margin: 0; font-family: var(--serif); font-weight: 800; font-size: clamp(1.5rem, 3vw, 2rem); overflow-wrap: anywhere; }
+.lp-sub { margin: .15rem 0 1rem; color: var(--lp-dim); font-size: .85rem; }
+.lp-sub b { color: var(--pc); font-weight: 500; }
+.lp-bar { display: grid; grid-template-columns: 1.4rem minmax(0, 1fr); gap: .2rem .6rem; align-items: center; margin-bottom: .7rem; }
+.lp-bar svg { width: 1.2rem; height: 1.2rem; grid-row: span 2; fill: none; stroke-width: 1.6; stroke-linejoin: round; }
+.lp-bar .lbl { display: flex; justify-content: space-between; font-size: .75rem; color: var(--lp-dim); font-variant-numeric: tabular-nums; }
+.lp-bar .lbl b { color: var(--lp-text); font-weight: 500; }
+.lp-track { height: .42rem; background: #0d0c0b; border-radius: 1rem; box-shadow: inset 0 1px 2px #000; overflow: hidden; }
+.lp-fill { height: 100%; width: var(--w); border-radius: inherit; }
+#profile.opening .lp-fill { animation: lpFill 1s cubic-bezier(.2, .7, .2, 1) 1.3s both; } @keyframes lpFill { from { width: 0; } }
+.f-hero { background: linear-gradient(90deg, #7e2f1b, var(--hero), var(--hero-hi)); }
+.f-demon { background: linear-gradient(90deg, #3b2f78, var(--demon), var(--demon-hi)); }
+.f-xp { background: linear-gradient(90deg, #8a6d45, var(--amber)); }
+.lp-intro { margin: .6rem 0 0; font-size: .85rem; line-height: 1.6; font-style: italic; opacity: .85; min-height: 1.4em; overflow-wrap: anywhere; white-space: pre-line; }
+.lp-intro.none { opacity: .45; }
+.lp-side { display: grid; grid-template-rows: 1fr auto; gap: .5rem; padding: .5rem; }
+.lp-side .lp-panel { display: grid; place-items: center; text-align: center; }
+.lp-crest { min-height: 6rem; } .lp-crest svg { width: 3.2rem; height: 3.2rem; fill: none; stroke: var(--pc); stroke-width: 1.2; stroke-linejoin: round; filter: drop-shadow(0 0 .6rem color-mix(in srgb, var(--pc) 50%, transparent)); }
+.lp-all { padding: .6rem .3rem; } .lp-all small { display: block; font-size: .66rem; letter-spacing: .1em; color: var(--lp-dim); margin-bottom: .2rem; }
+.lp-all b { font-family: var(--didone); font-weight: 400; font-size: 1.8rem; color: var(--amber); line-height: 1; font-variant-numeric: tabular-nums; }
+.lp-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin: .7rem 0 0 8rem; }
+.lp-chip { display: inline-flex; align-items: center; gap: .45rem; padding: .45rem .8rem; font-size: .78rem; background: var(--leather); border: 1px solid color-mix(in srgb, var(--bronze) 45%, transparent); color: var(--parch); }
+.lp-chip svg { width: .9rem; height: .9rem; fill: none; stroke: var(--bronze-hi); stroke-width: 1.6; }
+.lp-xp { margin: .5rem 0 0 8rem; display: grid; grid-template-columns: 1fr auto; gap: .8rem; align-items: center; font-size: .75rem; color: var(--lp-dim); font-variant-numeric: tabular-nums; }
+/* 진영 전적 (양피지) */
+.lp-camps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 2rem; }
+.lp-parch { position: relative; color: var(--ink); background: linear-gradient(175deg, var(--parch), var(--parch-lo)); box-shadow: inset 0 0 0 1px #8a6d4566, inset 0 0 2.5rem #a8926a55, 3px 4px 0 -1px #bfae8c, 6px 8px 0 -2px #a99977, 0 1rem 1.6rem #0007; }
+.lp-camp { padding: 1.1rem 1.2rem 1.2rem; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3rem 1rem; align-items: center; }
+.lp-camp .ic { grid-row: span 3; width: 3.6rem; height: 3.6rem; border-radius: 50%; display: grid; place-items: center; background: var(--leather); box-shadow: 0 0 0 2px var(--parch), 0 0 0 3px #8a6d4588; }
+.lp-camp .ic svg { width: 1.9rem; height: 1.9rem; fill: none; stroke-width: 1.4; stroke-linejoin: round; }
+.lp-camp h3 { margin: 0; font-family: var(--serif); font-weight: 800; font-size: 1rem; }
+.lp-camp .pct { font-family: var(--didone); font-size: 2.3rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.lp-camp .pct small { font-size: 1rem; }
+.lp-camp p { margin: 0; font-size: .8rem; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.lp-camp.hero .pct { color: #9b3c1f; } .lp-camp.hero .ic svg { stroke: var(--hero-hi); }
+.lp-camp.demon .pct { color: #4e3d9a; } .lp-camp.demon .ic svg { stroke: var(--demon-hi); }
+.lp-pips { grid-column: 1 / -1; display: flex; gap: .25rem; margin-top: .6rem; min-height: .5rem; }
+.lp-pips i { flex: 0 1 1.6rem; height: .5rem; background: #00000018; box-shadow: inset 0 0 0 1px #8a6d4544; }
+.lp-camp.hero .lp-pips i.w { background: var(--hero); } .lp-camp.demon .lp-pips i.w { background: var(--demon); }
+.lp-pips em { font-style: normal; font-size: .72rem; color: var(--ink-dim); }
+.lp-note { margin: .9rem 0 0; font-size: .75rem; color: var(--lp-dim); line-height: 1.6; }
+/* 장부 (꾸미기 / 찾기) */
+.lp-ledger { padding: 1.3rem 1.3rem 1.4rem; }
+.lp-ribbon { position: absolute; top: -.4rem; right: 1.2rem; width: 2.6rem; height: 4.6rem; background: linear-gradient(#b4502f, #8f3a20); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%); display: grid; place-items: start center; padding-top: 1.2rem; }
+.lp-ribbon svg { width: 1.2rem; fill: none; stroke: #f3dcc0; stroke-width: 1.4; }
+.lp-tabs { display: flex; gap: 1.2rem; margin: 0 3.4rem 1rem 0; }
+.lp-tabs button { background: none; border: 0; padding: .2rem 0 .35rem; font-family: var(--serif); font-weight: 800; font-size: 1.1rem; color: var(--ink-dim); cursor: pointer; border-bottom: 2px solid transparent; }
+.lp-tabs button[aria-selected="true"] { color: var(--ink); border-color: #9b3c1f; }
+.lp-row { border-top: 1px solid #8a6d4566; padding: .8rem 0; }
+.lp-ledger label { color: var(--ink); letter-spacing: 0; text-transform: none; font-size: inherit; margin: 0; }
+.lp-row > label, .lp-row > .lab { display: block; font-family: var(--serif); font-weight: 800; font-size: .9rem; margin-bottom: .5rem; }
+.lp-row small, .lp-count { font-family: var(--sans); font-weight: 400; font-size: .72rem; color: var(--ink-dim); }
+.lp-row small { margin-left: .4rem; } .lp-count { float: right; font-variant-numeric: tabular-nums; }
+.lp-opts { display: flex; flex-wrap: wrap; gap: .45rem; }
+.lp-opts input { position: absolute; opacity: 0; pointer-events: none; }
+.lp-opts label { cursor: pointer; }
+.o-em { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; background: var(--leather); border: 1px solid transparent; }
+.o-em svg { width: 1.2rem; height: 1.2rem; fill: none; stroke: var(--parch); stroke-width: 1.5; stroke-linejoin: round; }
+input:checked + .o-em { border-color: var(--amber); box-shadow: 0 0 0 2px var(--parch), 0 0 0 3px #9b3c1f; } input:checked + .o-em svg { stroke: var(--amber); }
+.o-c { width: 2rem; height: 2rem; border-radius: 50%; background: var(--pc); box-shadow: inset 0 0 0 2px #0003; display: block; }
+input:checked + .o-c { box-shadow: 0 0 0 2px var(--parch), 0 0 0 4px var(--ink); }
+.o-t { padding: .4rem .7rem; font-size: .8rem; border: 1px solid #8a6d4588; background: #fff3; display: block; }
+input:checked + .o-t { background: var(--leather); color: var(--parch); border-color: var(--leather); }
+.lp-opts input:focus-visible + * { outline: 2px solid #9b3c1f; outline-offset: 2px; }
+.lp-in-field { width: 100%; background: #fff5; border: 1px solid #8a6d4588; color: var(--ink); padding: .55rem .6rem; font: inherit; font-size: .92rem; border-radius: 0; }
+.lp-in-field:focus { outline: 1px solid #9b3c1f; border-color: #9b3c1f; }
+textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
+.lp-save { width: 100%; margin-top: .4rem; padding: .8rem; border: 0; background: var(--leather); color: var(--amber); letter-spacing: .15em; cursor: pointer; box-shadow: inset 0 0 0 1px #8a6d4588; font: inherit; }
+.lp-save:hover { background: #000; }
+.lp-link { display: block; margin: .9rem auto 0; background: none; border: 0; color: var(--ink-dim); text-decoration: underline; cursor: pointer; font: inherit; font-size: .8rem; }
+.pmsg { min-height: 1.2em; margin: .5rem 0 0; text-align: center; font-size: .82rem; color: var(--ink-dim); }
+.pmsg.bad { color: #a3241a; } .pmsg.good { color: #2f6a4f; }
+.pnote { margin: .4rem 0 0; text-align: center; font-size: .72rem; color: var(--ink-dim); }
+.lp-guest { text-align: center; padding: 1.4rem 0 .6rem; } .lp-guest p { margin: 0 0 1rem; font-size: .9rem; line-height: 1.6; }
+.presults { list-style: none; margin: .8rem 0 0; padding: 0; display: grid; gap: .4rem; }
+.presults button { width: 100%; display: flex; align-items: center; gap: .8rem; padding: .5rem .6rem; border: 1px solid #8a6d4566; background: #fff3; color: var(--ink); cursor: pointer; text-align: left; font: inherit; }
+.presults button:hover { background: #fff6; border-color: #9b3c1f; }
+.presults .medal { width: 2.2rem; height: 2.2rem; border-width: 1px; } .presults .medal svg { width: 1.1rem; }
+.presults small { display: block; font-size: .72rem; color: var(--ink-dim); }
+.pempty { margin: 1rem 0 0; text-align: center; font-size: .85rem; color: var(--ink-dim); }
+@media (max-width: 900px) { .lp-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) {
+  .lp-cluster { grid-template-columns: 6rem minmax(0, 1fr); } .lp-side { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; grid-template-rows: none; padding: .5rem 0 0; }
+  .lp-chips, .lp-xp { margin-left: 0; } .lp-tag .lv { font-size: 2rem; } .lp-camps { grid-template-columns: minmax(0, 1fr); }
+}
+/* 책 펼치기: 표지가 열리고 책장 다섯 장이 촤라락 넘어간 뒤 사라진다 */
+.book { position: absolute; left: 50%; top: 50%; width: min(18rem, 40vw); aspect-ratio: 3 / 4; translate: 0 -50%; perspective: 120rem; pointer-events: none; z-index: 5; opacity: 0; }
+#profile.opening .book { animation: bookLife 1.6s ease both; }
+@keyframes bookLife { 0% { opacity: 0; transform: translateX(-50%) scale(.8); } 12% { opacity: 1; transform: translateX(-25%) scale(1); } 70% { opacity: 1; transform: translateX(0) scale(1.05); } 100% { opacity: 0; transform: translateX(0) scale(1.35); } }
+.book > * { position: absolute; inset: 0; transform-origin: left center; transform-style: preserve-3d; }
+.b-back { background: linear-gradient(90deg, #d9cdb2, #e8dec8); box-shadow: inset .3rem 0 1rem #0004, 0 1rem 2rem #000a; border-radius: 0 .3rem .3rem 0; }
+.b-page { background: linear-gradient(90deg, #cfc2a4, #ebe1cc 30%, #e4d9c1); border-radius: 0 .3rem .3rem 0; box-shadow: inset .2rem 0 .6rem #0003;
+  background-image: repeating-linear-gradient(transparent 0 1.1rem, #8a6d4522 1.1rem 1.15rem), linear-gradient(90deg, #cfc2a4, #ebe1cc 30%, #e4d9c1); background-clip: content-box; padding: 1.4rem 1.2rem; }
+.b-cover { background: linear-gradient(135deg, #3a2a1c, #1d150e); border-radius: 0 .3rem .3rem 0; box-shadow: inset 0 0 0 .3rem #1d150e, inset 0 0 0 .38rem #c9a46a88, 0 1rem 2rem #000a; display: grid; place-items: center; }
+.b-cover svg { width: 40%; fill: none; stroke: #c9a46a; stroke-width: 1.2; }
+#profile.opening .b-cover { animation: flip .55s cubic-bezier(.4, 0, .3, 1) .15s both; }
+#profile.opening .b-page { animation: flip .42s cubic-bezier(.4, 0, .3, 1) calc(.42s + var(--i) * .09s) both; }
+@keyframes flip { to { transform: rotateY(-178deg); } }
+@media (prefers-reduced-motion: reduce) { #profile.opening :is(.lp, .book, .b-cover, .b-page, .lp-fill) { animation: none; } .book { display: none; } }
 /* 로그인 창 */
 #loginDlg { width: min(100%, 24rem); }
 .login-sub { margin: 0 0 1rem; text-align: center; font-size: .85rem; color: var(--fog); line-height: 1.6; }
@@ -996,43 +1096,51 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
     <div class="login-links"><button type="button" class="link" id="lgToggle"></button><button type="button" class="link" id="lgGuest">게스트로 시작</button></div>
   </form>
 </dialog>
-<dialog id="profile" class="glass ornate" aria-labelledby="pfTitle">
-  <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
-  <div class="st-head"><h2 id="pfTitle">프로필</h2><button class="st-close" type="button" data-close="profile" aria-label="닫기">×</button></div>
-  <div class="tabs" role="tablist">
-    <button role="tab" type="button" data-ptab="mine" aria-controls="ptab-mine">내 프로필</button>
-    <button role="tab" type="button" data-ptab="find" aria-controls="ptab-find">프로필 찾기</button>
+<dialog id="profile" aria-labelledby="pfTitle">
+  <div class="book" aria-hidden="true">
+    <div class="b-back"></div>
+    <div class="b-page" style="--i:4"></div><div class="b-page" style="--i:3"></div><div class="b-page" style="--i:2"></div><div class="b-page" style="--i:1"></div><div class="b-page" style="--i:0"></div>
+    <div class="b-cover"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4Z"/></svg></div>
   </div>
-  <div class="panes">
-    <section class="pane" id="ptab-mine" role="tabpanel">
-      <div id="pGuest" hidden style="text-align:center;padding:2rem 0">
-        <p style="margin:0 0 1rem;color:var(--fog)">로그인하면 내 프로필을 만들고 꾸밀 수 있습니다.</p>
-        <button class="btn" type="button" id="pLogin">로그인 / 회원가입</button>
-      </div>
-      <div id="pPreview"></div>
-      <form class="pform" id="pForm">
-        <div><label for="pName">닉네임</label><input type="text" id="pName" maxlength="12" autocomplete="nickname" placeholder="2~12자" required></div>
-        <div id="pTitleRow"><label for="pTitle">칭호</label><select id="pTitle"></select></div>
-        <div><label for="pIntro">소개말 <span class="counter" id="pCount"></span></label><textarea id="pIntro" maxlength="80" placeholder="다른 모험가에게 보여 줄 한마디"></textarea></div>
-        <fieldset class="picks" id="pEmblems"><legend>문양</legend></fieldset>
-        <fieldset class="picks" id="pColors"><legend>색</legend></fieldset>
-        <p class="pmsg" id="pMsg" role="status"></p>
-        <button class="btn" id="pSave">저장</button>
-        <p class="pnote" id="pKeyNote"></p>
-        <button class="btn ghost" type="button" id="logoutBtn">로그아웃</button>
-      </form>
-    </section>
-    <section class="pane" id="ptab-find" role="tabpanel" hidden>
-      <input class="psearch" id="pSearch" type="search" placeholder="닉네임으로 찾기" aria-label="닉네임으로 찾기" autocomplete="off">
-      <ul class="presults" id="pResults"></ul>
-      <p class="pempty" id="pEmpty">찾고 싶은 모험가의 닉네임을 입력하세요.</p>
-    </section>
-  </div>
-</dialog>
-<dialog id="pview" class="glass ornate" aria-label="프로필 보기">
-  <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
-  <div id="pviewBody"></div>
-  <button class="btn" type="button" data-close="pview" style="width:100%;margin-top:1rem">닫기</button>
+  <div class="lp"><div class="lp-in">
+    <div class="lp-top">
+      <button class="lp-back" type="button" data-close="profile"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>돌아가기</button>
+      <h2 id="pfTitle">원정 기록부</h2>
+    </div>
+    <div class="lp-grid">
+      <div id="pRecord"></div>
+      <aside class="lp-parch lp-ledger" aria-label="꾸미기와 찾기">
+        <span class="lp-ribbon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21V8M12 12c-3 0-5-2-5-5 3 0 5 2 5 5zm0 3c3 0 5-2 5-5-3 0-5 2-5 5z"/></svg></span>
+        <div class="lp-tabs" role="tablist">
+          <button role="tab" type="button" data-ptab="mine" aria-controls="ptab-mine">꾸미기</button>
+          <button role="tab" type="button" data-ptab="find" aria-controls="ptab-find">모험가 찾기</button>
+        </div>
+        <section id="ptab-mine" role="tabpanel">
+          <div id="pGuest" class="lp-guest" hidden>
+            <p>로그인하면 내 기록부가 생기고<br>전적과 경험치가 쌓입니다.</p>
+            <button class="lp-save" type="button" id="pLogin">로그인 / 회원가입</button>
+          </div>
+          <form id="pForm">
+            <div class="lp-row"><label for="pName">닉네임 <small>2~12자</small></label><input class="lp-in-field" type="text" id="pName" maxlength="12" autocomplete="nickname" required></div>
+            <div class="lp-row"><span class="lab">문장</span><div class="lp-opts" id="pEmblems"></div></div>
+            <div class="lp-row"><span class="lab">문장 색</span><div class="lp-opts" id="pColors"></div></div>
+            <div class="lp-row"><span class="lab">가죽 재질</span><div class="lp-opts" id="pSkins"></div></div>
+            <div class="lp-row" id="pTitleRow"><label for="pTitle">대표 칭호 <small>얻은 칭호 중 하나</small></label><select class="lp-in-field" id="pTitle"></select></div>
+            <div class="lp-row"><label for="pIntro">소개말 <span class="lp-count" id="pCount"></span></label><textarea class="lp-in-field" id="pIntro" maxlength="80" placeholder="다른 모험가에게 보여 줄 한마디"></textarea></div>
+            <button class="lp-save" id="pSave">기록부에 남기기</button>
+            <p class="pmsg" id="pMsg" role="status"></p>
+            <p class="pnote" id="pKeyNote"></p>
+            <button class="lp-link" type="button" id="logoutBtn">로그아웃</button>
+          </form>
+        </section>
+        <section id="ptab-find" role="tabpanel" hidden>
+          <input class="lp-in-field" id="pSearch" type="search" placeholder="닉네임으로 찾기" aria-label="닉네임으로 찾기" autocomplete="off">
+          <ul class="presults" id="pResults"></ul>
+          <p class="pempty" id="pEmpty">찾고 싶은 모험가의 닉네임을 입력하세요.</p>
+        </section>
+      </aside>
+    </div>
+  </div></div>
 </dialog>
 <dialog id="jobDlg" class="glass ornate">
   <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
@@ -1444,7 +1552,14 @@ function tone(freq, { type = 'sine', at = 0, peak = .2, decay = .35, glideTo } =
   g.gain.exponentialRampToValueAtTime(.0001, t + decay);          // 자연스럽게 사라짐
   o.connect(g).connect(actx.destination); o.start(t); o.stop(t + decay + .05);
 }
-let sealBuf;
+let sealBuf, noiseBuf;
+function noise(at, dur, peak, freq) { // 걸러 낸 백색소음: 종이 넘기는 소리
+  noiseBuf ??= (() => { const b = actx.createBuffer(1, actx.sampleRate * .5, actx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; })();
+  const t = actx.currentTime + at, src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+  src.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.setValueAtTime(freq, t); f.frequency.exponentialRampToValueAtTime(freq * 1.8, t + dur); f.Q.value = .7;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak * sfxLevel(), t + dur * .25); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  src.connect(f).connect(g).connect(actx.destination); src.start(t, Math.random() * .3); src.stop(t + dur + .05);
+}
 const SFX = {
   awaken() {
     tone(130.8, { peak: .22, decay: 1.6, glideTo: 261.6 }); tone(196, { type: 'triangle', peak: .08, decay: 1.6, glideTo: 392 });
@@ -1464,6 +1579,9 @@ const SFX = {
       const src = actx.createBufferSource(), g = actx.createGain();
       src.buffer = buf; g.gain.value = sfxLevel(); src.connect(g).connect(actx.destination); src.start();
     });
+  },
+  pages() { // 기록부 열기: 표지가 툭 열리고 책장이 촤라락
+    noise(0.15, .16, .5, 900); [0, 1, 2, 3, 4].forEach(i => noise(.42 + i * .09, .1, .32, 2200 + i * 250));
   },
   tick() { tone(1500, { type: 'triangle', peak: .09, decay: .07, glideTo: 750 }); },                 // 그 외: 틱
 };
@@ -1776,15 +1894,16 @@ function tickTimers() {
 setInterval(tickTimers, 500);
 
 /* ---------- 게임 결과 ---------- */
+let lastGain = ''; // 이번 판으로 얻은 경험치 (로그인한 사람만 서버가 알려 준다)
 function renderOver() {
   const o = game.over;
   $('overBox').hidden = !o;
-  if (!o) return;
+  if (!o) return void (lastGain = '');
   const meP = game.players[0], myRole = meP.role || game.role;
   const win = o.winner === 'eater' ? o.id === game.you : myRole !== 'eater' && (o.winner === 'hero') === (myRole !== 'demon');
   $('overTitle').textContent = o.winner === 'eater' ? `${nameOf(o.id)}, 별을 먹는 괴물의 승리!` : o.winner === 'hero' ? '용사 파티 승리!' : o.seal ? '봉인 의식 완성 · 마왕군 승리!' : '마왕군 승리!';
   $('overTitle').style.color = o.winner === 'hero' ? 'var(--amber)' : o.winner === 'eater' ? '#b6a6ff' : '#ff7a86';
-  $('overMe').textContent = win ? '당신의 진영이 이겼습니다.' : '당신의 진영이 졌습니다.';
+  $('overMe').textContent = (win ? '당신의 진영이 이겼습니다.' : '당신의 진영이 졌습니다.') + (lastGain ? ` (${lastGain})` : '');
   $('overList').innerHTML = game.players.map(p => `<li class="${p.alive === false ? 'x' : ''}"><span>${esc(p.name)}${p.id === meP.id ? ' (나)' : ''} · ${esc(p.job || '')}</span>
     ${roleChip(p.role)}</li>`).join('');
 }
@@ -1977,22 +2096,61 @@ const profileKey = () => { try { return sessionStorage.getItem('arcana-session')
 // 로그인 기능 전에 이 기기에서 만든 프로필 열쇠: 회원가입 때 그 프로필에 계정을 붙인다
 const legacyKey = () => { try { return localStorage.getItem('arcana-profile') || ''; } catch { return ''; } };
 
-function profileCard(p) {
-  if (!p) return '';
-  const st = p.stats || {}, rate = st.games ? Math.round(st.wins / st.games * 100) + '%' : '-';
-  return `<div class="pcard c-${p.color}">${medal(p.emblem, p.color)}
-    <span class="pname">${esc(p.nickname)}</span>
-    ${p.title ? `<span class="ptitle">${esc(p.title)}</span>` : ''}
-    <p class="pintro${p.intro ? '' : ' none'}">${p.intro ? esc(p.intro) : '아직 소개말이 없습니다.'}</p>
-    <div class="pstats">
-      <div><b>${st.games ?? 0}</b><span>플레이</span></div><div><b>${st.wins ?? 0}</b><span>승리</span></div><div><b>${rate}</b><span>승률</span></div>
-      <div><b>${st.heroWins ?? 0}</b><span>용사로 승리</span></div><div><b>${st.demonWins ?? 0}</b><span>마왕군으로 승리</span></div><div><b>${st.bestStreak ?? 0}</b><span>최고 연승</span></div>
+/* ---------- 원정 기록부 (프로필 화면) ----------
+   내 기록 또는 다른 사람의 기록을 왼쪽에, 꾸미기 / 모험가 찾기를 오른쪽 장부에 보여 준다 */
+const SKIN_NAME = { leather: '흑갈색 가죽', ebony: '흑단', forest: '숲 이끼' };
+let viewing = null; // 다른 사람의 기록을 보는 중이면 그 프로필 (게스트는 { guest: true, nickname })
+const pct = (w, g) => (g ? Math.round(w / g * 100) : 0);
+const icon = (path, extra = '') => `<svg viewBox="0 0 24 24"${extra}>${path}</svg>`;
+function recordHTML(p, mine) {
+  const st = p.stats || {}, lv = p.level || { lv: 1, into: 0, need: 60 };
+  const hp = pct(st.heroWins, st.heroGames), dp = pct(st.demonWins, st.demonGames);
+  const pips = c => { const r = (st.recent || []).filter(x => x[0] === c).slice(-12);
+    return r.length ? r.map(x => `<i class="${x[1] === '1' ? 'w' : ''}"></i>`).join('') : '<em>아직 기록이 없습니다.</em>'; };
+  const head = mine ? '<span>모험가 기록</span>'
+    : `<span>${esc(p.nickname)}의 기록</span>${myProfile || !p.guest ? `<button type="button" data-mine>${myProfile ? '내 기록 보기' : '돌아가기'}</button>` : ''}`;
+  if (p.guest) return `<h3 class="lp-sec"><i>I</i>${head}</h3>
+    <div class="lp-rec c-silver" data-skin="leather"><div class="lp-panel lp-main"><h1 class="lp-name">${esc(p.nickname)}</h1>
+    <p class="lp-sub"><b>게스트</b> · 기록부가 없는 모험가</p><p class="lp-intro none">로그인하지 않은 모험가는 전적과 경험치가 남지 않습니다.</p></div></div>`;
+  return `<h3 class="lp-sec"><i>I</i>${head}</h3>
+  <div class="lp-rec c-${p.color}" data-skin="${p.skin || 'leather'}">
+    <div class="lp-cluster">
+      <div class="lp-tag">${medal(p.emblem, p.color)}<small>LEVEL</small><span class="lv">${lv.lv}</span><span class="tt">${esc(p.title || '새내기 모험가')}</span></div>
+      <div class="lp-panel lp-main">
+        <h1 class="lp-name">${esc(p.nickname)}</h1>
+        <p class="lp-sub"><b>${esc(p.title || '새내기 모험가')}</b> · ${st.games || 0}판 참가 · ${st.wins || 0}승</p>
+        <div class="lp-bar">${icon(EMBLEM.sword, ' style="stroke:var(--hero-hi)"')}<div class="lbl"><span>용사 파티 승률</span><b>${st.heroGames ? hp + '%' : '-'}</b></div>
+          <div class="lp-track"><div class="lp-fill f-hero" style="--w:${hp}%"></div></div></div>
+        <div class="lp-bar">${icon(EMBLEM.moon, ' style="stroke:var(--demon-hi)"')}<div class="lbl"><span>마왕군 승률</span><b>${st.demonGames ? dp + '%' : '-'}</b></div>
+          <div class="lp-track"><div class="lp-fill f-demon" style="--w:${dp}%"></div></div></div>
+        <p class="lp-intro${p.intro ? '' : ' none'}">${p.intro ? `“${esc(p.intro)}”` : '아직 소개말이 없습니다.'}</p>
+      </div>
+      <div class="lp-side"><div class="lp-panel lp-crest">${icon(EMBLEM[p.emblem] || EMBLEM.star)}</div>
+        <div class="lp-panel lp-all"><small>통산 승률</small><b>${st.games ? pct(st.wins, st.games) + '%' : '-'}</b></div></div>
     </div>
-    <p class="pnote">전적은 실제 게임 결과가 생기면 기록됩니다.</p></div>`;
+    <div class="lp-chips">
+      <span class="lp-chip">${icon(EMBLEM.sword)}용사 ${st.heroGames || 0}판</span><span class="lp-chip">${icon(EMBLEM.moon)}마왕군 ${st.demonGames || 0}판</span>
+      <span class="lp-chip">${icon(EMBLEM.star)}최고 ${st.bestStreak || 0}연승</span>
+    </div>
+    <div class="lp-xp"><div class="lp-track"><div class="lp-fill f-xp" style="--w:${lv.need ? Math.round(lv.into / lv.need * 100) : 100}%"></div></div>
+      <span>${lv.need ? `다음 레벨까지 ${lv.into.toLocaleString()} / ${lv.need.toLocaleString()} XP` : '최고 레벨'}</span></div>
+    <div class="lp-camps">
+      <div class="lp-parch lp-camp hero"><span class="ic">${icon(EMBLEM.sword)}</span><h3>용사 파티일 때</h3>
+        <div class="pct">${hp}<small>%</small></div><p>${st.heroGames || 0}판 · ${st.heroWins || 0}승 ${(st.heroGames || 0) - (st.heroWins || 0)}패</p><div class="lp-pips">${pips('h')}</div></div>
+      <div class="lp-parch lp-camp demon"><span class="ic">${icon(EMBLEM.moon)}</span><h3>마왕군일 때</h3>
+        <div class="pct">${dp}<small>%</small></div><p>${st.demonGames || 0}판 · ${st.demonWins || 0}승 ${(st.demonGames || 0) - (st.demonWins || 0)}패</p><div class="lp-pips">${pips('d')}</div></div>
+    </div>
+    <p class="lp-note">아래 칸은 최근 판 결과입니다(색칠 = 승리). 경험치: 한 판 참가 40 · 승리 +60 · 끝까지 살아남으면 +10.<br>20레벨까지는 금방 오르고, 그 뒤로는 레벨마다 필요한 경험치가 10%씩 늘어납니다.</p>
+  </div>`;
 }
-function guestCard(name) {
-  return `<div class="pcard c-silver">${medal('star', 'silver')}<span class="pname">${esc(name)}</span><span class="ptitle">게스트</span>
-    <p class="pintro none">프로필을 만들지 않은 모험가입니다.</p></div>`;
+function showRecord() {
+  let p = viewing;
+  if (!p && myProfile) { // 내 기록: 꾸미는 중인 값을 바로 보여 준다
+    const v = formValue(), t = myProfile.titles?.find(t => t.id === v.title);
+    p = { ...myProfile, ...v, nickname: v.nickname || myProfile.nickname, title: t?.name || myProfile.title };
+  }
+  if (!p) p = { guest: true, nickname: $('name').value.trim() || '나그네' };
+  $('pRecord').innerHTML = recordHTML(p, !viewing);
 }
 function renderMeBtn() {
   $('meBtn').classList.toggle('empty', !myProfile);
@@ -2001,34 +2159,30 @@ function renderMeBtn() {
 }
 renderMeBtn();
 // 선택지 그리기
-$('pEmblems').insertAdjacentHTML('beforeend', Object.keys(EMBLEM).map(k =>
-  `<label title="${EMBLEM_NAME[k]}"><input type="radio" name="pEmblem" value="${k}" aria-label="${EMBLEM_NAME[k]}">${medal(k, 'amber')}</label>`).join(''));
-$('pColors').insertAdjacentHTML('beforeend', Object.keys(COLOR_NAME).map(k =>
-  `<label title="${COLOR_NAME[k]}"><input type="radio" name="pColor" value="${k}" aria-label="${COLOR_NAME[k]}"><span class="swatch c-${k}"></span></label>`).join(''));
+const radioRow = (id, name, entries) => $(id).insertAdjacentHTML('beforeend', entries.map(([k, label, inner]) =>
+  `<label title="${label}"><input type="radio" name="${name}" value="${k}" aria-label="${label}">${inner}</label>`).join(''));
+radioRow('pEmblems', 'pEmblem', Object.keys(EMBLEM).map(k => [k, EMBLEM_NAME[k], `<span class="o-em">${icon(EMBLEM[k])}</span>`]));
+radioRow('pColors', 'pColor', Object.keys(COLOR_NAME).map(k => [k, COLOR_NAME[k], `<span class="o-c c-${k}"></span>`]));
+radioRow('pSkins', 'pSkin', Object.keys(SKIN_NAME).map(k => [k, SKIN_NAME[k], `<span class="o-t">${SKIN_NAME[k]}</span>`]));
+const checked = name => document.querySelector(`[name=${name}]:checked`)?.value;
 const formValue = () => ({
   nickname: $('pName').value.trim(), intro: $('pIntro').value, title: $('pTitle').value,
-  emblem: document.querySelector('[name=pEmblem]:checked')?.value || 'star', color: document.querySelector('[name=pColor]:checked')?.value || 'amber',
+  emblem: checked('pEmblem') || 'star', color: checked('pColor') || 'amber', skin: checked('pSkin') || 'leather',
 });
-function previewProfile() { // 입력하는 대로 위쪽 카드가 바뀐다
-  const v = formValue(), t = myProfile?.titles?.find(t => t.id === v.title);
-  $('pEmblems').querySelectorAll('.medal').forEach(m => m.className = 'medal c-' + v.color);
-  $('pCount').textContent = `${$('pIntro').value.length} / 80`;
-  $('pPreview').innerHTML = profileCard({ ...(myProfile || {}), ...v, nickname: v.nickname || '닉네임', title: t?.name || '새내기 모험가', stats: myProfile?.stats || {} });
-}
 function fillProfileForm() {
-  const p = myProfile || { nickname: $('name').value.trim(), intro: '', emblem: 'star', color: 'amber', titles: [] };
+  const p = myProfile || { nickname: '', intro: '', emblem: 'star', color: 'amber', skin: 'leather', titles: [] };
   $('pName').value = p.nickname; $('pIntro').value = p.intro;
   $('pTitle').innerHTML = (p.titles || []).map(t => `<option value="${t.id}" title="${esc(t.desc)}">${esc(t.name)}</option>`).join('');
-  $('pTitle').value = p.titleId || ''; $('pTitleRow').hidden = !myProfile;
+  $('pTitle').value = p.titleId || '';
   document.querySelector(`[name=pEmblem][value=${p.emblem}]`).checked = true;
   document.querySelector(`[name=pColor][value=${p.color}]`).checked = true;
-  $('pSave').textContent = '저장';
-  $('pGuest').hidden = !!myProfile; $('pPreview').hidden = $('pForm').hidden = !myProfile;
+  document.querySelector(`[name=pSkin][value=${p.skin || 'leather'}]`).checked = true;
+  $('pGuest').hidden = !!myProfile; $('pForm').hidden = !myProfile;
   $('pKeyNote').textContent = myProfile?.login ? `로그인 아이디: ${myProfile.login}` : '';
   $('pMsg').textContent = ''; $('pMsg').className = 'pmsg';
-  previewProfile();
+  $('pCount').textContent = `${$('pIntro').value.length} / 80`;
 }
-$('pForm').addEventListener('input', previewProfile);
+$('pForm').addEventListener('input', () => { $('pCount').textContent = `${$('pIntro').value.length} / 80`; viewing = null; showRecord(); });
 $('pForm').onsubmit = e => {
   e.preventDefault();
   $('pMsg').textContent = '저장하는 중…'; $('pMsg').className = 'pmsg';
@@ -2040,9 +2194,21 @@ function showPTab(name) {
   if (name === 'find') $('pSearch').focus();
 }
 document.querySelectorAll('[data-ptab]').forEach(t => t.onclick = () => showPTab(t.dataset.ptab));
-$('meBtn').onclick = () => { // 게스트는 프로필 찾기만 (내 프로필 탭에서 로그인 안내)
-  fillProfileForm(); showPTab(myProfile ? 'mine' : 'find'); $('profile').showModal();
-};
+// 기록부 열기: 이미 열려 있으면 내용만 바꾸고, 아니면 책이 펼쳐지며 열린다
+let openT;
+function openProfile(p, tab) {
+  viewing = p;
+  showRecord();
+  const dlg = $('profile');
+  dlg.querySelector('.lp').scrollTop = 0;
+  if (dlg.open) return;
+  fillProfileForm(); showRecord(); showPTab(tab || (myProfile ? 'mine' : 'find'));
+  dlg.classList.remove('opening'); void dlg.offsetWidth; dlg.classList.add('opening');
+  dlg.showModal(); sfx('pages');
+  clearTimeout(openT); openT = setTimeout(() => dlg.classList.remove('opening'), 2400);
+}
+$('meBtn').onclick = () => openProfile(null);
+$('pRecord').addEventListener('click', e => { if (e.target.closest('[data-mine]')) { viewing = null; showRecord(); } });
 $('pLogin').onclick = () => { $('profile').close(); openLogin('login'); };
 let searchT;
 $('pSearch').oninput = () => {
@@ -2050,11 +2216,11 @@ $('pSearch').oninput = () => {
   searchT = setTimeout(() => send({ type: 'profile:find', q: $('pSearch').value }), 200);
 };
 $('pResults').onclick = e => { const b = e.target.closest('[data-name]'); if (b) send({ type: 'profile:view', nickname: b.dataset.name }); };
-// 대기실 자리 / 게임 상대를 누르면 프로필 보기
+// 대기실 자리 / 게임 상대를 누르면 그 사람의 기록부
 function viewPlayer(el) {
   if (!el || el.classList.contains('empty')) return;
   if (el.dataset.profile) send({ type: 'profile:view', nickname: el.dataset.name });
-  else { $('pviewBody').innerHTML = guestCard(el.dataset.name); $('pview').showModal(); }
+  else openProfile({ guest: true, nickname: el.dataset.name }, 'find');
 }
 $('seats').addEventListener('click', e => viewPlayer(e.target.closest('.seat')));
 $('opps').addEventListener('click', e => {
@@ -2063,10 +2229,6 @@ $('opps').addEventListener('click', e => {
   viewPlayer(e.target.closest('.opp'));
 });
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dataset.close).close());
-['profile', 'pview'].forEach(id => $(id).addEventListener('click', e => { // 바깥 누르면 닫기
-  const r = $(id).getBoundingClientRect();
-  if (e.target === $(id) && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) $(id).close();
-}));
 
 /* ---------- 로그인 / 회원가입 ----------
    접속하면 로그인 창이 가장 먼저 뜬다 (아이디는 기억해 두었다가 채움). 같은 탭에서 새로고침하면 다시 묻지 않는다. */
@@ -2128,6 +2290,8 @@ function onProfileMessage(msg) {
   if (msg.type === 'profile:me') {
     if (!msg.profile && profileKey()) try { sessionStorage.removeItem('arcana-session'); } catch {} // 서버에 없는 열쇠
     myProfile = msg.profile; renderMeBtn();
+    if (msg.gained) { lastGain = `경험치 +${msg.gained} · 레벨 ${msg.profile.level.lv}`; if (game?.over) renderOver(); }
+    if ($('profile').open && !viewing) showRecord();
     if (msg.saved) { fillProfileForm(); $('pMsg').textContent = '저장했습니다.'; $('pMsg').className = 'pmsg good'; }
   }
   if (msg.type === 'profile:error') { $('pMsg').textContent = msg.message; $('pMsg').className = 'pmsg bad'; }
@@ -2138,8 +2302,7 @@ function onProfileMessage(msg) {
     $('pEmpty').textContent = msg.q.trim() ? '그런 닉네임의 모험가가 없습니다.' : '찾고 싶은 모험가의 닉네임을 입력하세요.';
   }
   if (msg.type === 'profile:view') {
-    $('pviewBody').innerHTML = msg.profile ? profileCard(msg.profile) : guestCard(msg.nickname);
-    $('pview').showModal();
+    openProfile(msg.profile || { guest: true, nickname: msg.nickname }, 'find');
   }
 }
 

@@ -8,7 +8,8 @@
     "test:profiles": "node test/profiles.cjs",
     "test:game": "node test/game.test.mjs",
     "test:cards": "node test/cards.cjs",
-    "test:login": "node test/login.cjs"
+    "test:login": "node test/login.cjs",
+    "test:xp": "node test/xp.test.mjs"
   },
   "dependencies": {
     "pg": "^8.16.3",
