@@ -13,7 +13,14 @@ const FILE = join(DIR, 'profiles.json');
 export const EMBLEMS = ['king', 'queen', 'bishop', 'blade', 'feather', 'infinity', 'tide', 'key', 'lantern']; // 문장 (이름과 그림은 클라이언트의 MARKS)
 export const COLORS = ['amber', 'jade', 'crimson', 'violet', 'silver'];
 export const SKINS = ['leather', 'ebony', 'forest']; // 기록부 가죽 재질
-export const BANNERS = ['none', 'gold', 'dusk', 'sakura', 'rosechain', 'violet']; // 프로필 배너·칭호 배너 (그림은 클라이언트)
+export const BANNERS = ['none', 'gold', 'dusk', 'sakura', 'rosechain', 'violet', 'bluesmoke', 'starsmoke', 'sunforest', 'moongeese', 'redcloud',
+  'butterfly', 'curtain', 'crow', 'cover', 'planet']; // 프로필 배너·칭호 배너 (그림은 클라이언트)
+// 관리자 계정: 모든 칭호와 모든 배너를 가진다. 환경 변수 ADMIN_LOGINS(쉼표로 구분)로 바꿀 수 있음
+const ADMINS = new Set((process.env.ADMIN_LOGINS ?? 'lliooli').split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
+export const isAdmin = p => !!p?.login && ADMINS.has(p.login);
+// 배너 잠금: 배너마다 여는 조건 test(p). 조건은 나중에 정한다 → 지금은 모두 잠김 ('none'은 항상)
+const BANNER_UNLOCK = {};
+export const bannersOf = p => BANNERS.filter(b => b === 'none' || isAdmin(p) || !!BANNER_UNLOCK[b]?.(p));
 const NAME = /^[\p{L}\p{N}_ ]{2,12}$/u; // 글자·숫자·밑줄·띄어쓰기 2~12자
 const MAX_INTRO = 80;
 
@@ -47,7 +54,7 @@ export const TITLES = [
   { id: 'changer', name: '게임 체인저', desc: '게임 종료시 hp(소울하트 포함) 1 이하', flag: 'changer' },
   { id: 'sparkle', name: '반짝 반짝', desc: '홈 화면의 마법진이 맞춰지는걸 목격', flag: 'sparkle', hidden: true },
 ];
-const hasTitle = (t, p) => { const st = p.stats || {}; return t.flag ? !!st.flags?.[t.flag] : t.count(st, p) >= t.goal; };
+const hasTitle = (t, p) => { if (isAdmin(p)) return true; const st = p.stats || {}; return t.flag ? !!st.flags?.[t.flag] : t.count(st, p) >= t.goal; };
 
 const byKey = new Map();  // key -> profile
 const byName = new Map(); // 소문자 닉네임 -> key
@@ -129,10 +136,10 @@ export function recordGame(key, { camp, win, survived, job, hand = 0, soul = 0, 
 export function publicView(p) {
   const title = TITLES.find(t => t.id === p.title);
   const stats = { ...blankStats(), ...p.stats };
-  return { nickname: p.nickname, intro: p.intro, emblem: EMBLEMS.includes(p.emblem) ? p.emblem : EMBLEMS[0], color: p.color, skin: p.skin || 'leather', banner: p.banner || 'none', tbanner: p.tbanner || 'none', title: title?.name || '', stats, level: levelOf(stats.xp), createdAt: p.createdAt };
+  return { nickname: p.nickname, intro: p.intro, emblem: EMBLEMS.includes(p.emblem) ? p.emblem : EMBLEMS[0], color: p.color, skin: p.skin || 'leather', banner: bannersOf(p).includes(p.banner) ? p.banner : 'none', tbanner: bannersOf(p).includes(p.tbanner) ? p.tbanner : 'none', title: title?.name || '', stats, level: levelOf(stats.xp), createdAt: p.createdAt };
 }
 // 본인에게 보여 줄 정보 (+ 고를 수 있는 칭호)
-export const ownView = p => ({ ...publicView(p), login: p.login || '', titleId: p.title, titles: titlesOf(p).map(({ id, name, desc }) => ({ id, name, desc })), codex: codexOf(p) });
+export const ownView = p => ({ ...publicView(p), login: p.login || '', titleId: p.title, titles: titlesOf(p).map(({ id, name, desc }) => ({ id, name, desc })), codex: codexOf(p), banners: bannersOf(p), admin: isAdmin(p) });
 
 export function search(q) {
   q = String(q ?? '').trim().toLowerCase();
@@ -153,8 +160,9 @@ export function save(key, input) {
   const emblem = EMBLEMS.includes(input.emblem) ? input.emblem : EMBLEMS[0];
   const color = COLORS.includes(input.color) ? input.color : 'amber';
   const skin = SKINS.includes(input.skin) ? input.skin : (p?.skin || 'leather');
-  const banner = BANNERS.includes(input.banner) ? input.banner : (p?.banner || 'none');
-  const tbanner = BANNERS.includes(input.tbanner) ? input.tbanner : (p?.tbanner || 'none');
+  const owned = bannersOf(p); // 잠긴 배너는 고를 수 없다
+  const banner = owned.includes(input.banner) ? input.banner : owned.includes(p?.banner) ? p.banner : 'none';
+  const tbanner = owned.includes(input.tbanner) ? input.tbanner : owned.includes(p?.tbanner) ? p.tbanner : 'none';
   const next = p || { key: randomBytes(16).toString('hex'), createdAt: Date.now(), stats: blankStats() };
   const title = titlesOf(next).some(t => t.id === input.title) ? input.title : (p?.title || TITLES[0].id);
   if (p) byName.delete(p.nickname.toLowerCase());

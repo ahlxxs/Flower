@@ -27,7 +27,7 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   await a.waitForSelector('#profile[open]'); await sleep(300);
   ok((await a.textContent('#pRecord')).includes('LEVEL') && (await a.textContent('.lp-tag .lv')) === '1', '새 계정은 1레벨');
   await a.fill('#pIntro', '봉인은 내가 막는다.');
-  await a.click('[name=pEmblem][value=blade] + .o-em'); await a.click('[name=pColor][value=crimson] + .o-c'); await a.click('[name=pSkin][value=ebony] + .o-t'); await a.click('[name=pBanner][value=gold] + .o-t'); await a.click('[name=pTBanner][value=sakura] + .o-tb');
+  await a.click('[name=pEmblem][value=blade] + .o-em'); await a.click('[name=pColor][value=crimson] + .o-c'); await a.click('[name=pSkin][value=ebony] + .o-t');
   ok((await a.getAttribute('.lp-rec', 'data-skin')) === 'ebony' && (await a.textContent('.lp-intro')).includes('봉인은 내가'), '꾸미는 대로 기록부가 바로 바뀜');
   await a.click('#pSave'); await sleep(500);
   ok((await a.textContent('#pMsg')) === '저장했습니다.', '프로필 만들기');
@@ -45,7 +45,7 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   ok((await g.textContent('#pResults')).includes('용사아린'), '닉네임 일부로 검색');
   await g.click('#pResults button'); await sleep(400);
   ok((await g.textContent('#pRecord')).includes('봉인은 내가 막는다.') && (await g.textContent('#pRecord')).includes('용사아린의 기록'), '검색 결과 눌러 그 사람의 기록부 보기');
-  ok((await g.getAttribute('.lp-rec', 'data-skin')) === 'ebony' && !!(await g.$('.pbanner.pb-gold')) && !!(await g.$('.tbanner.tb-sakura')), '가죽 재질·프로필 배너·칭호 배너도 저장됨');
+  ok((await g.getAttribute('.lp-rec', 'data-skin')) === 'ebony', '가죽 재질도 저장됨');
   await g.click('[data-close="profile"]');
 
   // 4. 방: 프로필 사용자가 만들고, 게스트가 참가 → 서로 눌러 보기
@@ -98,6 +98,16 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   ok((await d.textContent('#cxTitles')).includes('달고 있음'), '도감에서 바로 칭호 달기');
   await d.click('[data-close="codex"]'); await d.click('#meBtn'); await d.waitForSelector('#profile[open]'); await sleep(200);
   ok((await d.textContent('.lp-tag .tt')) === '반짝 반짝' && (await d.$eval('#pTitle', s => s.value)) === 'sparkle', '기록부에도 단 칭호가 보이고 고를 수 있음');
+  ok(await d.evaluate(() => [...document.querySelectorAll('[name=pBanner]')].every(i => i.disabled === (i.value !== 'none'))), '일반 계정은 배너가 모두 잠김');
+  await d.click('[data-close="profile"]');
+
+  // 7. 관리자 계정(lliooli): 모든 칭호·모든 배너
+  const m = await page(); await m.goto(U); await ready(m); await signup(m, 'lliooli', '관리자');
+  await m.click('#meBtn'); await m.waitForSelector('#profile[open]'); await sleep(200);
+  ok(await m.evaluate(() => [...document.querySelectorAll('[name=pBanner]')].every(i => !i.disabled)) && (await m.$$('#pTitle option')).length === 25, '관리자: 배너 전부 열림, 칭호 25개 모두 고를 수 있음');
+  await m.click('[name=pBanner][value=planet] + .o-t'); await m.click('[name=pTBanner][value=crow] + .o-tb'); await m.selectOption('#pTitle', 'legend'); await m.click('#pSave'); await sleep(500);
+  await m.click('[data-ptab="find"]'); await m.fill('#pSearch', '관리자'); await sleep(600); await m.click('#pResults button'); await sleep(400);
+  ok(!!(await m.$('#pRecord .pbanner.pb-planet')) && !!(await m.$('#pRecord .tbanner.tb-crow')) && (await m.textContent('#pRecord .lp-tag .tt')) === '전설', '관리자가 고른 배너·칭호가 다른 사람 화면에도 보임');
   ok(!errs.length, '페이지 오류 없음 ' + errs.join(' / '));
   await b.close(); srv.kill(); process.exit(failed ? 1 : 0);
 })().catch(e => { console.error(e); spawn('fuser', ['-k', '3123/tcp']); setTimeout(() => process.exit(1), 300); });

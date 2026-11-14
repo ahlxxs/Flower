@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 process.env.DATA_DIR = (await import('node:fs')).mkdtempSync((await import('node:os')).tmpdir() + '/arcana-xp-');
 delete process.env.DATABASE_URL;
-const { levelOf, xpNeed, save, recordGame, publicView, getByKey, titlesOf, codexOf, setTitle, setFlag, TITLES } = await import('../profiles.js');
+const { levelOf, xpNeed, save, recordGame, publicView, getByKey, titlesOf, codexOf, setTitle, setFlag, TITLES, signup, bannersOf, BANNERS } = await import('../profiles.js');
 let sum = 0; for (let lv = 1; lv < 20; lv++) sum += xpNeed(lv);
 assert.equal(sum, 2508);                                     // 20레벨까지 약 33판
 assert.equal(levelOf(0).lv, 1); assert.equal(levelOf(59).lv, 1); assert.equal(levelOf(60).lv, 2);
@@ -35,5 +35,14 @@ assert.ok(setTitle(t.key, 'sparkle').error);
 assert.ok(setFlag(t.key, 'sparkle')); assert.ok(!setFlag(t.key, 'sparkle')); assert.ok(!setFlag(t.key, 'doom')); // 클라이언트가 켤 수 있는 건 sparkle만
 assert.equal(setTitle(t.key, 'sparkle').profile.title, 'sparkle');
 assert.equal(publicView(getByKey(t.key)).title, '반짝 반짝');
-console.log('PASS 레벨·경험치·칭호 점검 모두 통과');
+// 배너 잠금과 관리자 계정
+assert.deepEqual(bannersOf(getByKey(t.key)), ['none']);                                   // 일반 계정: 배너 전부 잠김
+assert.equal(save(t.key, { nickname: '칭호시험', banner: 'gold', tbanner: 'planet' }).profile.banner, 'none');
+const adm = signup({ login: 'lliooli', password: 'secret12', nickname: '관리자' }).profile;
+assert.equal(titlesOf(adm).length, TITLES.length); assert.equal(bannersOf(adm).length, BANNERS.length);
+assert.ok(codexOf(adm).every(x => x.got) && codexOf(adm).find(x => x.id === 'sparkle').name === '반짝 반짝');
+save(adm.key, { nickname: '관리자', banner: 'planet', tbanner: 'crow' });
+assert.deepEqual([publicView(adm).banner, publicView(adm).tbanner], ['planet', 'crow']);
+assert.equal(setTitle(adm.key, 'legend').profile.title, 'legend');
+console.log('PASS 레벨·경험치·칭호·배너 점검 모두 통과');
 process.exit(0);
