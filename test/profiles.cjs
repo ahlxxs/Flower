@@ -29,6 +29,15 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   await a.fill('#pIntro', '봉인은 내가 막는다.');
   await a.click('[name=pEmblem][value=blade] + .o-em'); await a.click('[name=pColor][value=crimson] + .o-c');
   ok((await a.textContent('.lp-intro')).includes('봉인은 내가') && !!(await a.$('.lp-rec.c-crimson')), '꾸미는 대로 기록부가 바로 바뀜');
+  ok(!!(await a.$('#pAddPhoto')) && (await a.$$('[name=pAvatar]')).length === 9, '프로필 사진: + 버튼과 기본 사진 9개');
+  await a.click('[name=pAvatar][value=crown] + .o-av');
+  ok(!!(await a.$('.lp-tag .medal.av svg')), '기본 사진을 고르면 바로 기록부에 보임');
+  const shot = await a.screenshot({ clip: { x: 0, y: 0, width: 400, height: 300 } }); // 올릴 사진 대신 화면 일부를 PNG로
+  await a.setInputFiles('#pPhoto', { name: 'me.png', mimeType: 'image/png', buffer: shot }); await sleep(800);
+  ok((await a.textContent('#pMsg')).includes('프로필 사진을 바꿨습니다') && (await a.getAttribute('.lp-tag .medal.av img', 'src')).startsWith('/avatar/'), '+로 내 사진 올리기 → 기록부에 내 사진');
+  const avUrl = await a.getAttribute('.lp-tag .medal.av img', 'src');
+  const avRes = await a.evaluate(async u => { const r = await fetch(u); return [r.status, r.headers.get('content-type'), (await r.arrayBuffer()).byteLength]; }, avUrl);
+  ok(avRes[0] === 200 && avRes[1].startsWith('image/') && avRes[2] > 500, '올린 사진 주소에서 사진이 나옴 → ' + avRes);
   await a.click('#pSave'); await sleep(500);
   ok((await a.textContent('#pMsg')) === '저장했습니다.', '프로필 만들기');
   ok((await a.evaluate(() => myProfile?.nickname || '')) === '용사아린', '내 프로필로 로그인됨');
@@ -45,6 +54,7 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   ok((await g.textContent('#pResults')).includes('용사아린'), '닉네임 일부로 검색');
   await g.click('#pResults button'); await sleep(400);
   ok((await g.textContent('#pRecord')).includes('봉인은 내가 막는다.') && (await g.textContent('#pRecord')).includes('용사아린의 기록'), '검색 결과 눌러 그 사람의 기록부 보기');
+  ok((await g.getAttribute('#pRecord .lp-tag .medal.av img', 'src')) === avUrl && !!(await g.$('#pResults .medal.av img')), '다른 사람에게도 내 사진이 보임 (기록부, 검색 결과)');
   await g.click('[data-close="profile"]');
 
   // 4. 방: 프로필 사용자가 만들고, 게스트가 참가 → 서로 눌러 보기

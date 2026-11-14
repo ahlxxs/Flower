@@ -26,7 +26,7 @@ function friendCard(key) {
   const f = profiles.getByKey(key);
   if (!f) return null;
   const v = profiles.publicView(f), on = onlineAs(key), r = on && rooms.get(on.room);
-  return { nickname: v.nickname, emblem: v.emblem, color: v.color, title: v.title, lv: v.level.lv, online: !!on, room: r && !r.started ? r.code : '', playing: !!r?.started };
+  return { nickname: v.nickname, avatar: v.avatar, emblem: v.emblem, color: v.color, title: v.title, lv: v.level.lv, online: !!on, room: r && !r.started ? r.code : '', playing: !!r?.started };
 }
 function ownView(prof) {
   const cards = list => (list || []).map(friendCard).filter(Boolean);
@@ -57,6 +57,13 @@ const http = createServer(async (req, res) => {
     if (start >= size || start > end) { res.writeHead(416, { 'content-range': `bytes */${size}` }); return res.end(); }
     res.writeHead(206, { ...head, 'content-length': end - start + 1, 'content-range': `bytes ${start}-${end}/${size}` });
     return createReadStream(file, { start, end }).pipe(res);
+  }
+  const av = req.url.match(/^\/avatar\/([0-9a-f]{16})\.img(\?|$)/); // 올린 프로필 사진 (주소에 판 번호가 붙어 있어 오래 저장해도 된다)
+  if (av) {
+    const img = profiles.avatarImage(av[1]);
+    if (!img) { res.writeHead(404); return res.end(); }
+    res.writeHead(200, { 'content-type': img.mime, 'content-length': img.buf.length, 'cache-control': 'public, max-age=31536000, immutable', 'x-content-type-options': 'nosniff' });
+    return res.end(img.buf);
   }
   if (req.url === '/cards.json') { // 카드 목록 (게임 화면에서 카드를 그릴 때 사용)
     res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=300' });
@@ -171,7 +178,8 @@ function remove(p) {
   broadcast(room);
 }
 
-new WebSocketServer({ server: http }).on('connection', (ws, req) => {
+new WebSocketServer({ server: http, maxPayload: 512 * 1024 }) // 메시지 하나는 512KB까지 (프로필 사진 포함)
+.on('connection', (ws, req) => {
   let me = null;
   const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 
@@ -232,6 +240,11 @@ new WebSocketServer({ server: http }).on('connection', (ws, req) => {
       const res = profiles.save(msg.key, msg);
       if (res.error) return send(me, { type: 'profile:error', message: res.error });
       return send(me, { type: 'profile:me', key: res.profile.key, profile: ownView(res.profile), saved: true });
+    }
+    if (msg.type === 'profile:avatar') { // 프로필 사진 올리기
+      const res = profiles.setAvatarImage(msg.key, msg.data);
+      if (res.error) return send(me, { type: 'profile:error', message: res.error });
+      return send(me, { type: 'profile:me', profile: ownView(res.profile), avatarSaved: true });
     }
     if (msg.type === 'profile:title') { // 도감이나 기록부에서 칭호 달기
       const res = profiles.setTitle(msg.key, String(msg.id ?? ''));

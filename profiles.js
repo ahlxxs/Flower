@@ -12,6 +12,7 @@ const DIR = process.env.DATA_DIR || new URL('./data', import.meta.url).pathname;
 const FILE = join(DIR, 'profiles.json');
 export const EMBLEMS = ['king', 'queen', 'bishop', 'blade', 'feather', 'infinity', 'tide', 'key', 'lantern']; // 문장 (이름과 그림은 클라이언트의 MARKS)
 export const COLORS = ['amber', 'jade', 'crimson', 'violet', 'silver'];
+export const AVATARS = ['hood', 'star', 'moon', 'sun', 'leaf', 'flame', 'mask', 'crown', 'eye']; // 기본 프로필 사진 (그림은 클라이언트). 'custom' = 직접 올린 사진
 export const BANNERS = ['none', 'gold', 'dusk', 'sakura', 'rosechain', 'violet', 'bluesmoke', 'starsmoke', 'sunforest', 'moongeese', 'redcloud',
   'butterfly', 'curtain', 'crow', 'cover', 'planet']; // 프로필 배너·칭호 배너 (그림은 클라이언트)
 // 관리자 계정: 모든 칭호와 모든 배너를 가진다. 환경 변수 ADMIN_LOGINS(쉼표로 구분)로 바꿀 수 있음
@@ -58,6 +59,7 @@ const hasTitle = (t, p) => { if (isAdmin(p)) return true; const st = p.stats || 
 const byKey = new Map();  // key -> profile
 const byName = new Map(); // 소문자 닉네임 -> key
 const byLogin = new Map(); // 소문자 로그인 아이디 -> key
+const byPid = new Map();   // 공개 사진 번호(pid) -> key. 올린 사진 주소에 key 대신 쓴다
 const db = process.env.DATABASE_URL ? new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 }) : null;
 let loaded;
 export const storage = db ? 'database' : 'file'; // /health에서 보여 줌
@@ -68,7 +70,7 @@ if (db) {
 } else {
   try { loaded = JSON.parse(readFileSync(FILE, 'utf8')); } catch { loaded = []; } // 첫 실행: 파일 없음
 }
-for (const p of loaded) { byKey.set(p.key, p); byName.set(p.nickname.toLowerCase(), p.key); if (p.login) byLogin.set(p.login, p.key); }
+for (const p of loaded) { byKey.set(p.key, p); byName.set(p.nickname.toLowerCase(), p.key); if (p.login) byLogin.set(p.login, p.key); if (p.pid) byPid.set(p.pid, p.key); }
 
 let saveTimer, dbQueue = Promise.resolve();
 function persist(p) {
@@ -89,6 +91,26 @@ export const count = () => byKey.size;
 export const getByKey = key => byKey.get(String(key ?? '')) || null;
 export const getByName = name => byKey.get(byName.get(String(name ?? '').trim().toLowerCase())) || null;
 export const titlesOf = p => TITLES.filter(t => hasTitle(t, p));
+// 프로필 사진: 올린 사진이면 주소(/avatar/번호.img?v=판), 아니면 기본 그림 이름
+export const avatarOf = p => p.avatar === 'custom' && p.avatarImg ? `/avatar/${p.pid}.img?v=${p.avatarImg.v}` : AVATARS.includes(p.avatar) ? p.avatar : AVATARS[0];
+const IMG_SIG = { 'image/webp': b => b.toString('latin1', 0, 4) === 'RIFF' && b.toString('latin1', 8, 12) === 'WEBP', 'image/jpeg': b => b[0] === 0xff && b[1] === 0xd8, 'image/png': b => b.readUInt32BE(0) === 0x89504e47 };
+// 사진 올리기: 브라우저가 256×256으로 줄여 보낸 data URL. 형식과 크기를 확인하고 저장한다
+export function setAvatarImage(key, dataUrl) {
+  const p = getByKey(key);
+  if (!p) return { error: '로그인하면 프로필 사진을 올릴 수 있습니다.' };
+  const m = /^data:(image\/(?:webp|jpeg|png));base64,([A-Za-z0-9+/]+={0,2})$/.exec(String(dataUrl ?? ''));
+  const buf = m && Buffer.from(m[2], 'base64');
+  if (!m || buf.length < 12 || !IMG_SIG[m[1]](buf)) return { error: '이 사진은 쓸 수 없습니다. 다른 사진을 골라 주세요.' };
+  if (buf.length > 150000) return { error: '사진이 너무 큽니다.' };
+  if (!p.pid) { p.pid = randomBytes(8).toString('hex'); byPid.set(p.pid, p.key); }
+  p.avatarImg = { mime: m[1], b64: m[2], v: Date.now().toString(36) }; p.avatar = 'custom';
+  persist(p);
+  return { profile: p };
+}
+export function avatarImage(pid) { // 주소로 사진 꺼내기
+  const p = byKey.get(byPid.get(String(pid)));
+  return p?.avatarImg ? { mime: p.avatarImg.mime, buf: Buffer.from(p.avatarImg.b64, 'base64') } : null;
+}
 // 도감에 보여 줄 칭호 전체: 얻었는지, 진행도(cur / goal). 숨겨진 칭호는 얻기 전까지 가린다
 export const codexOf = p => TITLES.map(t => {
   const got = !!p && hasTitle(t, p);
@@ -135,10 +157,10 @@ export function recordGame(key, { camp, win, survived, job, hand = 0, soul = 0, 
 export function publicView(p) {
   const title = TITLES.find(t => t.id === p.title);
   const stats = { ...blankStats(), ...p.stats };
-  return { nickname: p.nickname, intro: p.intro, emblem: EMBLEMS.includes(p.emblem) ? p.emblem : EMBLEMS[0], color: p.color, banner: bannersOf(p).includes(p.banner) ? p.banner : 'none', tbanner: bannersOf(p).includes(p.tbanner) ? p.tbanner : 'none', title: title?.name || '', stats, level: levelOf(stats.xp), createdAt: p.createdAt };
+  return { nickname: p.nickname, intro: p.intro, avatar: avatarOf(p), emblem: EMBLEMS.includes(p.emblem) ? p.emblem : EMBLEMS[0], color: p.color, banner: bannersOf(p).includes(p.banner) ? p.banner : 'none', tbanner: bannersOf(p).includes(p.tbanner) ? p.tbanner : 'none', title: title?.name || '', stats, level: levelOf(stats.xp), createdAt: p.createdAt };
 }
 // 본인에게 보여 줄 정보 (+ 고를 수 있는 칭호)
-export const ownView = p => ({ ...publicView(p), login: p.login || '', titleId: p.title, titles: titlesOf(p).map(({ id, name, desc }) => ({ id, name, desc })), codex: codexOf(p), banners: bannersOf(p), admin: isAdmin(p) });
+export const ownView = p => ({ ...publicView(p), login: p.login || '', titleId: p.title, titles: titlesOf(p).map(({ id, name, desc }) => ({ id, name, desc })), codex: codexOf(p), banners: bannersOf(p), admin: isAdmin(p), avatarId: p.avatar || AVATARS[0], customAvatar: p.avatarImg ? `/avatar/${p.pid}.img?v=${p.avatarImg.v}` : '' });
 
 export function search(q) {
   q = String(q ?? '').trim().toLowerCase();
@@ -158,13 +180,14 @@ export function save(key, input) {
   const intro = String(input.intro ?? '').trim().slice(0, MAX_INTRO);
   const emblem = EMBLEMS.includes(input.emblem) ? input.emblem : EMBLEMS[0];
   const color = COLORS.includes(input.color) ? input.color : 'amber';
+  const avatar = input.avatar === 'custom' ? (p?.avatarImg ? 'custom' : (p?.avatar || AVATARS[0])) : AVATARS.includes(input.avatar) ? input.avatar : (p?.avatar || AVATARS[0]);
   const owned = bannersOf(p); // 잠긴 배너는 고를 수 없다
   const banner = owned.includes(input.banner) ? input.banner : owned.includes(p?.banner) ? p.banner : 'none';
   const tbanner = owned.includes(input.tbanner) ? input.tbanner : owned.includes(p?.tbanner) ? p.tbanner : 'none';
   const next = p || { key: randomBytes(16).toString('hex'), createdAt: Date.now(), stats: blankStats() };
   const title = titlesOf(next).some(t => t.id === input.title) ? input.title : (p?.title || TITLES[0].id);
   if (p) byName.delete(p.nickname.toLowerCase());
-  Object.assign(next, { nickname, intro, emblem, color, banner, tbanner, title });
+  Object.assign(next, { nickname, intro, avatar, emblem, color, banner, tbanner, title });
   byKey.set(next.key, next); byName.set(nickname.toLowerCase(), next.key);
   persist(next);
   return { profile: next };
