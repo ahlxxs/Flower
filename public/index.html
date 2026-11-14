@@ -504,7 +504,7 @@ body.targeting.heal-mode .opp:not(.dead):hover, body.targeting.heal-mode #meSeat
   background: linear-gradient(170deg, var(--parch), var(--parch-lo)); box-shadow: inset 0 0 0 1px #8a6d4588, inset 0 0 0 4px var(--parch), inset 0 0 0 5px #8a6d4555;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 1.1rem), 50% 100%, 0 calc(100% - 1.1rem)); display: grid; gap: .3rem; justify-items: center; align-content: start; filter: drop-shadow(0 .4rem .6rem #0009); }
 .lp-tag::before { content: ''; position: absolute; top: 0; left: 50%; translate: -50% 0; width: 1.6rem; height: .7rem; background: var(--hero); clip-path: polygon(0 0, 100% 0, 50% 100%); }
-.lp-tag .medal { width: 4rem; height: 4rem; margin-top: .2rem; border-width: 2px; } .lp-tag .medal svg { width: 2rem; }
+.lp-tag .medal { width: 2.6rem; height: 2.6rem; margin-top: .3rem; border-width: 1px; } .lp-tag .medal svg { width: 2rem; }
 .lp-tag small { font-size: .66rem; letter-spacing: .14em; color: var(--ink-dim); }
 .lp-tag .lv { font-family: var(--didone); font-size: 2.6rem; line-height: 1; border-block: 1px solid #8a6d4588; padding: .25rem .4rem; width: 100%; font-variant-numeric: tabular-nums; }
 .lp-tag .tt { font-family: var(--serif); font-weight: 800; font-size: .78rem; line-height: 1.35; }
@@ -737,15 +737,13 @@ input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--in
 .invite-box p { margin: 0 0 .8rem; line-height: 1.5; } .invite-box b { color: var(--amber); } .invite-box small { display: block; font-size: .75rem; color: var(--dim); }
 .iv-acts { display: flex; gap: .5rem; } .iv-acts .btn { flex: 1; padding: .55rem; }
 .st-hint { font-size: .72rem; color: var(--dim); }
-/* 프로필 사진 */
+/* 내 사진 문장 */
 .medal.av { overflow: hidden; background: #0a0806; }
-.medal.av > img, .medal.av > svg { width: 100% !important; height: 100% !important; display: block; object-fit: cover; stroke: none; }
-.o-av .medal { width: 2.6rem; height: 2.6rem; border-width: 2px; border-color: transparent; box-shadow: none; }
-input:checked + .o-av .medal { border-color: var(--ink); box-shadow: 0 0 0 2px var(--parch), 0 0 0 4px #9b3c1f; }
-.lp-opts input:focus-visible + .o-av { outline: 2px solid #9b3c1f; outline-offset: 2px; border-radius: 50%; }
+.medal.av > img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.o-photo { padding: 0; overflow: hidden; } .o-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.crest-photo { width: 4.6rem; height: 4.6rem; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--pc), 0 0 1rem color-mix(in srgb, var(--pc) 45%, transparent); }
 .o-add { width: 2.6rem; height: 2.6rem; border-radius: 50%; border: 2px dashed color-mix(in srgb, var(--ink) 55%, transparent); background: #fff4; color: var(--ink); font: 300 1.6rem/1 var(--sans); cursor: pointer; display: grid; place-items: center; padding-bottom: .15rem; }
 .o-add:hover, .o-add:focus-visible { border-style: solid; background: var(--leather); color: var(--amber); outline: none; }
-.cx-row .medal.av { width: 4.4rem; height: 4.4rem; }
 /* 로그인 창 */
 #loginDlg { width: min(100%, 24rem); }
 .login-sub { margin: 0 0 1rem; text-align: center; font-size: .85rem; color: var(--fog); line-height: 1.6; }
@@ -1260,9 +1258,8 @@ input:checked + .o-av .medal { border-color: var(--ink); box-shadow: 0 0 0 2px v
           </div>
           <form id="pForm">
             <div class="lp-row"><label for="pName">닉네임 <small>2~12자</small></label><input class="lp-in-field" type="text" id="pName" maxlength="12" autocomplete="nickname" required></div>
-            <div class="lp-row"><span class="lab">프로필 사진 <small>+를 눌러 내 사진 올리기</small></span><div class="lp-opts" id="pAvatars"></div>
+            <div class="lp-row"><span class="lab">문장 <small>+를 눌러 내 사진을 문장으로</small></span><div class="lp-opts" id="pEmblems"></div>
               <input type="file" id="pPhoto" accept="image/*" hidden></div>
-            <div class="lp-row"><span class="lab">문장 <small>기록부를 꾸미는 장식</small></span><div class="lp-opts" id="pEmblems"></div></div>
             <div class="lp-row"><span class="lab">문장 색</span><div class="lp-opts" id="pColors"></div></div>
             <div class="lp-row"><span class="lab">프로필 배너 <small>이름 뒤에 걸리는 띠</small></span><div class="lp-opts" id="pBanners"></div></div>
             <div class="lp-row"><span class="lab">칭호 배너 <small>칭호를 감싸는 띠</small></span><div class="lp-opts" id="pTBanners"></div></div>
@@ -2283,31 +2280,10 @@ const MARK_DEFAULT = 'king';
 const markSVG = (k, size = '') => { const m = MARKS[k] || MARKS[MARK_DEFAULT];
   return `<svg class="mark" viewBox="0 0 48 48" aria-hidden="true" style="--ac:${m.ac};stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round${size}">${m.svg}</svg>`; };
 const markName = k => (MARKS[k] || MARKS[MARK_DEFAULT]).name;
-// 기본 프로필 사진 (64×64, 직접 그린 그림). 올린 사진은 서버 주소(/avatar/…)로 온다
-const avBg = (id, a, b) => `<defs><radialGradient id="avg-${id}" cx=".5" cy=".35" r=".75"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></radialGradient></defs><rect width="64" height="64" fill="url(#avg-${id})"/>`;
-const avStar = (x, y, r, c) => `<path d="M${x} ${y - r}L${x + r * .22} ${y - r * .22} ${x + r} ${y} ${x + r * .22} ${y + r * .22} ${x} ${y + r} ${x - r * .22} ${y + r * .22} ${x - r} ${y} ${x - r * .22} ${y - r * .22}Z" fill="${c}"/>`;
-const AVATARS = {
-  hood: { name: '떠돌이 모험가', svg: `${avBg('hood', '#2f5a4c', '#0c1a15')}<path d="M32 12C21 12 15 22 15 33v31h34V33c0-11-6-21-17-21Z" fill="#1a1712"/><path d="M32 16c-8 0-12 8-12 16 0 6 2 10 4 12h16c2-2 4-6 4-12 0-8-4-16-12-16Z" fill="#070605"/>
-      <circle cx="27.5" cy="33" r="1.4" fill="#e8c27a"/><circle cx="36.5" cy="33" r="1.4" fill="#e8c27a"/><path d="M15 64c2-10 8-16 17-16s15 6 17 16Z" fill="#3a2d1c"/><path d="M32 48l-3 6h6Z" fill="#e8c27a"/>` },
-  star: { name: '별지기', svg: `${avBg('star', '#2b3a78', '#0a0f26')}${avStar(32, 32, 16, '#f6dc9a')}${avStar(48, 16, 4, '#fff')}${avStar(16, 46, 3, '#cfe0ff')}<circle cx="18" cy="18" r="1" fill="#fff"/><circle cx="47" cy="47" r="1.2" fill="#fff"/>` },
-  moon: { name: '초승달', svg: `${avBg('moon', '#7a5cc8', '#1d1440')}<path d="M40 14A20 20 0 1 0 40 50 15 15 0 1 1 40 14Z" fill="#f4ecff"/>${avStar(45, 24, 4, '#fff7c8')}<circle cx="50" cy="40" r="1" fill="#fff"/>` },
-  sun: { name: '태양', svg: `${avBg('sun', '#f7c860', '#a8561c')}${Array.from({ length: 12 }, (_, i) => `<path d="M32 6l2.4 9h-4.8Z" fill="#fff1c4" transform="rotate(${i * 30} 32 32)"/>`).join('')}<circle cx="32" cy="32" r="12" fill="#fff1c4"/><circle cx="32" cy="32" r="8" fill="#f0a838"/>` },
-  leaf: { name: '숲의 정령', svg: `${avBg('leaf', '#7fb06a', '#163222')}<path d="M32 54V30" stroke="#f0f7d8" stroke-width="2.4" stroke-linecap="round"/><path d="M32 34C22 34 16 26 17 16c10 0 16 8 15 18Z" fill="#d8f0b0"/><path d="M32 40c10 0 16-8 15-18-10 0-16 8-15 18Z" fill="#f0f7d8"/>
-      <circle cx="46" cy="48" r="1.6" fill="#fffbd0"/><circle cx="18" cy="44" r="1.2" fill="#fffbd0"/>` },
-  flame: { name: '불꽃', svg: `${avBg('flame', '#e0573a', '#3a0a10')}<path d="M32 10c4 8 14 14 14 26a14 14 0 0 1-28 0c0-7 4-11 6-14 1 4 3 6 5 6-1-8 1-13 3-18Z" fill="#ffb25a"/><path d="M32 30c2 4 7 6 7 12a7 7 0 0 1-14 0c0-4 3-6 4-8 1 2 2 3 3 3 0-3 0-5 0-7Z" fill="#fff0c0"/>` },
-  mask: { name: '가면 무도회', svg: `${avBg('mask', '#6a2448', '#18060f')}<path d="M10 28c6-4 14-4 22 2 8-6 16-6 22-2 0 8-5 13-12 13-5 0-8-3-10-6-2 3-5 6-10 6-7 0-12-5-12-13Z" fill="#e8c27a"/>
-      <path d="M17 30c3-2 7-1 9 2-2 2-6 3-9-2ZM47 30c-3-2-7-1-9 2 2 2 6 3 9-2Z" fill="#18060f"/><path d="M54 28c3-6 2-12-2-16" fill="none" stroke="#f3dca2" stroke-width="1.6"/>${avStar(52, 12, 3, '#fff')}` },
-  crown: { name: '왕관', svg: `${avBg('crown', '#2f5fa8', '#0b1838')}<path d="M14 42l-2-20 10 8 10-14 10 14 10-8-2 20Z" fill="#f2d58e"/><rect x="14" y="44" width="36" height="5" rx="1" fill="#d9ad5d"/>
-      <circle cx="12" cy="21" r="2.4" fill="#f2d58e"/><circle cx="32" cy="15" r="2.6" fill="#f2d58e"/><circle cx="52" cy="21" r="2.4" fill="#f2d58e"/><circle cx="32" cy="36" r="3" fill="#e0505e"/><circle cx="22" cy="38" r="1.8" fill="#7fd8ff"/><circle cx="42" cy="38" r="1.8" fill="#7fd8ff"/>` },
-  eye: { name: '예언의 눈', svg: `${avBg('eye', '#1f5a5a', '#05110f')}${Array.from({ length: 8 }, (_, i) => `<path d="M32 6v7" stroke="#e8c27a" stroke-width="1.6" stroke-linecap="round" transform="rotate(${i * 45 - 90} 32 32) rotate(0)"/>`).join('')}
-      <path d="M10 32c6-9 14-13 22-13s16 4 22 13c-6 9-14 13-22 13s-16-4-22-13Z" fill="#f4ecd6"/><circle cx="32" cy="32" r="8" fill="#2c7a72"/><circle cx="32" cy="32" r="3.6" fill="#05110f"/><circle cx="34" cy="30" r="1.3" fill="#fff"/>` },
-};
-const AVATAR_DEFAULT = 'hood';
-// 프로필 사진 동그라미: av가 '/'로 시작하면 올린 사진, 아니면 기본 그림
-const avatarHTML = (av, color = 'amber') => `<span class="medal av c-${color}">${String(av || '').startsWith('/')
-  ? `<img src="${esc(av)}" alt="" loading="lazy" decoding="async">` : `<svg viewBox="0 0 64 64" aria-hidden="true">${(AVATARS[av] || AVATARS[AVATAR_DEFAULT]).svg}</svg>`}</span>`;
 const COLOR_NAME = { amber: '금빛', jade: '옥빛', crimson: '진홍', violet: '보랏빛', silver: '은빛' };
-const medal = (emblem, color) => `<span class="medal c-${color}">${markSVG(emblem)}</span>`;
+// 문장 동그라미. emblem이 'custom'이면 올린 사진(photo 주소)을 보여 준다
+const medal = (emblem, color, photo) => emblem === 'custom' && photo ? `<span class="medal av c-${color}"><img src="${esc(photo)}" alt="" loading="lazy" decoding="async"></span>` : `<span class="medal c-${color}">${markSVG(emblem)}</span>`;
+const crest = p => p.emblem === 'custom' && p.photo ? `<img class="crest-photo" src="${esc(p.photo)}" alt="">` : markSVG(p.emblem); // 기록부 오른쪽 문장 칸
 let myProfile = null;
 // 로그인하면 받는 세션 열쇠: 이 탭에만 둔다 (새로 접속하면 다시 로그인)
 const profileKey = () => { try { return sessionStorage.getItem('arcana-session') || ''; } catch { return ''; } };
@@ -2413,7 +2389,7 @@ function recordHTML(p, mine) {
   return `<h3 class="lp-sec"><i>I</i>${head}</h3>
   <div class="lp-rec c-${p.color}">
     <div class="lp-cluster">
-      <div class="lp-tag">${avatarHTML(p.avatar, p.color)}<small>LEVEL</small><span class="lv">${lv.lv}</span><span class="tt">${esc(p.title || '새내기 모험가')}</span></div>
+      <div class="lp-tag">${medal(p.emblem, p.color, p.photo)}<small>LEVEL</small><span class="lv">${lv.lv}</span><span class="tt">${esc(p.title || '새내기 모험가')}</span></div>
       <div class="lp-panel lp-main">
         ${bannerHTML(p.banner, `<h1 class="lp-name">${esc(p.nickname)}</h1>`)}
         <p class="lp-sub">${titleBanner(p.tbanner, esc(p.title || '새내기 모험가'))} · ${st.games || 0}판 참가 · ${st.wins || 0}승</p>
@@ -2423,7 +2399,7 @@ function recordHTML(p, mine) {
           <div class="lp-track"><div class="lp-fill f-demon" style="--w:${dp}%"></div></div></div>
         <p class="lp-intro${p.intro ? '' : ' none'}">${p.intro ? `“${esc(p.intro)}”` : '아직 소개말이 없습니다.'}</p>
       </div>
-      <div class="lp-side"><div class="lp-panel lp-crest">${markSVG(p.emblem)}</div>
+      <div class="lp-side"><div class="lp-panel lp-crest">${crest(p)}</div>
         <div class="lp-panel lp-all"><small>통산 승률</small><b>${st.games ? pct(st.wins, st.games) + '%' : '-'}</b></div></div>
     </div>
     <div class="lp-chips">
@@ -2445,7 +2421,7 @@ function showRecord() {
   let p = viewing;
   if (!p && myProfile) { // 내 기록: 꾸미는 중인 값을 바로 보여 준다
     const v = formValue(), t = myProfile.titles?.find(t => t.id === v.title);
-    p = { ...myProfile, ...v, avatar: v.avatar === 'custom' ? myProfile.customAvatar : v.avatar, nickname: v.nickname || myProfile.nickname, title: t?.name || myProfile.title };
+    p = { ...myProfile, ...v, photo: myProfile.customAvatar, nickname: v.nickname || myProfile.nickname, title: t?.name || myProfile.title };
   }
   if (!p) p = { guest: true, nickname: $('name').value.trim() || '나그네' };
   const bn = !p.guest && BANNERS[p.banner] ? p.banner : 'none', art = BANNERS[bn].bg || BANNERS[bn].hang;
@@ -2455,23 +2431,22 @@ function showRecord() {
 // 선택지 그리기
 const radioRow = (id, name, entries) => $(id).insertAdjacentHTML('beforeend', entries.map(([k, label, inner]) =>
   `<label title="${label}"><input type="radio" name="${name}" value="${k}" aria-label="${label}">${inner}</label>`).join(''));
-radioRow('pEmblems', 'pEmblem', Object.keys(MARKS).map(k => [k, MARKS[k].name, `<span class="o-em">${markSVG(k)}</span>`]));
 radioRow('pColors', 'pColor', Object.keys(COLOR_NAME).map(k => [k, COLOR_NAME[k], `<span class="o-c c-${k}"></span>`]));
 radioRow('pBanners', 'pBanner', BANNER_IDS.map(k => [k, BANNERS[k].name, `<span class="o-t">${BANNERS[k].name}</span>`]));
 radioRow('pTBanners', 'pTBanner', BANNER_IDS.map(k => [k, BANNERS[k].name, `<span class="o-tb">${titleBanner(k, BANNERS[k].name)}</span>`]));
 const checked = name => document.querySelector(`[name=${name}]:checked`)?.value;
 const formValue = () => ({
   nickname: $('pName').value.trim(), intro: $('pIntro').value, title: $('pTitle').value,
-  avatar: checked('pAvatar') || AVATAR_DEFAULT, emblem: checked('pEmblem') || MARK_DEFAULT, color: checked('pColor') || 'amber', banner: checked('pBanner') || 'none', tbanner: checked('pTBanner') || 'none',
+  emblem: checked('pEmblem') || MARK_DEFAULT, color: checked('pColor') || 'amber', banner: checked('pBanner') || 'none', tbanner: checked('pTBanner') || 'none',
 });
-function renderAvatarOpts(sel) { // + (올리기), 올린 사진(있으면), 기본 그림들
-  const custom = myProfile?.customAvatar;
-  $('pAvatars').innerHTML = `<button type="button" class="o-add" id="pAddPhoto" aria-label="내 사진 올리기" title="내 사진 올리기">+</button>`
-    + [...(custom ? [['custom', '내 사진', custom]] : []), ...Object.keys(AVATARS).map(k => [k, AVATARS[k].name, k])]
-      .map(([v, label, av]) => `<label title="${label}"><input type="radio" name="pAvatar" value="${v}" aria-label="${label}"${v === sel ? ' checked' : ''}><span class="o-av">${avatarHTML(av, myProfile?.color)}</span></label>`).join('');
-  if (!document.querySelector('[name=pAvatar]:checked')) document.querySelector(`[name=pAvatar][value=${AVATAR_DEFAULT}]`).checked = true;
+function renderEmblemOpts(sel) { // + (사진 올리기), 올린 사진(있으면), 문장 9개
+  const photo = myProfile?.customAvatar;
+  $('pEmblems').innerHTML = '<button type="button" class="o-add" id="pAddPhoto" aria-label="내 사진을 문장으로" title="내 사진을 문장으로">+</button>'
+    + [...(photo ? [['custom', '내 사진', `<span class="o-em o-photo"><img src="${esc(photo)}" alt=""></span>`]] : []), ...Object.keys(MARKS).map(k => [k, MARKS[k].name, `<span class="o-em">${markSVG(k)}</span>`])]
+      .map(([v, label, inner]) => `<label title="${label}"><input type="radio" name="pEmblem" value="${v}" aria-label="${label}"${v === sel ? ' checked' : ''}>${inner}</label>`).join('');
+  if (!checked('pEmblem')) document.querySelector(`[name=pEmblem][value=${MARK_DEFAULT}]`).checked = true;
 }
-$('pAvatars').addEventListener('click', e => { if (e.target.closest('#pAddPhoto')) $('pPhoto').click(); });
+$('pEmblems').addEventListener('click', e => { if (e.target.closest('#pAddPhoto')) $('pPhoto').click(); });
 // 고른 사진을 가운데 정사각형으로 잘라 256×256으로 줄인 뒤 올린다
 $('pPhoto').onchange = async () => {
   const file = $('pPhoto').files[0]; $('pPhoto').value = '';
@@ -2493,8 +2468,7 @@ function fillProfileForm() {
   $('pName').value = p.nickname; $('pIntro').value = p.intro;
   $('pTitle').innerHTML = (p.titles || []).map(t => `<option value="${t.id}" title="${esc(t.desc)}">${esc(t.name)}</option>`).join('');
   $('pTitle').value = p.titleId || '';
-  renderAvatarOpts(p.avatarId || AVATAR_DEFAULT);
-  (document.querySelector(`[name=pEmblem][value=${p.emblem}]`) || document.querySelector(`[name=pEmblem][value=${MARK_DEFAULT}]`)).checked = true;
+  renderEmblemOpts(p.emblem);
   document.querySelector(`[name=pColor][value=${p.color}]`).checked = true;
   for (const inp of document.querySelectorAll('[name=pBanner], [name=pTBanner]')) { // 잠긴 배너는 고를 수 없다
     const lock = !ownedBanners().includes(inp.value);
@@ -2547,7 +2521,7 @@ function friendBtn(p) { // 다른 사람 기록 위의 "친구 신청" (게스�
 function friendRow(f, acts) {
   const where = !f.online ? '<span class="f-st">오프라인</span>' : f.playing ? '<span class="f-st on">게임 중</span>'
     : f.room ? `<span class="f-st on">방 ${esc(f.room)}</span>` : '<span class="f-st on">접속 중</span>';
-  return `<li class="f-row${f.online ? ' online' : ''}">${avatarHTML(f.avatar, f.color)}<span class="f-who"><b>${esc(f.nickname)}</b><small>Lv.${f.lv} · ${esc(f.title)}</small>${where}</span>
+  return `<li class="f-row${f.online ? ' online' : ''}">${medal(f.emblem, f.color, f.photo)}<span class="f-who"><b>${esc(f.nickname)}</b><small>Lv.${f.lv} · ${esc(f.title)}</small>${where}</span>
     <span class="f-acts">${acts.map(([act, label]) => `<button type="button" data-fact="${act}" data-nick="${esc(f.nickname)}"${act === 'join' ? ` data-room="${esc(f.room)}"` : ''}>${label}</button>`).join('')}</span></li>`;
 }
 function renderFriends() {
@@ -2633,9 +2607,8 @@ function renderCodex() {
     $('cxCards').innerHTML = kinds.map(k => `<h3>${esc(k)}</h3>` + CARD_DB.filter(c => c.kind === k)
       .map(c => `<figure>${cardHTML(c)}<figcaption>덱에 ${c.count || 0}장</figcaption></figure>`).join('')).join('');
   } else {
-    $('cxSum').textContent = '프로필 사진, 문장, 문장 색은 바로 쓸 수 있고, 배너는 조건을 채우면 열립니다. 고르는 곳은 기록부의 꾸미기입니다.';
-    $('cxMarks').innerHTML = `<section><h3>기본 프로필 사진 <small class="cx-count">기록부 꾸미기의 +로 내 사진도 쓸 수 있습니다</small></h3><div class="cx-row">${Object.keys(AVATARS).map(k => `<figure>${avatarHTML(k, myProfile?.color)}${AVATARS[k].name}</figure>`).join('')}</div></section>
-      <section><h3>문장 <small class="cx-count">장식</small></h3><div class="cx-row">${Object.keys(MARKS).map(k => `<figure>${medal(k, myProfile?.color || 'amber')}${MARKS[k].name}</figure>`).join('')}</div></section>
+    $('cxSum').textContent = '문장과 문장 색은 바로 쓸 수 있고, 배너는 조건을 채우면 열립니다. 고르는 곳은 기록부의 꾸미기입니다.';
+    $('cxMarks').innerHTML = `<section><h3>문장 <small class="cx-count">기록부 꾸미기의 +로 내 사진도 문장으로 쓸 수 있습니다</small></h3><div class="cx-row">${Object.keys(MARKS).map(k => `<figure>${medal(k, myProfile?.color || 'amber')}${MARKS[k].name}</figure>`).join('')}</div></section>
       <section><h3>문장 색</h3><div class="cx-row">${Object.keys(COLOR_NAME).map(k => `<figure>${medal(myProfile?.emblem || MARK_DEFAULT, k)}${COLOR_NAME[k]}</figure>`).join('')}</div></section>
       <section><h3>프로필 배너 <small class="cx-count">${ownedBanners().length - 1} / ${BANNER_IDS.length - 1} 해금</small></h3><div class="cx-banners">${BANNER_IDS.filter(k => k !== 'none').map(k => { const lock = !ownedBanners().includes(k);
         return `<figure class="${lock ? 'locked' : ''}">${bannerHTML(k, `<h1 class="lp-name">${esc(myProfile?.nickname || '모험가')}</h1>`)}<figcaption>${BANNERS[k].name}${lock ? ' · 잠김 (조건 공개 예정)' : ''}</figcaption></figure>`; }).join('')}</div></section>
@@ -2755,13 +2728,13 @@ function onProfileMessage(msg) {
     if (msg.friendDone) { $('fMsg').textContent = { 'friend:request': '친구 신청을 보냈습니다.', 'friend:accept': '친구가 되었습니다.', 'friend:decline': '신청을 거절했습니다.', 'friend:remove': '목록에서 지웠습니다.' }[msg.friendDone]; $('fMsg').className = 'pmsg good'; $('fName').value = ''; }
     if (msg.friendDone && $('profile').open && viewing) showRecord();
     if (msg.titled && $('profile').open) fillProfileForm();
-    if (msg.avatarSaved) { renderAvatarOpts('custom'); showRecord(); $('pMsg').textContent = '프로필 사진을 바꿨습니다.'; $('pMsg').className = 'pmsg good'; }
+    if (msg.avatarSaved) { renderEmblemOpts('custom'); showRecord(); $('pMsg').textContent = '내 사진을 문장으로 정했습니다.'; $('pMsg').className = 'pmsg good'; }
     if (msg.saved) { fillProfileForm(); $('pMsg').textContent = '저장했습니다.'; $('pMsg').className = 'pmsg good'; }
   }
   if (msg.type === 'profile:error' && msg.friend) { $('fMsg').textContent = msg.message; $('fMsg').className = 'pmsg bad'; renderFriends(); if (viewing) showRecord(); return; }
   if (msg.type === 'profile:error') { $('pMsg').textContent = msg.message; $('pMsg').className = 'pmsg bad'; if ($('codex').open) renderCodex(); }
   if (msg.type === 'profile:list' && msg.q === $('pSearch').value) {
-    $('pResults').innerHTML = msg.results.map(p => `<li><button type="button" data-name="${esc(p.nickname)}" class="c-${p.color}">${avatarHTML(p.avatar, p.color)}
+    $('pResults').innerHTML = msg.results.map(p => `<li><button type="button" data-name="${esc(p.nickname)}" class="c-${p.color}">${medal(p.emblem, p.color, p.photo)}
       <span>${esc(p.nickname)}<small>${esc(p.title)}</small></span></button></li>`).join('');
     $('pEmpty').hidden = !!msg.results.length;
     $('pEmpty').textContent = msg.q.trim() ? '그런 닉네임의 모험가가 없습니다.' : '찾고 싶은 모험가의 닉네임을 입력하세요.';

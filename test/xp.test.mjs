@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 process.env.DATA_DIR = (await import('node:fs')).mkdtempSync((await import('node:os')).tmpdir() + '/arcana-xp-');
 delete process.env.DATABASE_URL;
-const { getByName, levelOf, xpNeed, save, recordGame, publicView, getByKey, titlesOf, codexOf, setTitle, setFlag, TITLES, signup, bannersOf, BANNERS, friendRequest, friendAnswer, friendRemove, setAvatarImage, avatarImage, avatarOf } = await import('../profiles.js');
+const { getByName, levelOf, xpNeed, save, recordGame, publicView, getByKey, titlesOf, codexOf, setTitle, setFlag, TITLES, signup, bannersOf, BANNERS, friendRequest, friendAnswer, friendRemove, setAvatarImage, avatarImage } = await import('../profiles.js');
 let sum = 0; for (let lv = 1; lv < 20; lv++) sum += xpNeed(lv);
 assert.equal(sum, 2508);                                     // 20레벨까지 약 33판
 assert.equal(levelOf(0).lv, 1); assert.equal(levelOf(59).lv, 1); assert.equal(levelOf(60).lv, 2);
@@ -57,17 +57,18 @@ assert.ok(titlesOf(getByKey(hub.key)).some(x => x.name === '인맥') && !titlesO
 friendRemove(hub.key, '친구3');
 assert.equal(getByKey(hub.key).friends.length, 9); assert.ok(!getByName('친구3').friends.includes(hub.key));
 assert.ok(friendAnswer(hub.key, '친구5', true).error);                                    // 받은 신청 없이 수락 불가
-// 프로필 사진: 기본 그림 고르기, 사진 올리기 (형식·크기 확인), 주소로 꺼내기
-const ph = save(null, { nickname: '사진시험', avatar: 'moon' }).profile;
-assert.equal(avatarOf(ph), 'moon');
-assert.equal(save(ph.key, { nickname: '사진시험', avatar: 'custom' }).profile.avatar, 'moon');       // 올린 사진 없이 custom 불가
+// 내 사진 문장: 사진 올리기 (형식·크기 확인), 주소로 꺼내기
+const ph = save(null, { nickname: '사진시험', emblem: 'tide' }).profile;
+assert.equal(save(ph.key, { nickname: '사진시험', emblem: 'custom' }).profile.emblem, 'king'); // 올린 사진 없이 custom 불가 → 기본 문장
 const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(40)]);
 assert.ok(setAvatarImage(ph.key, 'data:image/png;base64,' + Buffer.from('<script>alert(1)</script>').toString('base64')).error); // 내용이 사진이 아니면 거절
 assert.ok(setAvatarImage(ph.key, 'data:text/html;base64,' + png.toString('base64')).error);
 assert.ok(setAvatarImage(ph.key, 'data:image/png;base64,' + Buffer.concat([png, Buffer.alloc(160000)]).toString('base64')).error); // 너무 큼
 assert.ok(setAvatarImage(ph.key, 'data:image/png;base64,' + png.toString('base64')).profile);
-const url = avatarOf(getByKey(ph.key)), pid = url.match(/\/avatar\/([0-9a-f]{16})\.img/)[1];
+const url = publicView(getByKey(ph.key)).photo, pid = url.match(/\/avatar\/([0-9a-f]{16})\.img/)[1];
 assert.ok(!url.includes(ph.key)); assert.deepEqual(avatarImage(pid).buf, png); assert.equal(avatarImage('0'.repeat(16)), null);
-assert.equal(publicView(getByKey(ph.key)).avatar, url);
-console.log('PASS 레벨·경험치·칭호·배너·친구·프로필 사진 점검 모두 통과');
+assert.equal(publicView(getByKey(ph.key)).emblem, 'custom');
+save(ph.key, { nickname: '사진시험', emblem: 'key' }); assert.deepEqual([publicView(getByKey(ph.key)).emblem, publicView(getByKey(ph.key)).photo], ['key', '']); // 문장으로 돌아가기
+assert.equal(save(ph.key, { nickname: '사진시험', emblem: 'custom' }).profile.emblem, 'custom');   // 올린 사진은 남아 있어 다시 고를 수 있음
+console.log('PASS 레벨·경험치·칭호·배너·친구·사진 문장 점검 모두 통과');
 process.exit(0);

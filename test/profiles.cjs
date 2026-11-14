@@ -29,12 +29,11 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   await a.fill('#pIntro', '봉인은 내가 막는다.');
   await a.click('[name=pEmblem][value=blade] + .o-em'); await a.click('[name=pColor][value=crimson] + .o-c');
   ok((await a.textContent('.lp-intro')).includes('봉인은 내가') && !!(await a.$('.lp-rec.c-crimson')), '꾸미는 대로 기록부가 바로 바뀜');
-  ok(!!(await a.$('#pAddPhoto')) && (await a.$$('[name=pAvatar]')).length === 9, '프로필 사진: + 버튼과 기본 사진 9개');
-  await a.click('[name=pAvatar][value=crown] + .o-av');
-  ok(!!(await a.$('.lp-tag .medal.av svg')), '기본 사진을 고르면 바로 기록부에 보임');
+  ok(!!(await a.$('#pEmblems #pAddPhoto')) && (await a.$$('[name=pEmblem]')).length === 9, '문장: + 버튼과 문장 9개');
   const shot = await a.screenshot({ clip: { x: 0, y: 0, width: 400, height: 300 } }); // 올릴 사진 대신 화면 일부를 PNG로
   await a.setInputFiles('#pPhoto', { name: 'me.png', mimeType: 'image/png', buffer: shot }); await sleep(800);
-  ok((await a.textContent('#pMsg')).includes('프로필 사진을 바꿨습니다') && (await a.getAttribute('.lp-tag .medal.av img', 'src')).startsWith('/avatar/'), '+로 내 사진 올리기 → 기록부에 내 사진');
+  ok((await a.textContent('#pMsg')).includes('내 사진을 문장으로') && (await a.getAttribute('.lp-tag .medal.av img', 'src')).startsWith('/avatar/') && !!(await a.$('.lp-crest .crest-photo')), '+로 내 사진 올리기 → 문장 자리에 내 사진');
+  ok((await a.$$('[name=pEmblem]')).length === 10 && await a.evaluate(() => document.querySelector('[name=pEmblem]:checked').value === 'custom'), '올린 사진이 문장 고르기에 "내 사진"으로 추가됨');
   const avUrl = await a.getAttribute('.lp-tag .medal.av img', 'src');
   const avRes = await a.evaluate(async u => { const r = await fetch(u); return [r.status, r.headers.get('content-type'), (await r.arrayBuffer()).byteLength]; }, avUrl);
   ok(avRes[0] === 200 && avRes[1].startsWith('image/') && avRes[2] > 500, '올린 사진 주소에서 사진이 나옴 → ' + avRes);

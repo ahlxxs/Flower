@@ -26,7 +26,7 @@ function friendCard(key) {
   const f = profiles.getByKey(key);
   if (!f) return null;
   const v = profiles.publicView(f), on = onlineAs(key), r = on && rooms.get(on.room);
-  return { nickname: v.nickname, avatar: v.avatar, emblem: v.emblem, color: v.color, title: v.title, lv: v.level.lv, online: !!on, room: r && !r.started ? r.code : '', playing: !!r?.started };
+  return { nickname: v.nickname, emblem: v.emblem, photo: v.photo, color: v.color, title: v.title, lv: v.level.lv, online: !!on, room: r && !r.started ? r.code : '', playing: !!r?.started };
 }
 function ownView(prof) {
   const cards = list => (list || []).map(friendCard).filter(Boolean);
@@ -241,7 +241,7 @@ new WebSocketServer({ server: http, maxPayload: 512 * 1024 }) // 메시지 하�
       if (res.error) return send(me, { type: 'profile:error', message: res.error });
       return send(me, { type: 'profile:me', key: res.profile.key, profile: ownView(res.profile), saved: true });
     }
-    if (msg.type === 'profile:avatar') { // 프로필 사진 올리기
+    if (msg.type === 'profile:avatar') { // 내 사진을 문장으로 올리기
       const res = profiles.setAvatarImage(msg.key, msg.data);
       if (res.error) return send(me, { type: 'profile:error', message: res.error });
       return send(me, { type: 'profile:me', profile: ownView(res.profile), avatarSaved: true });
