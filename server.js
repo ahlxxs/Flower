@@ -20,7 +20,7 @@ const rooms = new Map();   // code -> { code, host, players: [player], started }
 const authTries = new Map(); // ip -> { fails, lock }
 // 맵(배경). 그림은 public/maps/<이름>-back.svg·-front.svg. 'forest' 말고는 같은 이름의 배너가 있다 (그 맵에서 10번 이기면 열림)
 const MAPS = ['forest', 'redcloud', 'moongeese', 'dusk', 'gold', 'sakura', 'rosechain', 'violet', 'cover', 'planet', 'crow', 'curtain', 'butterfly',
-  'thicket', 'firefly', 'swamp', 'waterfall', 'ruins', 'shrine', 'sunset', 'skycity', 'henge', 'goldtree', 'bluesmoke', 'starsmoke', 'sunforest'];
+  'thicket', 'firefly', 'swamp', 'waterfall', 'ruins', 'shrine', 'sunset', 'skycity', 'henge', 'bluesmoke', 'starsmoke', 'sunforest'];
 const players = new Map(); // token -> { id, token, name, room, ready, ws, timer, job, role, pkey(로그인한 프로필 key) }
 
 // 내 프로필 + 친구 목록(접속 여부, 들어가 있는 방). 친구의 key는 절대 내보내지 않는다
@@ -53,7 +53,12 @@ const http = createServer(async (req, res) => {
     const file = new URL(`./public/${asset[1] || ''}${asset[2]}`, import.meta.url);
     const size = await stat(file).then(s => s.size, () => 0);
     if (!size) { res.writeHead(404); return res.end(); }
-    const head = { 'content-type': { mp3: 'audio/mpeg', jpg: 'image/jpeg', png: 'image/png', svg: 'image/svg+xml' }[asset[3]], 'accept-ranges': 'bytes', 'cache-control': 'public, max-age=86400' };
+    // 맵 그림은 다시 그려도 이름이 같으므로, 브라우저가 매번 바뀌었는지 확인하게 한다 (안 바뀌었으면 304로 짧게)
+    const fresh = asset[1] === 'maps/' || asset[1] === 'brand/' || !asset[1];
+    const mtime = fresh ? (await stat(file)).mtime : null;
+    if (fresh && req.headers['if-modified-since'] && new Date(req.headers['if-modified-since']) >= new Date(mtime.toUTCString())) { res.writeHead(304); return res.end(); }
+    const head = { 'content-type': { mp3: 'audio/mpeg', jpg: 'image/jpeg', png: 'image/png', svg: 'image/svg+xml' }[asset[3]], 'accept-ranges': 'bytes',
+      'cache-control': fresh ? 'no-cache' : 'public, max-age=86400', ...(fresh ? { 'last-modified': mtime.toUTCString() } : {}) };
     const m = (req.headers.range || '').match(/bytes=(\d*)-(\d*)/);
     if (!m) { res.writeHead(200, { ...head, 'content-length': size }); return createReadStream(file).pipe(res); }
     const start = m[1] ? +m[1] : size - +m[2], end = m[1] && m[2] ? Math.min(+m[2], size - 1) : size - 1;
@@ -77,7 +82,7 @@ const http = createServer(async (req, res) => {
     return res.end(JSON.stringify({ ok: true, storage: profiles.storage, profiles: profiles.count() }));
   }
   // 한 페이지짜리 앱: 모든 경로에 index.html (초대 링크는 /?room=ABCDE)
-  res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+  res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); // 새로 올린 화면이 바로 보이게
   res.end(await readFile(new URL('./public/index.html', import.meta.url)));
 });
 

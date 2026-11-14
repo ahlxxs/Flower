@@ -13,7 +13,7 @@ const FILE = join(DIR, 'profiles.json');
 export const EMBLEMS = ['king', 'queen', 'bishop', 'blade', 'feather', 'infinity', 'tide', 'key', 'lantern']; // 문장 (이름과 그림은 클라이언트의 MARKS)
 export const COLORS = ['amber', 'jade', 'crimson', 'violet', 'silver'];
 export const BANNERS = ['none', 'gold', 'dusk', 'sakura', 'rosechain', 'violet', 'bluesmoke', 'starsmoke', 'sunforest', 'moongeese', 'redcloud',
-  'butterfly', 'curtain', 'crow', 'cover', 'planet', 'thicket', 'firefly', 'swamp', 'waterfall', 'ruins', 'shrine', 'sunset', 'skycity', 'henge', 'goldtree']; // 프로필 배너·칭호 배너 (그림은 클라이언트)
+  'butterfly', 'curtain', 'crow', 'cover', 'planet', 'thicket', 'firefly', 'swamp', 'waterfall', 'ruins', 'shrine', 'sunset', 'skycity', 'henge']; // 프로필 배너·칭호 배너 (그림은 클라이언트)
 export const BANNER_WINS = 10; // 같은 이름의 맵에서 이만큼 이기면 그 배너가 열린다
 // 관리자 계정: 모든 칭호와 모든 배너를 가진다. 환경 변수 ADMIN_LOGINS(쉼표로 구분)로 바꿀 수 있음
 const ADMINS = new Set((process.env.ADMIN_LOGINS ?? 'lliooli').split(',').map(s => s.trim().toLowerCase()).filter(Boolean));

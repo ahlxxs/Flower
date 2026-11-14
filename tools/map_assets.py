@@ -23,20 +23,6 @@ def gradient_map(l, stops):
         if l <= t2: return lerp(c1, c2, (l - t1) / (t2 - t1) if t2 > t1 else 0)
     return stops[-1][1]
 
-# 1. 황금 나무: 흰 바탕 지우고 71×71 원래 픽셀로
-tree = grid_sample(Image.open(SRC / 'goldtree.jpg').convert('RGB'), 71).convert('RGBA')
-px = tree.load(); w, h = tree.size
-white = lambda x, y: min(px[x, y][:3]) > 228
-outside, stack = set(), [(x, y) for x in range(w) for y in (0, h - 1)] + [(x, y) for y in range(h) for x in (0, w - 1)]
-while stack:  # 가장자리와 이어진 흰 칸 = 바탕 → 투명. 잎 사이에 갇힌 흰 칸은 밝은 잎빛으로
-    x, y = stack.pop()
-    if (x, y) in outside or not (0 <= x < w and 0 <= y < h) or not white(x, y): continue
-    outside.add((x, y)); stack += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
-for y in range(h):
-    for x in range(w):
-        if (x, y) in outside: px[x, y] = (0, 0, 0, 0)
-        elif white(x, y): px[x, y] = (250, 222, 130, 255)
-tree.crop(tree.getbbox()).save(D / 'goldtree.png')
 
 # 2. 환상열석 구름: 체크무늬 바탕(어두운 청색)을 지우고 노을빛으로 다시 칠한다. 구름 셋을 잘라 쓴다
 clouds = Image.open(SRC / 'clouds.jpg').convert('RGB')

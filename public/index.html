@@ -787,9 +787,6 @@ input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--in
 .pb-henge { --bn-veil: #2a0a12; color: #fff0e0; border: 1px solid #ffe0c0aa; box-shadow: 0 .3rem .8rem #0006; }
 .tb-henge { color: #ffe0c0; background: #7a1424; border: 1px solid #ffe0c0aa; }
 .lp-dlg[data-bn="henge"], .lp-dlg[data-bn="henge"] .lp-rec { --leather: #2a0a12; --leather-hi: #4a0f1c; --bronze: #e0502e; --bronze-hi: #ffe0c0; --parch: #fbe4d8; --parch-lo: #ecc6b4; --ink: #5a1420; --t-glow: #c02a2a; }
-.pb-goldtree { --bn-veil: #1e2a2e; color: #fff6d8; border: 1px solid #f0a828aa; box-shadow: 0 .3rem .8rem #0006; }
-.tb-goldtree { color: #f8c848; background: #3a4a5a; border: 1px solid #f0a828aa; }
-.lp-dlg[data-bn="goldtree"], .lp-dlg[data-bn="goldtree"] .lp-rec { --leather: #1e2a2e; --leather-hi: #2a3a40; --bronze: #c87a1a; --bronze-hi: #f8c848; --parch: #f6efdc; --parch-lo: #e4d6b4; --ink: #2a2a1e; --t-glow: #566878; }
 /* 로그인 창 */
 #loginDlg { width: min(100%, 24rem); }
 .login-sub { margin: 0 0 1rem; text-align: center; font-size: .85rem; color: var(--fog); line-height: 1.6; }
@@ -1499,7 +1496,7 @@ function playLogo() {
 const MAPS = { forest: '깊은 숲', redcloud: '붉은 상운', moongeese: '달과 기러기', dusk: '노을 궁궐', gold: '금빛 운해', sakura: '벚꽃 물방울', rosechain: '장미 사슬',
   violet: '천상의 제비꽃', cover: '아르카나 표지', planet: '행성 고리', crow: '붉은 까마귀', curtain: '진홍 무대', butterfly: '나비 격자',
   thicket: '분홍 덤불', firefly: '반딧불 숲', swamp: '보랏빛 늪', waterfall: '분홍 폭포', ruins: '부유 폐허', shrine: '잠든 수호상', sunset: '노을 성',
-  skycity: '구름 위 시계탑', henge: '붉은 환상열석', goldtree: '황금 나무', bluesmoke: '푸른 연기', starsmoke: '별밤 연기', sunforest: '숲의 햇살' };
+  skycity: '구름 위 시계탑', henge: '붉은 환상열석', bluesmoke: '푸른 연기', starsmoke: '별밤 연기', sunforest: '숲의 햇살' };
 function setMap(m) { // 새 그림을 다 받으면 천천히 나타나고, 그 뒤 이전 그림을 지운다
   m = MAPS[m] ? m : 'forest';
   if ($('frame').dataset.map === m && $('mapBack').children.length) return;
@@ -2454,7 +2451,6 @@ Object.assign(BANNERS, {
   sunset: { name: '노을 성', photo: true, pos: '38% 52%' },
   skycity: { name: '구름 위 시계탑', photo: true, pos: '30% 32%' },
   henge: { name: '붉은 환상열석', photo: true, pos: '50% 24%' },
-  goldtree: { name: '황금 나무', photo: true, pos: '88% 62%', size: 'auto 175%', fill: '#3a4858', edge: 'linear-gradient(90deg, #3a4858 56%, transparent 64%, transparent 86%, #3a4858 93%)' }, // 나무 전체가 띠에 들어오게
 });
 Object.assign(TB_DECO, {
   thicket: twinkle(8, 8, 6, '#ff8cc6'),
@@ -2466,7 +2462,6 @@ Object.assign(TB_DECO, {
   sunset: '<circle cx="8" cy="8" r="6" fill="#ffd86a"/>',
   skycity: '<path d="M2 12h12v-2a3 3 0 0 0-3-3 4 4 0 0 0-7 1 2.5 2.5 0 0 0-2 4z" fill="#fff4ee" stroke="#c8a8c8"/>',
   henge: '<rect x="2" y="6" width="3" height="9" fill="#ffe0c0"/><rect x="11" y="6" width="3" height="9" fill="#ffe0c0"/><rect x="1" y="4" width="14" height="2" fill="#ffe0c0"/>',
-  goldtree: '<circle cx="8" cy="6" r="6" fill="#f0a828"/><rect x="7" y="9" width="2" height="6" fill="#5a3a2a"/>',
 });
 const BANNER_IDS = Object.keys(BANNERS);
 const ownedBanners = () => myProfile?.banners || ['none'];
