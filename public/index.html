@@ -1444,6 +1444,7 @@ function tone(freq, { type = 'sine', at = 0, peak = .2, decay = .35, glideTo } =
   g.gain.exponentialRampToValueAtTime(.0001, t + decay);          // 자연스럽게 사라짐
   o.connect(g).connect(actx.destination); o.start(t); o.stop(t + decay + .05);
 }
+let sealBuf;
 const SFX = {
   awaken() {
     tone(130.8, { peak: .22, decay: 1.6, glideTo: 261.6 }); tone(196, { type: 'triangle', peak: .08, decay: 1.6, glideTo: 392 });
@@ -1456,10 +1457,13 @@ const SFX = {
   heal() { [784, 988, 1175].forEach((f, i) => tone(f, { at: i * .07, peak: .08, decay: .5 })); },     // 회복: 반짝
   death() { tone(196, { peak: .18, decay: 1.2, glideTo: 65 }); },
   chime() { tone(1046.5, { peak: .16, decay: .45 }); tone(1568, { at: .045, peak: .11, decay: .5 }); }, // 주요 버튼: 딩
-  seal() { // 마법진이 겹칠 때: 낮게 울리며 올라가는 지잉 + 위에서 반짝
-    tone(110, { type: 'sawtooth', peak: .035, decay: 1.8, glideTo: 220 }); tone(220, { peak: .12, decay: 1.9, glideTo: 330 });
-    tone(880, { type: 'triangle', peak: .03, decay: 1.5, glideTo: 1320 });
-    [1318.5, 1760, 2637].forEach((f, i) => tone(f, { at: .05 + i * .07, peak: .045, decay: 1.2 }));
+  seal() { // 마법진이 겹칠 때: 녹음된 소리 /audio/seal.mp3 (처음 한 번만 받아 둔다)
+    sealBuf ??= fetch('/audio/seal.mp3').then(r => r.arrayBuffer()).then(b => actx.decodeAudioData(b)).catch(() => (sealBuf = null));
+    sealBuf.then(buf => {
+      if (!buf) return;
+      const src = actx.createBufferSource(), g = actx.createGain();
+      src.buffer = buf; g.gain.value = sfxLevel(); src.connect(g).connect(actx.destination); src.start();
+    });
   },
   tick() { tone(1500, { type: 'triangle', peak: .09, decay: .07, glideTo: 750 }); },                 // 그 외: 틱
 };
