@@ -621,6 +621,35 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
 .title-toast { inset: auto; top: 12%; left: 50%; translate: -50% 0; margin: 0; border: 1px solid #e8c27a; background: #1b1610f2; color: var(--amber); padding: .8rem 1.6rem; border-radius: 2rem; font-family: 'Nanum Myeongjo', serif; font-weight: 800; box-shadow: 0 0 2rem #e8c27a55; }
 .title-toast:popover-open { animation: toastIn 3.6s ease forwards; }
 @keyframes toastIn { 0% { opacity: 0; transform: translateY(-1rem); } 10%, 85% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+/* 배너: 프로필 배너(.pbanner, 이름 뒤) · 칭호 배너(.tbanner) */
+.pbanner { position: relative; display: flex; align-items: center; min-height: 3.4rem; padding: .5rem 2.6rem; margin: 0 0 .7rem; }
+.pbanner .lp-name { position: relative; z-index: 1; }
+.pbanner:not(.pb-none) .lp-name { color: inherit; }
+.pbanner svg { position: absolute; overflow: visible; pointer-events: none; z-index: 2; }
+.bn-l { left: -1.3rem; top: 50%; translate: 0 -50%; width: 3.2rem; height: 3.2rem; }
+.bn-r { right: -1.3rem; top: 50%; translate: 0 -50%; width: 3.2rem; height: 3.2rem; }
+.bn-t { left: 50%; top: -.8rem; translate: -50% 0; width: 3.4rem; height: 1.4rem; }
+.bn-h { right: .4rem; top: -.45rem; width: min(15rem, 70%); height: auto; }
+.pb-none { min-height: 0; padding: 0; }
+.pb-gold { color: #2a1d0c; border: 1px solid #f6e3a8; box-shadow: inset 0 0 0 3px #0000001f, 0 .3rem .8rem #0006;
+  background: radial-gradient(ellipse 40% 60% at 30% 120%, #ffffff40, transparent 70%), radial-gradient(ellipse 30% 50% at 75% -20%, #ffffff33, transparent 70%), linear-gradient(100deg, #9c7434, #e9c77c 30%, #f6e2a6 50%, #d9ad5d 72%, #a57a37); }
+.pb-dusk { color: #fbeee8; border: 1px solid #e9d3c6; border-radius: 99rem; background: linear-gradient(90deg, #5e2c3dd9, #8a4e5cd9 60%, #6b3446d9); box-shadow: 0 .3rem .8rem #0006; }
+.pb-sakura { color: #3b2f78; border-radius: 99rem; background: #dcdcff; margin-left: 1rem; padding-left: 3.2rem; }
+.pb-rosechain { color: #f1e6ff; border: 1px solid #8f7ae066; background: linear-gradient(#1d1940, #2a2258); box-shadow: 0 0 1.4rem #a46ad855, inset 0 0 1.2rem #a46ad833; }
+.pb-rosechain .bn-h { filter: drop-shadow(0 0 .3rem #c58cff); }
+.pb-violet { color: #2b2350; border: 1px solid #fff; background: linear-gradient(110deg, #a995f5, #ddd5ff 45%, #b9a8ff); box-shadow: 0 0 1rem #b3a6f555; }
+.tbanner { display: inline-flex; align-items: center; gap: .35rem; padding: .12rem .7rem .12rem .4rem; font-weight: 500; font-size: .82rem; border-radius: .3rem; white-space: nowrap; }
+.tbanner svg { width: 1rem; height: 1rem; overflow: visible; }
+.tb-gold { color: #2a1d0c; border: 1px solid #f6e3a8; background: linear-gradient(90deg, #b8873c, #f2d58e 50%, #b8873c); }
+.tb-dusk { color: #fbeee8; border: 1px solid #e9d3c6; border-radius: 99rem; background: #6b3446; }
+.tb-sakura { color: #3b2f78; border-radius: 99rem; background: #dcdcff; }
+.tb-rosechain { color: #e6d6ff; border: 1px solid #8f7ae0; background: #211c48; box-shadow: 0 0 .6rem #a46ad866; }
+.tb-violet { color: #2b2350; border: 1px solid #fff; background: linear-gradient(110deg, #a995f5, #e2dbff); }
+.o-tb { display: block; padding: .2rem; border: 1px solid transparent; } .o-tb > b { font-size: .8rem; color: var(--ink); padding: .2rem .5rem; display: block; border: 1px solid #8a6d4588; }
+input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.cx-banners { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1.6rem 2.6rem; padding: .8rem 1.4rem 0; }
+.cx-banners figure { margin: 0; display: grid; gap: .5rem; } .cx-banners figcaption { font-size: .78rem; color: var(--lp-dim); text-align: center; }
+.cx-banners .lp-name { font-size: 1.3rem; }
 /* 로그인 창 */
 #loginDlg { width: min(100%, 24rem); }
 .login-sub { margin: 0 0 1rem; text-align: center; font-size: .85rem; color: var(--fog); line-height: 1.6; }
@@ -1143,6 +1172,8 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
             <div class="lp-row"><span class="lab">문장</span><div class="lp-opts" id="pEmblems"></div></div>
             <div class="lp-row"><span class="lab">문장 색</span><div class="lp-opts" id="pColors"></div></div>
             <div class="lp-row"><span class="lab">가죽 재질</span><div class="lp-opts" id="pSkins"></div></div>
+            <div class="lp-row"><span class="lab">프로필 배너 <small>이름 뒤에 걸리는 띠</small></span><div class="lp-opts" id="pBanners"></div></div>
+            <div class="lp-row"><span class="lab">칭호 배너 <small>칭호를 감싸는 띠</small></span><div class="lp-opts" id="pTBanners"></div></div>
             <div class="lp-row" id="pTitleRow"><label for="pTitle">대표 칭호 <small>얻은 칭호 중 하나</small></label><select class="lp-in-field" id="pTitle"></select><button class="lp-link" type="button" id="pCodex" style="margin:.5rem 0 0">도감에서 모든 칭호와 조건 보기</button></div>
             <div class="lp-row"><label for="pIntro">소개말 <span class="lp-count" id="pCount"></span></label><textarea class="lp-in-field" id="pIntro" maxlength="80" placeholder="다른 모험가에게 보여 줄 한마디"></textarea></div>
             <button class="lp-save" id="pSave">기록부에 남기기</button>
@@ -1169,7 +1200,7 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
     <div class="cx-tabs" role="tablist">
       <button role="tab" type="button" data-ctab="titles">칭호</button>
       <button role="tab" type="button" data-ctab="cards">카드</button>
-      <button role="tab" type="button" data-ctab="marks">문장</button>
+      <button role="tab" type="button" data-ctab="marks">문장·배너</button>
     </div>
     <p class="cx-sum" id="cxSum"></p>
     <ul class="cx-titles" id="cxTitles" role="tabpanel"></ul>
@@ -1177,6 +1208,7 @@ textarea.lp-in-field { resize: vertical; min-height: 4.2rem; line-height: 1.5; }
     <div class="cx-marks" id="cxMarks" role="tabpanel" hidden></div>
   </div></div>
 </dialog>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><radialGradient id="pearl" cx=".35" cy=".35"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#f3b9c8"/><stop offset="1" stop-color="#9c4a62"/></radialGradient></defs></svg>
 <div class="title-toast" id="titleToast" popover="manual" aria-live="polite"></div>
 <dialog id="jobDlg" class="glass ornate">
   <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
@@ -2160,6 +2192,42 @@ const legacyKey = () => { try { return localStorage.getItem('arcana-profile') ||
 /* ---------- 원정 기록부 (프로필 화면) ----------
    내 기록 또는 다른 사람의 기록을 왼쪽에, 꾸미기 / 모험가 찾기를 오른쪽 장부에 보여 준다 */
 const SKIN_NAME = { leather: '흑갈색 가죽', ebony: '흑단', forest: '숲 이끼' };
+/* ---------- 배너: 기록부 이름 뒤의 프로필 배너, 칭호를 감싸는 칭호 배너 (그림은 모두 SVG/CSS로 직접 그림) ---------- */
+const sakura = (x, y, r, fill, rot = 0) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${r / 12})" fill="${fill}">${[0, 72, 144, 216, 288].map(a =>
+  `<path transform="rotate(${a})" d="M0 0C-4.5-4-4.5-10-1.6-12.4L0-10.6 1.6-12.4C4.5-10 4.5-4 0 0Z"/>`).join('')}<circle r="1.8" fill="#b9b2ee"/></g>`;
+const rose = (x, y, r) => `<g transform="translate(${x} ${y}) scale(${r / 5})"><circle r="5" fill="#f1d2ff"/><path d="M0 0c1.2-1.2 2.6 0 2 1.5-1 2-3.8 1.5-4.2-.8-.5-3 2.8-4.7 5.2-3.2" fill="none" stroke="#a46ad8" stroke-width="1"/></g>`;
+const leaf = (x, y, a) => `<ellipse cx="${x}" cy="${y}" rx="2.4" ry="5" transform="rotate(${a} ${x} ${y})" fill="#b9a2ee"/>`;
+const crescent = (x, y, r) => `<path transform="translate(${x} ${y}) scale(${r / 10})" d="M4 -9A10 10 0 1 0 4 9 7.5 7.5 0 1 1 4 -9Z" fill="#c9a7ff"/>`;
+const twinkle = (x, y, r, fill) => `<path transform="translate(${x} ${y}) scale(${r / 10})" d="M0-10L1.6-1.6 10 0 1.6 1.6 0 10-1.6 1.6-10 0-1.6-1.6Z" fill="${fill}"/>`;
+const BANNERS = {
+  none: { name: '없음' },
+  gold: { name: '금빛 운해',
+    left: `<path d="M30 6C14 2 4 14 10 26c4 8 16 6 14-2" fill="none" stroke="#5fd6cc" stroke-width="3.2" stroke-linecap="round"/><path d="M4 34c8-4 16-4 26 2" fill="none" stroke="#f4dc9a" stroke-width="2"/>${twinkle(30, 6, 5, '#fff3cf')}`,
+    right: `<path d="M10 34C26 38 36 26 30 14c-4-8-16-6-14 2" fill="none" stroke="#5fd6cc" stroke-width="3.2" stroke-linecap="round"/><path d="M36 6c-8 4-16 4-26-2" fill="none" stroke="#f4dc9a" stroke-width="2"/><circle cx="30" cy="30" r="4.5" fill="#f0b45c"/>`,
+    top: `<path d="M20 2l3 6-3 6-3-6z" fill="#7fe0d6"/><path d="M2 10h12M26 10h12" stroke="#f4dc9a" stroke-width="1.2"/>` },
+  dusk: { name: '노을 궁궐',
+    left: `<path d="M38 22c-10 0-12-8-20-8S4 20 2 14" fill="none" stroke="#e9d3c6" stroke-width="2.2" stroke-linecap="round"/>`,
+    right: `<path d="M2 26c8 2 14-2 16-10s10-12 18-6c-6-1-10 2-10 8 0 8-12 14-24 8z" fill="#e9d3c6" opacity=".9"/>`,
+    top: `<circle cx="20" cy="9" r="7" fill="url(#pearl)"/><path d="M8 12c4 6 18 6 24 0" fill="none" stroke="#e9d3c6" stroke-width="1.6"/>` },
+  sakura: { name: '벚꽃 물방울',
+    left: `<circle cx="8" cy="34" r="5" fill="#d9d6ff"/><circle cx="34" cy="38" r="2.5" fill="#d9d6ff"/><circle cx="4" cy="16" r="2" fill="#d9d6ff"/>${sakura(18, 18, 13, '#ffffff', 10)}${sakura(34, 26, 9, '#cfcaff', -20)}${sakura(14, 34, 6, '#e9e6ff', 30)}`,
+    right: `<circle cx="20" cy="32" r="6" fill="#d9d6ff"/><circle cx="32" cy="22" r="2.5" fill="#d9d6ff"/><circle cx="10" cy="8" r="2" fill="#d9d6ff"/>` },
+  rosechain: { name: '장미 사슬',
+    hang: `<path d="M0 2Q50 12 100 4T200 6" fill="none" stroke="#d6c2ff" stroke-width="1" stroke-dasharray="1 3"/>
+      ${[[14, 0], [52, 2], [96, 1], [150, 3], [186, 0]].map(([x, d], i) => `${leaf(x - 5, 6 + d, -30)}${leaf(x + 5, 7 + d, 30)}${rose(x, 6 + d, i % 2 ? 4.5 : 6)}`).join('')}
+      <path d="M34 4v26M120 4v34M170 4v20" stroke="#d6c2ff" stroke-width=".8" stroke-dasharray="1 2.5"/>${twinkle(34, 32, 3.5, '#fff')}${crescent(120, 42, 6)}${twinkle(170, 26, 3, '#fff')}` },
+  violet: { name: '천상의 제비꽃',
+    left: `<g fill="none" stroke="#ffffff" stroke-width="1.2" opacity=".9"><path d="M14 30c-2-8 2-14 8-16M22 14c-6-6-14-2-12 4 2 5 9 3 12-4zM22 14c2-8 10-8 11-2 0 5-7 6-11 2zM22 14c8 0 10 7 5 10-4 2-7-3-5-10z"/></g>${twinkle(6, 8, 4, '#fff')}`,
+    right: `<circle cx="24" cy="26" r="9" fill="#2b2350" stroke="#f2c6ee" stroke-width="1.4"/><path d="M24 19v14M17 26h14" stroke="#f2c6ee" stroke-width="1.2"/>${twinkle(36, 10, 4, '#f2c6ee')}` },
+};
+const BANNER_IDS = Object.keys(BANNERS);
+const bannerHTML = (id, inner) => { const b = BANNERS[id] || BANNERS.none, sv = (cls, d, vb) => d ? `<svg class="bn-${cls}" viewBox="${vb}" aria-hidden="true">${d}</svg>` : '';
+  return `<div class="pbanner pb-${BANNERS[id] ? id : 'none'}">${sv('l', b.left, '0 0 40 40')}${sv('r', b.right, '0 0 40 40')}${sv('t', b.top, '0 0 40 16')}${sv('h', b.hang, '0 0 200 50')}${inner}</div>`; };
+// 칭호 배너: 칭호 글자를 감싸는 작은 띠. 왼쪽에 작은 장식 하나
+const TB_DECO = { gold: twinkle(8, 8, 6, '#5fd6cc'), dusk: '<circle cx="8" cy="8" r="5" fill="url(#pearl)"/>', sakura: sakura(8, 8, 7, '#ffffff'),
+  rosechain: crescent(8, 8, 6), violet: twinkle(8, 8, 6, '#ffffff') };
+const titleBanner = (id, text) => BANNERS[id] && id !== 'none'
+  ? `<span class="tbanner tb-${id}"><svg viewBox="0 0 16 16" aria-hidden="true">${TB_DECO[id]}</svg>${text}</span>` : `<b>${text}</b>`;
 let viewing = null; // 다른 사람의 기록을 보는 중이면 그 프로필 (게스트는 { guest: true, nickname })
 const pct = (w, g) => (g ? Math.round(w / g * 100) : 0);
 const icon = (path, extra = '') => `<svg viewBox="0 0 24 24"${extra}>${path}</svg>`;
@@ -2178,8 +2246,8 @@ function recordHTML(p, mine) {
     <div class="lp-cluster">
       <div class="lp-tag">${medal(p.emblem, p.color)}<small>LEVEL</small><span class="lv">${lv.lv}</span><span class="tt">${esc(p.title || '새내기 모험가')}</span></div>
       <div class="lp-panel lp-main">
-        <h1 class="lp-name">${esc(p.nickname)}</h1>
-        <p class="lp-sub"><b>${esc(p.title || '새내기 모험가')}</b> · ${st.games || 0}판 참가 · ${st.wins || 0}승</p>
+        ${bannerHTML(p.banner, `<h1 class="lp-name">${esc(p.nickname)}</h1>`)}
+        <p class="lp-sub">${titleBanner(p.tbanner, esc(p.title || '새내기 모험가'))} · ${st.games || 0}판 참가 · ${st.wins || 0}승</p>
         <div class="lp-bar">${icon(UI_ICON.sword, ' style="stroke:var(--hero-hi)"')}<div class="lbl"><span>용사 파티 승률</span><b>${st.heroGames ? hp + '%' : '-'}</b></div>
           <div class="lp-track"><div class="lp-fill f-hero" style="--w:${hp}%"></div></div></div>
         <div class="lp-bar">${icon(UI_ICON.moon, ' style="stroke:var(--demon-hi)"')}<div class="lbl"><span>마왕군 승률</span><b>${st.demonGames ? dp + '%' : '-'}</b></div>
@@ -2225,10 +2293,12 @@ const radioRow = (id, name, entries) => $(id).insertAdjacentHTML('beforeend', en
 radioRow('pEmblems', 'pEmblem', Object.keys(MARKS).map(k => [k, MARKS[k].name, `<span class="o-em">${markSVG(k)}</span>`]));
 radioRow('pColors', 'pColor', Object.keys(COLOR_NAME).map(k => [k, COLOR_NAME[k], `<span class="o-c c-${k}"></span>`]));
 radioRow('pSkins', 'pSkin', Object.keys(SKIN_NAME).map(k => [k, SKIN_NAME[k], `<span class="o-t">${SKIN_NAME[k]}</span>`]));
+radioRow('pBanners', 'pBanner', BANNER_IDS.map(k => [k, BANNERS[k].name, `<span class="o-t">${BANNERS[k].name}</span>`]));
+radioRow('pTBanners', 'pTBanner', BANNER_IDS.map(k => [k, BANNERS[k].name, `<span class="o-tb">${titleBanner(k, BANNERS[k].name)}</span>`]));
 const checked = name => document.querySelector(`[name=${name}]:checked`)?.value;
 const formValue = () => ({
   nickname: $('pName').value.trim(), intro: $('pIntro').value, title: $('pTitle').value,
-  emblem: checked('pEmblem') || MARK_DEFAULT, color: checked('pColor') || 'amber', skin: checked('pSkin') || 'leather',
+  emblem: checked('pEmblem') || MARK_DEFAULT, color: checked('pColor') || 'amber', skin: checked('pSkin') || 'leather', banner: checked('pBanner') || 'none', tbanner: checked('pTBanner') || 'none',
 });
 function fillProfileForm() {
   const p = myProfile || { nickname: '', intro: '', emblem: MARK_DEFAULT, color: 'amber', skin: 'leather', titles: [] };
@@ -2238,6 +2308,8 @@ function fillProfileForm() {
   (document.querySelector(`[name=pEmblem][value=${p.emblem}]`) || document.querySelector(`[name=pEmblem][value=${MARK_DEFAULT}]`)).checked = true;
   document.querySelector(`[name=pColor][value=${p.color}]`).checked = true;
   document.querySelector(`[name=pSkin][value=${p.skin || 'leather'}]`).checked = true;
+  document.querySelector(`[name=pBanner][value=${BANNERS[p.banner] ? p.banner : 'none'}]`).checked = true;
+  document.querySelector(`[name=pTBanner][value=${BANNERS[p.tbanner] ? p.tbanner : 'none'}]`).checked = true;
   $('pGuest').hidden = !!myProfile; $('pForm').hidden = !myProfile;
   $('pKeyNote').textContent = myProfile?.login ? `로그인 아이디: ${myProfile.login}` : '';
   $('pMsg').textContent = ''; $('pMsg').className = 'pmsg';
@@ -2321,11 +2393,13 @@ function renderCodex() {
     $('cxCards').innerHTML = kinds.map(k => `<h3>${esc(k)}</h3>` + CARD_DB.filter(c => c.kind === k)
       .map(c => `<figure>${cardHTML(c)}<figcaption>덱에 ${c.count || 0}장</figcaption></figure>`).join('')).join('');
   } else {
-    $('cxSum').textContent = '문장, 문장 색, 가죽 재질은 모두 기록부의 꾸미기에서 고를 수 있습니다.';
+    $('cxSum').textContent = '문장, 문장 색, 가죽 재질, 배너는 모두 기록부의 꾸미기에서 고를 수 있습니다.';
     const skins = { leather: ['#282623', '#1d1c1a', '#8a6d45'], ebony: ['#1c2026', '#121417', '#6f7c8c'], forest: ['#1a2e25', '#11201a', '#7f8f63'] };
     $('cxMarks').innerHTML = `<section><h3>문장</h3><div class="cx-row">${Object.keys(MARKS).map(k => `<figure>${medal(k, myProfile?.color || 'amber')}${MARKS[k].name}</figure>`).join('')}</div></section>
       <section><h3>문장 색</h3><div class="cx-row">${Object.keys(COLOR_NAME).map(k => `<figure>${medal(myProfile?.emblem || MARK_DEFAULT, k)}${COLOR_NAME[k]}</figure>`).join('')}</div></section>
-      <section><h3>가죽 재질</h3><div class="cx-row">${Object.entries(skins).map(([k, [h, b, z]]) => `<figure><span class="cx-skin" style="--lh:${h};--lb:${b};--bz:${z}"></span>${SKIN_NAME[k]}</figure>`).join('')}</div></section>`;
+      <section><h3>가죽 재질</h3><div class="cx-row">${Object.entries(skins).map(([k, [h, b, z]]) => `<figure><span class="cx-skin" style="--lh:${h};--lb:${b};--bz:${z}"></span>${SKIN_NAME[k]}</figure>`).join('')}</div></section>
+      <section><h3>프로필 배너</h3><div class="cx-banners">${BANNER_IDS.filter(k => k !== 'none').map(k => `<figure>${bannerHTML(k, `<h1 class="lp-name">${esc(myProfile?.nickname || '모험가')}</h1>`)}<figcaption>${BANNERS[k].name}</figcaption></figure>`).join('')}</div></section>
+      <section><h3>칭호 배너</h3><div class="cx-row">${BANNER_IDS.filter(k => k !== 'none').map(k => `<figure>${titleBanner(k, esc(myProfile?.title || '새내기 모험가'))}${BANNERS[k].name}</figure>`).join('')}</div></section>`;
   }
 }
 function openCodex(tab = 'titles') {

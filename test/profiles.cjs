@@ -27,7 +27,7 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   await a.waitForSelector('#profile[open]'); await sleep(300);
   ok((await a.textContent('#pRecord')).includes('LEVEL') && (await a.textContent('.lp-tag .lv')) === '1', '새 계정은 1레벨');
   await a.fill('#pIntro', '봉인은 내가 막는다.');
-  await a.click('[name=pEmblem][value=blade] + .o-em'); await a.click('[name=pColor][value=crimson] + .o-c'); await a.click('[name=pSkin][value=ebony] + .o-t');
+  await a.click('[name=pEmblem][value=blade] + .o-em'); await a.click('[name=pColor][value=crimson] + .o-c'); await a.click('[name=pSkin][value=ebony] + .o-t'); await a.click('[name=pBanner][value=gold] + .o-t'); await a.click('[name=pTBanner][value=sakura] + .o-tb');
   ok((await a.getAttribute('.lp-rec', 'data-skin')) === 'ebony' && (await a.textContent('.lp-intro')).includes('봉인은 내가'), '꾸미는 대로 기록부가 바로 바뀜');
   await a.click('#pSave'); await sleep(500);
   ok((await a.textContent('#pMsg')) === '저장했습니다.', '프로필 만들기');
@@ -45,7 +45,7 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   ok((await g.textContent('#pResults')).includes('용사아린'), '닉네임 일부로 검색');
   await g.click('#pResults button'); await sleep(400);
   ok((await g.textContent('#pRecord')).includes('봉인은 내가 막는다.') && (await g.textContent('#pRecord')).includes('용사아린의 기록'), '검색 결과 눌러 그 사람의 기록부 보기');
-  ok((await g.getAttribute('.lp-rec', 'data-skin')) === 'ebony', '가죽 재질도 저장됨');
+  ok((await g.getAttribute('.lp-rec', 'data-skin')) === 'ebony' && !!(await g.$('.pbanner.pb-gold')) && !!(await g.$('.tbanner.tb-sakura')), '가죽 재질·프로필 배너·칭호 배너도 저장됨');
   await g.click('[data-close="profile"]');
 
   // 4. 방: 프로필 사용자가 만들고, 게스트가 참가 → 서로 눌러 보기
