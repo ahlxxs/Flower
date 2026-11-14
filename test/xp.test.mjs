@@ -67,7 +67,9 @@ assert.ok(setAvatarImage(ph.key, 'data:image/png;base64,' + Buffer.concat([png, 
 assert.ok(setAvatarImage(ph.key, 'data:image/png;base64,' + png.toString('base64')).profile);
 const url = publicView(getByKey(ph.key)).photo, pid = url.match(/\/avatar\/([0-9a-f]{16})\.img/)[1];
 assert.ok(!url.includes(ph.key)); assert.deepEqual(avatarImage(pid).buf, png); assert.equal(avatarImage('0'.repeat(16)), null);
-assert.equal(publicView(getByKey(ph.key)).emblem, 'custom');
+assert.equal(publicView(getByKey(ph.key)).emblem, 'custom'); assert.equal(publicView(getByKey(ph.key)).crest, 'tide'); // 큰 문장은 사진이 아니라 원래 문장
+assert.equal(save(ph.key, { nickname: '사진시험', emblem: 'custom', crest: 'eye' }).profile.crest, 'tide'); // 없는 문장 이름은 무시
+assert.equal(save(ph.key, { nickname: '사진시험', emblem: 'custom', crest: 'lantern' }).profile.crest, 'lantern');
 save(ph.key, { nickname: '사진시험', emblem: 'key' }); assert.deepEqual([publicView(getByKey(ph.key)).emblem, publicView(getByKey(ph.key)).photo], ['key', '']); // 문장으로 돌아가기
 assert.equal(save(ph.key, { nickname: '사진시험', emblem: 'custom' }).profile.emblem, 'custom');   // 올린 사진은 남아 있어 다시 고를 수 있음
 console.log('PASS 레벨·경험치·칭호·배너·친구·사진 문장 점검 모두 통과');

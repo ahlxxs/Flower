@@ -2,6 +2,7 @@ const { chromium } = require('playwright');
 const { spawn } = require('node:child_process');
 // 프로필(원정 기록부) 점검: 임시 저장 폴더로 서버를 띄우고 브라우저 여러 개로 확인한다. 실행: npm run test:profiles
 const { mkdtempSync } = require('node:fs'); const { tmpdir } = require('node:os'); const { join } = require('node:path');
+const MARK_TIDE = 'M4 21c7-5 13 4 20 0'; // 파도의 지팡이 문장 그림 일부
 const U = 'http://localhost:3123', DATA = mkdtempSync(join(tmpdir(), 'arcana-')), sleep = ms => new Promise(r => setTimeout(r, ms));
 let failed = 0;
 const ok = (c, l) => { if (!c) failed++; console.log((c ? 'PASS ' : 'FAIL ') + l); };
@@ -32,7 +33,9 @@ const start = () => spawn('node', ['server.js'], { env: { ...process.env, PORT: 
   ok(!!(await a.$('#pEmblems #pAddPhoto')) && (await a.$$('[name=pEmblem]')).length === 9, '문장: + 버튼과 문장 9개');
   const shot = await a.screenshot({ clip: { x: 0, y: 0, width: 400, height: 300 } }); // 올릴 사진 대신 화면 일부를 PNG로
   await a.setInputFiles('#pPhoto', { name: 'me.png', mimeType: 'image/png', buffer: shot }); await sleep(800);
-  ok((await a.textContent('#pMsg')).includes('내 사진을 문장으로') && (await a.getAttribute('.lp-tag .medal.av img', 'src')).startsWith('/avatar/') && !!(await a.$('.lp-crest .crest-photo')), '+로 내 사진 올리기 → 문장 자리에 내 사진');
+  ok((await a.textContent('#pMsg')).includes('내 사진을 문장으로') && (await a.getAttribute('.lp-tag .medal.av img', 'src')).startsWith('/avatar/') && !(await a.$('.lp-crest img')), '+로 내 사진 올리기 → 동그라미는 내 사진, 오른쪽 큰 칸은 문장 그대로');
+  await a.click('[name=pCrest][value=tide] + .o-em');
+  ok((await a.innerHTML('.lp-crest')).includes(MARK_TIDE), '오른쪽 큰 칸은 문장 중에서 따로 고름');
   ok((await a.$$('[name=pEmblem]')).length === 10 && await a.evaluate(() => document.querySelector('[name=pEmblem]:checked').value === 'custom'), '올린 사진이 문장 고르기에 "내 사진"으로 추가됨');
   const avUrl = await a.getAttribute('.lp-tag .medal.av img', 'src');
   const avRes = await a.evaluate(async u => { const r = await fetch(u); return [r.status, r.headers.get('content-type'), (await r.arrayBuffer()).byteLength]; }, avUrl);

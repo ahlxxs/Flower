@@ -1258,8 +1258,9 @@ input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--in
           </div>
           <form id="pForm">
             <div class="lp-row"><label for="pName">닉네임 <small>2~12자</small></label><input class="lp-in-field" type="text" id="pName" maxlength="12" autocomplete="nickname" required></div>
-            <div class="lp-row"><span class="lab">문장 <small>+를 눌러 내 사진을 문장으로</small></span><div class="lp-opts" id="pEmblems"></div>
+            <div class="lp-row"><span class="lab">문장 <small>이름 옆 동그라미 · +를 눌러 내 사진을 문장으로</small></span><div class="lp-opts" id="pEmblems"></div>
               <input type="file" id="pPhoto" accept="image/*" hidden></div>
+            <div class="lp-row"><span class="lab">큰 문장 <small>기록 오른쪽 칸</small></span><div class="lp-opts" id="pCrests"></div></div>
             <div class="lp-row"><span class="lab">문장 색</span><div class="lp-opts" id="pColors"></div></div>
             <div class="lp-row"><span class="lab">프로필 배너 <small>이름 뒤에 걸리는 띠</small></span><div class="lp-opts" id="pBanners"></div></div>
             <div class="lp-row"><span class="lab">칭호 배너 <small>칭호를 감싸는 띠</small></span><div class="lp-opts" id="pTBanners"></div></div>
@@ -2283,7 +2284,7 @@ const markName = k => (MARKS[k] || MARKS[MARK_DEFAULT]).name;
 const COLOR_NAME = { amber: '금빛', jade: '옥빛', crimson: '진홍', violet: '보랏빛', silver: '은빛' };
 // 문장 동그라미. emblem이 'custom'이면 올린 사진(photo 주소)을 보여 준다
 const medal = (emblem, color, photo) => emblem === 'custom' && photo ? `<span class="medal av c-${color}"><img src="${esc(photo)}" alt="" loading="lazy" decoding="async"></span>` : `<span class="medal c-${color}">${markSVG(emblem)}</span>`;
-const crest = p => p.emblem === 'custom' && p.photo ? `<img class="crest-photo" src="${esc(p.photo)}" alt="">` : markSVG(p.emblem); // 기록부 오른쪽 문장 칸
+const crest = p => markSVG(p.crest || (p.emblem !== 'custom' && p.emblem) || MARK_DEFAULT); // 기록부 오른쪽 큰 문장 칸: 사진이 아니라 문장 중에서 따로 고른다
 let myProfile = null;
 // 로그인하면 받는 세션 열쇠: 이 탭에만 둔다 (새로 접속하면 다시 로그인)
 const profileKey = () => { try { return sessionStorage.getItem('arcana-session') || ''; } catch { return ''; } };
@@ -2437,7 +2438,7 @@ radioRow('pTBanners', 'pTBanner', BANNER_IDS.map(k => [k, BANNERS[k].name, `<spa
 const checked = name => document.querySelector(`[name=${name}]:checked`)?.value;
 const formValue = () => ({
   nickname: $('pName').value.trim(), intro: $('pIntro').value, title: $('pTitle').value,
-  emblem: checked('pEmblem') || MARK_DEFAULT, color: checked('pColor') || 'amber', banner: checked('pBanner') || 'none', tbanner: checked('pTBanner') || 'none',
+  emblem: checked('pEmblem') || MARK_DEFAULT, crest: checked('pCrest') || MARK_DEFAULT, color: checked('pColor') || 'amber', banner: checked('pBanner') || 'none', tbanner: checked('pTBanner') || 'none',
 });
 function renderEmblemOpts(sel) { // + (사진 올리기), 올린 사진(있으면), 문장 9개
   const photo = myProfile?.customAvatar;
@@ -2446,6 +2447,7 @@ function renderEmblemOpts(sel) { // + (사진 올리기), 올린 사진(있으�
       .map(([v, label, inner]) => `<label title="${label}"><input type="radio" name="pEmblem" value="${v}" aria-label="${label}"${v === sel ? ' checked' : ''}>${inner}</label>`).join('');
   if (!checked('pEmblem')) document.querySelector(`[name=pEmblem][value=${MARK_DEFAULT}]`).checked = true;
 }
+radioRow('pCrests', 'pCrest', Object.keys(MARKS).map(k => [k, MARKS[k].name, `<span class="o-em">${markSVG(k)}</span>`]));
 $('pEmblems').addEventListener('click', e => { if (e.target.closest('#pAddPhoto')) $('pPhoto').click(); });
 // 고른 사진을 가운데 정사각형으로 잘라 256×256으로 줄인 뒤 올린다
 $('pPhoto').onchange = async () => {
@@ -2469,6 +2471,7 @@ function fillProfileForm() {
   $('pTitle').innerHTML = (p.titles || []).map(t => `<option value="${t.id}" title="${esc(t.desc)}">${esc(t.name)}</option>`).join('');
   $('pTitle').value = p.titleId || '';
   renderEmblemOpts(p.emblem);
+  (document.querySelector(`[name=pCrest][value=${p.crest}]`) || document.querySelector(`[name=pCrest][value=${MARK_DEFAULT}]`)).checked = true;
   document.querySelector(`[name=pColor][value=${p.color}]`).checked = true;
   for (const inp of document.querySelectorAll('[name=pBanner], [name=pTBanner]')) { // 잠긴 배너는 고를 수 없다
     const lock = !ownedBanners().includes(inp.value);
