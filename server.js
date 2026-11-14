@@ -32,6 +32,9 @@ function ownView(prof) {
   const cards = list => (list || []).map(friendCard).filter(Boolean);
   return { ...profiles.ownView(prof), friends: cards(prof.friends), friendReqs: cards(prof.friendReqs), friendSent: cards(prof.friendSent) };
 }
+// 그 프로필로 접속해 있는 모든 곳에 메시지 하나를 보낸다
+const sendTo = (key, msg) => { for (const x of players.values()) if (x.pkey === key && x.ws) send(x, msg); };
+const lastInvite = new Map(); // "보낸 key>받는 key" -> 시각 (같은 친구에게 초대를 너무 자주 보내지 않게)
 // 그 프로필로 접속해 있는 곳에 바뀐 내 프로필을 보낸다 (친구 신청을 받았을 때 등)
 function pushProfile(prof, extra = {}) {
   for (const x of players.values()) if (x.pkey === prof.key && x.ws) send(x, { type: 'profile:me', profile: ownView(prof), ...extra });
@@ -245,6 +248,16 @@ new WebSocketServer({ server: http }).on('connection', (ws, req) => {
       pushProfile(res.profile, { friendDone: msg.type, newTitles: newTitles(res.profile, mine) });
       return;
     }
+    if (msg.type === 'friend:invite') { // 내가 있는 방으로 친구 초대
+      const prof = profiles.getByKey(msg.key), f = profiles.getByName(String(msg.nickname ?? ''));
+      if (!prof || !f || !prof.friends?.includes(f.key)) return send(me, { type: 'profile:error', message: '친구만 초대할 수 있습니다.', friend: true });
+      if (!room || room.started) return send(me, { type: 'profile:error', message: '대기실에 있을 때 초대할 수 있습니다.', friend: true });
+      const pair = prof.key + '>' + f.key;
+      if (Date.now() - (lastInvite.get(pair) || 0) < 10000) return send(me, { type: 'profile:error', message: '잠시 뒤에 다시 초대해 주세요.', friend: true });
+      lastInvite.set(pair, Date.now());
+      sendTo(f.key, { type: 'friend:invite', from: prof.nickname, code: room.code });
+      return send(me, { type: 'friend:invited', nickname: f.nickname });
+    }
     if (msg.type === 'title:sparkle') { // 홈 화면 마법진이 겹치는 순간을 봄 (숨겨진 칭호)
       const prof = profiles.getByKey(msg.key);
       if (prof && profiles.setFlag(msg.key, 'sparkle')) send(me, { type: 'profile:me', profile: ownView(prof), newTitles: ['반짝 반짝'] });
@@ -285,6 +298,7 @@ new WebSocketServer({ server: http }).on('connection', (ws, req) => {
         target.players.push(me);
       }
       broadcast(target); // started 값으로 클라이언트가 게임 화면으로 바로 간다
+      if (msg.type === 'create' && prof) for (const k of prof.friends || []) sendTo(k, { type: 'friend:room', from: prof.nickname, code }); // 친구에게 "방을 만들었어요" 알림
     } else if (msg.type === 'ready') {
       if (!room || room.started) return;
       me.ready = !!msg.ready;

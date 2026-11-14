@@ -730,6 +730,13 @@ input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--in
 .f-acts [data-fact="accept"], .f-acts [data-fact="join"] { background: var(--leather); color: var(--amber); }
 .lp-sec .lp-friend { font-style: normal; font-size: .78rem; color: var(--bronze-hi); margin-right: .8rem; }
 .lp-sec [data-befriend] { margin-right: .8rem; padding: .15rem .6rem !important; border: 1px solid currentColor !important; }
+/* 친구 초대 / 친구 방 알림 */
+.invite-box { inset: auto; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); margin: 0; width: min(22rem, calc(100vw - 2rem)); padding: 1rem 1.1rem;
+  border: 1px solid #e8c27a; border-radius: .8rem; background: #14110cf2; color: var(--text); box-shadow: 0 0 2rem #e8c27a44, 0 1rem 2rem #000a; }
+.invite-box:popover-open { animation: ivIn .4s cubic-bezier(.2, .7, .2, 1); } @keyframes ivIn { from { opacity: 0; transform: translateY(1rem); } }
+.invite-box p { margin: 0 0 .8rem; line-height: 1.5; } .invite-box b { color: var(--amber); } .invite-box small { display: block; font-size: .75rem; color: var(--dim); }
+.iv-acts { display: flex; gap: .5rem; } .iv-acts .btn { flex: 1; padding: .55rem; }
+.st-hint { font-size: .72rem; color: var(--dim); }
 /* 로그인 창 */
 #loginDlg { width: min(100%, 24rem); }
 .login-sub { margin: 0 0 1rem; text-align: center; font-size: .85rem; color: var(--fog); line-height: 1.6; }
@@ -1004,6 +1011,7 @@ input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--in
         <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
         <label>초대 코드</label>
         <div class="code" id="roomCode"></div>
+        <button id="inviteFriends" class="btn" type="button">친구 초대</button>
         <button id="invite" class="btn ghost" type="button">초대 링크 보내기</button>
         <button id="leave" class="link" type="button">방 나가기</button>
       </aside>
@@ -1138,7 +1146,7 @@ input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--in
   <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
   <div class="st-head"><h2 id="stTitle">설정</h2><button class="st-close" type="button" id="stClose" aria-label="닫기">×</button></div>
   <div class="tabs" role="tablist">
-    <button role="tab" type="button" data-tab="sound" aria-controls="tab-sound">소리</button>
+    <button role="tab" type="button" data-tab="sound" aria-controls="tab-sound">소리·알림</button>
     <button role="tab" type="button" data-tab="controls" aria-controls="tab-controls">조작 방법</button>
     <button role="tab" type="button" data-tab="rules" aria-controls="tab-rules">기본 규칙</button>
   </div>
@@ -1147,13 +1155,14 @@ input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--in
       <div class="row"><label for="sMute">음소거</label><span></span><input class="switch" type="checkbox" id="sMute"></div>
       <div class="row"><label for="sBgm">배경 음악</label><input type="range" id="sBgm" min="0" max="100" step="5"><output for="sBgm" id="oBgm"></output></div>
       <div class="row"><label for="sSfx">효과음</label><input type="range" id="sSfx" min="0" max="100" step="5"><output for="sSfx" id="oSfx"></output></div>
+      <div class="row"><label for="sFriendRoom">친구 방 알림</label><span class="st-hint">친구가 방을 만들면 알려 줍니다</span><input class="switch" type="checkbox" id="sFriendRoom"></div>
       <p style="margin-top:1rem;font-size:.78rem;color:var(--dim)">배경 음악은 홈과 대기실에서 나옵니다. 브라우저 정책상 화면을 한 번 누른 뒤부터 재생됩니다. 효과음은 버튼을 누를 때 납니다. 설정은 이 기기에 저장됩니다.</p>
     </section>
     <section class="pane" id="tab-controls" role="tabpanel" hidden>
       <h3>방과 대기실</h3>
       <dl class="keys">
-        <dt>방 만들기</dt><dd>홈의 "방 만들기 →"를 누르고 닉네임을 입력합니다.</dd>
-        <dt>친구 초대</dt><dd>대기실의 "초대 링크 보내기"나 "+ 친구 초대"로 링크를 보내거나, 5자리 초대 코드를 알려 주세요.</dd>
+        <dt>방 만들기</dt><dd>홈의 "방 만들기"를 누릅니다. 로그인했다면 친구들에게 알림이 갑니다.</dd>
+        <dt>친구 초대</dt><dd>대기실의 "친구 초대"에서 접속 중인 친구에게 바로 초대를 보내거나, "초대 링크 보내기"로 링크를 보내거나, 5자리 초대 코드를 알려 주세요.</dd>
         <dt>입장</dt><dd>받은 링크를 열거나, 홈의 "방 참가하기"를 누르고 코드를 입력합니다.</dd>
         <dt>준비와 시작</dt><dd>참가자는 "준비하기", 모두 준비되면 방장이 "게임 시작"을 누릅니다.</dd>
         <dt>잠깐 나갔다 오기</dt><dd>새로고침하거나 다른 앱에 다녀와도 같은 탭이면 자동으로 돌아옵니다. 탭을 닫았다면 같은 닉네임으로 다시 입장하세요. 자리는 10분 동안 유지됩니다.</dd>
@@ -1288,6 +1297,9 @@ input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--in
 </dialog>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><radialGradient id="pearl" cx=".35" cy=".35"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#f3b9c8"/><stop offset="1" stop-color="#9c4a62"/></radialGradient><radialGradient id="planetG" cx=".35" cy=".3"><stop offset="0" stop-color="#ffe0f4"/><stop offset=".35" stop-color="#b48cf0"/><stop offset=".75" stop-color="#4b5fd6"/><stop offset="1" stop-color="#2a2b6a"/></radialGradient></defs></svg>
 <div class="title-toast" id="titleToast" popover="manual" aria-live="polite"></div>
+<div class="invite-box" id="inviteBox" popover="manual" role="alertdialog" aria-labelledby="ivText">
+  <p id="ivText"></p><div class="iv-acts"><button class="btn" type="button" id="ivJoin">참가</button><button class="btn ghost" type="button" id="ivClose">닫기</button></div>
+</div>
 <dialog id="jobDlg" class="glass ornate">
   <svg class="cn tl"><use href="#corner"/></svg><svg class="cn tr"><use href="#corner"/></svg><svg class="cn bl"><use href="#corner"/></svg><svg class="cn br"><use href="#corner"/></svg>
   <h2 id="jobName"></h2>
@@ -1608,13 +1620,13 @@ $('jobClose').onclick = () => $('jobDlg').close();
 /* ---------- 설정 ----------
    소리 설정은 localStorage에 저장한다. BGM을 붙일 때는 settings 값을 읽고
    'arcana:settings' 이벤트를 들으면 된다. */
-const settings = Object.assign({ mute: false, bgm: 60, sfx: 80, tab: 'sound' }, (() => { try { return JSON.parse(localStorage.getItem('arcana-settings')) || {}; } catch { return {}; } })());
+const settings = Object.assign({ mute: false, bgm: 60, sfx: 80, tab: 'sound', friendRoom: true }, (() => { try { return JSON.parse(localStorage.getItem('arcana-settings')) || {}; } catch { return {}; } })());
 function saveSettings() {
   try { localStorage.setItem('arcana-settings', JSON.stringify(settings)); } catch {}
   dispatchEvent(new CustomEvent('arcana:settings', { detail: settings }));
 }
 function syncSound() {
-  $('sMute').checked = settings.mute;
+  $('sMute').checked = settings.mute; $('sFriendRoom').checked = settings.friendRoom;
   for (const k of ['bgm', 'sfx']) {
     const el = $('s' + k[0].toUpperCase() + k.slice(1));
     el.value = settings[k]; el.disabled = settings.mute;
@@ -1622,6 +1634,7 @@ function syncSound() {
   }
 }
 $('sMute').onchange = e => { settings.mute = e.target.checked; syncSound(); saveSettings(); };
+$('sFriendRoom').onchange = e => { settings.friendRoom = e.target.checked; saveSettings(); };
 $('sBgm').oninput = e => { settings.bgm = +e.target.value; syncSound(); saveSettings(); };
 $('sSfx').oninput = e => { settings.sfx = +e.target.value; syncSound(); saveSettings(); };
 function showTab(name) {
@@ -2463,6 +2476,8 @@ $('pRecord').addEventListener('click', e => {
   const f = e.target.closest('[data-befriend]'); if (f) { f.disabled = true; send({ type: 'friend:request', key: profileKey(), nickname: f.dataset.befriend }); }
 });
 /* ---------- 친구: 닉네임으로 신청 → 상대가 수락하면 서로 친구. 친구가 접속 중인지, 어느 방에 있는지 보인다 ---------- */
+// 내가 대기실에 있고, 친구가 접속 중이며 이 방에 없을 때 초대할 수 있다
+const canInvite = f => f.online && room && !room.started && f.room !== room.code && !room.players?.some(p => p.name === f.nickname);
 const isFriend = n => myProfile?.friends?.some(f => f.nickname === n);
 function friendBtn(p) { // 다른 사람 기록 위의 "친구 신청" (게스트·나·이미 친구면 없음)
   if (!myProfile || p.guest || p.nickname === myProfile.nickname) return '';
@@ -2485,7 +2500,7 @@ function renderFriends() {
     (items.length ? `<ul class="f-list">${items.map(f => friendRow(f, acts(f))).join('')}</ul>` : empty ? `<p class="pempty">${empty}</p>` : '');
   const friends = [...(me.friends || [])].sort((a, b) => b.online - a.online || a.nickname.localeCompare(b.nickname));
   $('fLists').innerHTML = (reqs.length ? list('받은 신청', reqs, () => [['accept', '수락'], ['decline', '거절']]) : '')
-    + list('친구', friends, f => [['view', '기록'], ...(f.room && !room ? [['join', '참가']] : []), ['remove', '삭제']], '아직 친구가 없습니다. 위에 닉네임을 넣어 신청해 보세요.')
+    + list('친구', friends, f => [['view', '기록'], ...(canInvite(f) ? [['invite', '초대']] : []), ...(f.room && !room ? [['join', '참가']] : []), ['remove', '삭제']], '아직 친구가 없습니다. 위에 닉네임을 넣어 신청해 보세요.')
     + (me.friendSent?.length ? list('보낸 신청', me.friendSent, () => [['remove', '취소']]) : '');
 }
 $('fForm').onsubmit = e => {
@@ -2499,6 +2514,7 @@ $('fLists').onclick = e => {
   const n = b.dataset.nick, act = b.dataset.fact;
   if (act === 'view') return send({ type: 'profile:view', nickname: n });
   if (act === 'join') { $('profile').close(); $('code').value = b.dataset.room; return open('join'); }
+  if (act === 'invite') { b.disabled = true; b.textContent = '보내는 중'; return send({ type: 'friend:invite', key: profileKey(), nickname: n }); }
   if (act === 'remove' && !b.classList.contains('sure')) { b.classList.add('sure'); b.textContent = '정말?'; return; } // 한 번 더 눌러야 삭제
   b.disabled = true;
   send({ type: 'friend:' + act, key: profileKey(), nickname: n });
@@ -2580,6 +2596,27 @@ $('hmSettings').onclick = () => openSettings();
 document.querySelectorAll('.home-menu button').forEach(b => b.addEventListener('pointerdown', () => { b.classList.add('on'); setTimeout(() => b.classList.remove('on'), 600); }));
 $('pCodex').onclick = () => { $('profile').close(); openCodex(); };
 $('cxTitles').onclick = e => { const b = e.target.closest('[data-wear]'); if (b) { b.disabled = true; send({ type: 'profile:title', key: profileKey(), id: b.dataset.wear }); } };
+// 친구의 초대 · 친구가 만든 방 알림: "참가"를 누르면 그 방으로. 게임 중에는 띄우지 않는다
+let ivCode = '';
+function friendCall(msg) {
+  if (room?.started || room?.code === msg.code) return;
+  if (msg.type === 'friend:room' && !settings.friendRoom) return; // 설정에서 친구 방 알림을 껐음
+  ivCode = msg.code;
+  $('ivText').innerHTML = msg.type === 'friend:invite' ? `<b>${esc(msg.from)}</b>님이 방으로 초대했습니다.<small>방 ${esc(msg.code)}</small>` : `<b>${esc(msg.from)}</b>님이 방을 만들었습니다.<small>방 ${esc(msg.code)} · 설정에서 이 알림을 끌 수 있습니다</small>`;
+  const el = $('inviteBox');
+  try { el.hidePopover(); } catch {}
+  ([...document.querySelectorAll('dialog[open]')].pop() || document.body).append(el); // 열린 창이 있으면 그 안에 넣어야 누를 수 있다
+  try { el.showPopover(); } catch {}
+  sfx('chime');
+  clearTimeout(el.t); el.t = setTimeout(() => { try { el.hidePopover(); } catch {} }, 20000);
+}
+$('ivClose').onclick = () => { try { $('inviteBox').hidePopover(); } catch {} };
+$('ivJoin').onclick = () => {
+  try { $('inviteBox').hidePopover(); } catch {}
+  document.querySelectorAll('dialog[open]').forEach(d => d.id !== 'loginDlg' && d.close());
+  $('code').value = ivCode; open('join');
+};
+$('inviteFriends').onclick = () => myProfile ? openProfile(null, 'friends') : toast('로그인하면 친구에게 바로 초대를 보낼 수 있습니다.');
 function titleToast(names) { if (names?.length) toast(`✦ 칭호 획득: ${names.join(', ')}`); } // 칭호를 새로 얻으면
 function toast(text) { // 화면 위쪽에 잠깐 알림
   const el = $('titleToast');
@@ -2683,6 +2720,11 @@ function onMessage(e) {
     welcomed();
   }
   if (msg.type.startsWith('profile:')) return onProfileMessage(msg);
+  if (msg.type === 'friend:invited') { // 내가 보낸 초대가 전해짐
+    const b = document.querySelector(`[data-fact="invite"][data-nick="${CSS.escape(msg.nickname)}"]`); if (b) b.textContent = '초대함';
+    $('fMsg').textContent = `${msg.nickname}님에게 초대를 보냈습니다.`; $('fMsg').className = 'pmsg good'; return;
+  }
+  if (msg.type === 'friend:invite' || msg.type === 'friend:room') return friendCall(msg);
   if (msg.type === 'codex') { guestCodex = msg.titles; if ($('codex').open) renderCodex(); return; }
   if (msg.type.startsWith('auth:')) return onAuth(msg);
   if (msg.type === 'replaced') replaced = true;

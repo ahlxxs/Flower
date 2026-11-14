@@ -1,4 +1,4 @@
-// 친구 점검: 신청 → 실시간 알림 → 수락 → 접속·방 표시 → 방 참가 → 삭제. 실행: npm run test:friends
+// 친구 점검: 신청 → 실시간 알림 → 수락 → 방 알림·방 표시 → 방 참가 → 삭제 → 대기실에서 초대 → 알림 끄기. 실행: npm run test:friends
 const { chromium } = require('playwright');
 const { spawn } = require('node:child_process');
 const { mkdtempSync } = require('node:fs'); const { tmpdir } = require('node:os'); const { join } = require('node:path');
@@ -36,9 +36,11 @@ const ok = (c, l) => { if (!c) failed++; console.log((c ? 'PASS ' : 'FAIL ') + l
   ok((await B.textContent('#fLists')).includes('친구A') && (await B.textContent('#fLists')).includes('접속 중'), 'B: 수락 → 친구 목록에 A (접속 중)');
   ok((await A.textContent('#titleToast')).includes('친구가 되었습니다') && (await A.textContent('#fLists')).includes('친구B'), 'A: 친구가 됐다는 알림, 목록에 B');
 
-  // 3. A가 방을 만들면 B의 친구 목록에 방 코드 → 참가
+  // 3. A가 방을 만들면 B에게 알림이 뜨고, B의 친구 목록에 방 코드 → 참가
   await A.click('[data-close="profile"]'); await A.click('[data-open="create"]'); await A.click('#form .btn:not(.ghost)'); await A.waitForSelector('#lobby:not([hidden])'); await sleep(1800);
   const code = await A.textContent('#roomCode');
+  ok(await B.evaluate(() => document.getElementById('inviteBox').matches(':popover-open')) && (await B.textContent('#ivText')).includes('친구A님이 방을 만들었습니다'), 'B: 친구 방 알림이 뜸');
+  await B.click('#ivClose');
   await B.click('[data-ptab="mine"]'); await friendsTab(B);
   ok((await B.textContent('#fLists')).includes('방 ' + code), 'B: A가 있는 방 코드가 보임 → ' + code);
   await B.click('[data-fact="join"]'); await sleep(300);
@@ -56,6 +58,29 @@ const ok = (c, l) => { if (!c) failed++; console.log((c ? 'PASS ' : 'FAIL ') + l
   ok(!(await A.textContent('#fLists')).includes('친구B'), 'A: 두 번 누르면 삭제');
   await B.click('.seat[data-name="친구A"]'); await B.waitForSelector('#profile[open]'); await sleep(300);
   ok(!!(await B.$('[data-befriend="친구A"]')), 'B 쪽에서도 친구가 끊겨 "친구 신청" 버튼이 다시 보임');
+
+  // 5. 대기실의 "친구 초대": 다시 친구가 된 뒤, 방 밖의 C를 초대 → C 화면에 초대 → 참가
+  const C = await page(); await signup(C, 'friendc', '친구C');
+  await C.evaluate(() => send({ type: 'friend:request', key: profileKey(), nickname: '친구A' })); await sleep(300);
+  await A.click('[data-close="profile"]'); await A.click('#inviteFriends'); await A.waitForSelector('#profile[open]'); await sleep(400);
+  ok(await A.evaluate(() => !document.getElementById('ptab-friends').hidden), '대기실 "친구 초대" → 친구 탭이 열림');
+  await A.click('[data-fact="accept"]'); await sleep(500);
+  await A.click('[data-fact="invite"]'); await sleep(500);
+  ok((await A.textContent('#fMsg')).includes('초대를 보냈습니다'), 'A: 초대 보냄');
+  ok((await C.textContent('#ivText')).includes('친구A님이 방으로 초대했습니다'), 'C: 초대 알림');
+  await C.click('#ivJoin'); await sleep(300);
+  ok(await C.evaluate(c => document.getElementById('dlg').open && document.getElementById('code').value === c, code), 'C: 참가 → 그 방 코드로 참가 창');
+  await C.click('#form .btn:not(.ghost)'); await C.waitForSelector('#lobby:not([hidden])'); await sleep(1200);
+  ok((await A.textContent('#seats')).includes('친구C'), 'C가 초대받은 방에 들어옴');
+
+  // 6. 설정에서 친구 방 알림 끄기 → C가 방을 새로 만들어도 A(다른 방 손님 아님, 홈)에게 안 뜸
+  const D = await page(); await signup(D, 'friendd', '친구D');
+  await D.evaluate(() => send({ type: 'friend:request', key: profileKey(), nickname: '친구C' })); await sleep(300);
+  await C.evaluate(() => send({ type: 'friend:accept', key: profileKey(), nickname: '친구D' })); await sleep(300);
+  await D.click('#hmSettings'); await D.click('#sFriendRoom'); await D.click('#stClose');
+  ok(await D.evaluate(() => JSON.parse(localStorage.getItem('arcana-settings')).friendRoom === false), '설정: 친구 방 알림 끔 (이 기기에 저장)');
+  await C.click('#leave'); await sleep(800); await C.click('[data-open="create"]'); await C.click('#form .btn:not(.ghost)'); await sleep(2000);
+  ok(!(await D.evaluate(() => document.getElementById('inviteBox').matches(':popover-open'))), 'D: 알림을 끄면 친구 방 알림이 안 뜸');
   ok(!errs.length, '페이지 오류 없음 ' + errs.join(' / '));
   await b.close();
 })().catch(e => { console.error(e); failed++; }).finally(() => { server.kill(); process.exit(failed ? 1 : 0); });
