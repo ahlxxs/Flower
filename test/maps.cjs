@@ -25,9 +25,9 @@ const ok = (c, l) => { if (!c) failed++; console.log((c ? 'PASS ' : 'FAIL ') + l
   await A.clock.runFor(1000);
   await A.click('[data-open="create"]'); await A.fill('#name', '방장'); await A.click('#form .btn:not(.ghost)'); await A.waitForSelector('#lobby:not([hidden])'); await A.clock.runFor(2500);
   const code = await A.textContent('#roomCode');
-  ok(await map(A) === 'forest' && (await A.$$('#mapPick .mp:not(:disabled)')).length === 23, '방을 만들면 기본 맵(깊은 숲), 방장은 맵 23개 중 고를 수 있음');
+  ok(await map(A) === 'forest' && (await A.$$('#mapPick .mp:not(:disabled)')).length === 26, '방을 만들면 기본 맵(깊은 숲), 방장은 맵 26개 중 고를 수 있음');
   await B.click('[data-open="join"]'); await B.fill('#name', '손님'); await B.fill('#code', code); await B.click('#form .btn:not(.ghost)'); await B.waitForSelector('#lobby:not([hidden])'); await B.clock.runFor(2500);
-  ok((await B.$$('#mapPick .mp:disabled')).length === 23 && (await B.textContent('#mapNote')).includes('방장'), '손님은 맵을 고를 수 없음');
+  ok((await B.$$('#mapPick .mp:disabled')).length === 26 && (await B.textContent('#mapNote')).includes('방장'), '손님은 맵을 고를 수 없음');
   await A.click('#mapPick [data-map="swamp"]'); await sleep(2300); // 바뀌는 연출(1.8초)은 실제 시간으로 흐른다
   ok(await map(A) === 'swamp' && await map(B) === 'swamp' && await shown(B, 'swamp'), '방장이 "보랏빛 늪"을 고르면 둘 다 그 배경 (이전 그림은 지워짐)');
   await B.clock.runFor(30000);
@@ -38,7 +38,7 @@ const ok = (c, l) => { if (!c) failed++; console.log((c ? 'PASS ' : 'FAIL ') + l
   ok(await A.evaluate(() => document.getElementById('frame').dataset.view) === 'game' && await map(A) === 'swamp' && await map(B) === 'swamp', '게임 화면에서도 같은 맵');
   const names = Object.keys(await A.evaluate(() => MAPS));
   const bad = await A.evaluate(async names => (await Promise.all(names.flatMap(n => ['back', 'front'].map(async p => [n + '-' + p, (await fetch(`/maps/${n}-${p}.svg`)).status])))).filter(([, s]) => s !== 200), names);
-  ok(names.length === 23 && !bad.length, '맵 그림 46개 모두 받을 수 있음 ' + bad.join(' '));
+  ok(names.length === 26 && !bad.length, '맵 그림 52개 모두 받을 수 있음 ' + bad.join(' '));
   ok(!errs.length, '페이지 오류 없음 ' + errs.join(' / '));
   await b.close();
 })().catch(e => { console.error(e); failed++; }).finally(() => { server.kill(); process.exit(failed ? 1 : 0); });

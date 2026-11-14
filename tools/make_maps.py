@@ -1,4 +1,4 @@
-"""맵(배경) 23종을 그려 public/maps/<이름>-back.svg(마법진 뒤)와 -front.svg(마법진 앞)로 저장한다.
+"""맵(배경) 26종을 그려 public/maps/<이름>-back.svg(마법진 뒤)와 -front.svg(마법진 앞)로 저장한다.
 실행: python3 tools/make_maps.py   (맵 이름은 같은 이름의 배너와 짝. 그 맵에서 10번 이기면 배너가 열린다)"""
 import math, random, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
@@ -419,6 +419,66 @@ def m_goldtree(B, F, rnd):
              + pix_circle(323, 552, 10, 6, '#ffb030') + circle(323, 552, 40, '#ffb030', ' opacity=".2"')
              + pix_poly([(-20, 760), (400, 740), (800, 760), (1200, 750), (1620, 760), (1620, 920), (-20, 920)], c, '#1e2a2e')
              + glowdots(rnd, 30, ['#a0f070', '#ffd040', '#c080ff'], (100, 600, 1500, 880), 2))
+    return back, front
+
+# ---------------------------------------------------------------- 맵이 없던 배너 3종
+def smoke(rnd, x, y, length, ang, width, color, blur, n=5, curl=1.0):
+    """연기 한 줄기: 부드럽게 굽이치는 중심선을 따라 비단결 같은 가는 결 여러 가닥 + 흐린 빛 번짐.
+    위로 갈수록 넓게 퍼지고, 가닥마다 조금씩 꼬인다"""
+    k1, k2, ph = rnd.uniform(1.2, 2.2) * curl, rnd.uniform(2.5, 4) * curl, rnd.uniform(0, 6.28)
+    ca, sa = math.cos(ang), math.sin(ang)
+    def pt(t, off):  # 중심선 + 옆으로 비킨 가닥
+        wob = math.sin(t * math.pi * k1 + ph) * length * .16 + math.sin(t * math.pi * k2 + ph * 2) * length * .05
+        lat = wob + off * (.2 + t * 1.6) * width
+        return x + ca * length * t - sa * lat, y + sa * length * t + ca * lat
+    def line(off, twist):
+        ps = [pt(i / 36, off + math.sin(i / 36 * math.pi * 3 + twist) * .35) for i in range(37)]
+        d = f'M{f(ps[0][0])} {f(ps[0][1])}' + ''.join(f'Q{f(a[0])} {f(a[1])} {f((a[0] + b[0]) / 2)} {f((a[1] + b[1]) / 2)}' for a, b in zip(ps[1:], ps[2:]))
+        return d
+    out = [path(line(0, 0), 'none', f' stroke="{color}" stroke-width="{f(width * 1.6)}" stroke-linecap="round" opacity=".16" filter="{blur}"')]
+    for i in range(n * 2):
+        off, tw = rnd.uniform(-1, 1), rnd.uniform(0, 6.28)
+        out.append(path(line(off, tw), 'none', f' stroke="{color}" stroke-width="{f(rnd.uniform(.8, 2.2))}" stroke-linecap="round" opacity="{rnd.uniform(.25, .6):.2f}"'))
+    return ''.join(out)
+
+@mapdef('bluesmoke')  # 푸른 연기: 짙은 청록 어둠, 빛나는 청록 연기 소용돌이, 비스듬한 어두운 판
+def m_bluesmoke(B, F, rnd):
+    b8, b20 = B.blur('b8', 8), B.blur('b20', 20)
+    back = (rect(B.lin('sky', [(0, '#0f2230'), (.5, '#142c3a'), (1, '#081218')], 1, 1)) + circle(1000, 380, 460, B.rad('core', [(0, '#7fe0ff', .45), (.4, '#3aa8c8', .2), (1, '#3aa8c8', 0)]))
+            + g(''.join(circle(rnd.uniform(700, 1300), rnd.uniform(200, 600), rnd.uniform(60, 160), '#7fe0ff', f' opacity="{rnd.uniform(.05, .12):.2f}"') for _ in range(12)), f' filter="{b20}"')
+            + smoke(rnd, 760, 620, 600, -.6, 60, '#a9ecff', b8, 7) + smoke(rnd, 1300, 700, 520, -2.4, 50, '#a9ecff', b8, 6) + smoke(rnd, 980, 420, 360, -1.4, 40, '#d4f7ff', b8, 5, 1.6)
+            + circle(1000, 380, 70, B.rad('hot', [(0, '#eaffff', .9), (1, '#7fe0ff', 0)])))
+    front = (shade_center(F, '#05101a', .45) + path('M1380 -20H1620V920H1500Z', '#0a141c') + path('M1380 -20L1500 920', 'none', ' stroke="#3aa8c8" stroke-width="2" opacity=".5"')
+             + smoke(rnd, -40, 900, 420, -1.1, 50, '#7fe0ff', F.blur('b8', 8), 5) + smoke(rnd, 1640, 120, 300, 2.6, 40, '#7fe0ff', F.blur('b6', 6), 4))
+    return back, front
+
+@mapdef('starsmoke')  # 별밤 연기: 별이 가득한 검은 밤, 양옆에서 피어오르는 흰 연기
+def m_starsmoke(B, F, rnd):
+    b6 = B.blur('b6', 6)
+    back = (rect(B.rad('sky', [(0, '#1b2440'), (.6, '#0a0d1a'), (1, '#04050a')], .5, 1.1, 1)) + stars(rnd, 380, '#cfe0ff', 0, 900, (.6, .9, 1.3, 1.8))
+            + ''.join(sparkle(rnd.uniform(100, 1500), rnd.uniform(40, 700), rnd.uniform(5, 9), '#ffffff', .9) for _ in range(10))
+            + rect(B.lin('band', [(0, '#8fa8e0', 0), (.5, '#8fa8e0', .12), (1, '#8fa8e0', 0)], 1, 1), 0, 0, 1600, 900))
+    b8 = F.blur('b8', 8)
+    front = (shade_center(F, '#04050a', .35)
+             + smoke(rnd, 60, 940, 700, -1.45, 70, '#f2f2f2', b8, 7, .8) + smoke(rnd, 220, 960, 520, -1.7, 40, '#f2f2f2', b8, 5, .9)
+             + smoke(rnd, 1540, 940, 720, -1.65, 70, '#f2f2f2', b8, 7, .8) + smoke(rnd, 1380, 960, 480, -1.4, 40, '#f2f2f2', b8, 5, .9))
+    return back, front
+
+@mapdef('sunforest')  # 숲의 햇살: 연둣빛 숲, 왼쪽 위에서 쏟아지는 햇살, 빛의 원, 앞쪽 잎사귀
+def m_sunforest(B, F, rnd):
+    back = (rect(B.lin('sky', [(0, '#e9f5b8'), (.35, '#9cc87a'), (.75, '#3f7a4a'), (1, '#1f3d26')], 1, 1)) + circle(300, 60, 520, B.rad('sun', [(0, '#fffbe0', .95), (.4, '#f6ffd0', .4), (1, '#f6ffd0', 0)]))
+            + ''.join(trunk(x, 900, 900, w, c, lean=rnd.uniform(-20, 20)) for x, w, c in [(560, 16, '#5a8a5a'), (760, 12, '#6a9a62'), (1040, 18, '#4f7a52'), (1240, 14, '#5a8a5a')])
+            + ''.join(canopy(x, y, 220, 90, c, rnd, 12) for x, y, c in [(900, 60, '#4f8a4a'), (1300, 120, '#3f7a42'), (600, 30, '#6a9a52')])
+            + rays(180, -60, [.55, .7, .85, 1.0, 1.15], 1500, 110, '#fffbe0', .16)
+            + g(circle(980, 470, 230, 'none', ' stroke="#f6ffd8" stroke-width="3"') + circle(980, 470, 270, 'none', ' stroke="#f6ffd8" stroke-width="2" stroke-dasharray="120 20 10 20"') + circle(980, 470, 200, '#fffbe0', ' opacity=".18"'), ' opacity=".7"')
+            + ground(740, '#2f5a36', rnd, 18, 10) + bush(980, 760, 360, 80, '#4f8a4a', rnd) + rect('#fffbe0', 760, 742, 440, 6, ' opacity=".5" rx="3"')
+            + ''.join(leaf(rnd.uniform(200, 1500), rnd.uniform(100, 720), rnd.uniform(8, 14), 3, rnd.uniform(0, 6.28), '#f6ffc8', ' opacity=".8"') for _ in range(36)))
+    lf = lambda x, y, l, a: leaf(x, y, l, l * .3, a, '#1f4a2c') + path(f'M{f(x)} {f(y)}L{f(x + math.cos(a) * l * .9)} {f(y + math.sin(a) * l * .9)}', 'none', ' stroke="#2f6a3e" stroke-width="2"')
+    front = (shade_center(F, '#0e2414', .3)
+             + ''.join(lf(x, y, rnd.uniform(140, 230), a) for x, y, a in [(-20, 920, -1.0), (60, 940, -1.4), (160, 940, -1.1), (240, 930, -1.6), (-20, 700, -.4), (1620, 920, -2.1), (1540, 940, -1.8), (1440, 940, -2.0), (1360, 930, -1.5), (1620, 680, -2.8)])
+             + ''.join(lf(x, y, rnd.uniform(120, 200), a) for x, y, a in [(1500, -20, 2.0), (1400, -20, 1.6), (1620, 60, 2.6), (100, -20, 1.1), (200, -20, 1.5)])
+             + trunk(1540, 940, 960, 46, '#173322', -20) + ''.join(branches(1520, 220, math.pi + .5, 220, 18, 4, '#173322', rnd, .5))
+             + ''.join(circle(rnd.uniform(0, 1600), rnd.uniform(0, 900), rnd.uniform(1.5, 3), '#fffbe0', ' opacity=".7"') for _ in range(30)))
     return back, front
 
 def build():

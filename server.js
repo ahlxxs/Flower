@@ -20,7 +20,7 @@ const rooms = new Map();   // code -> { code, host, players: [player], started }
 const authTries = new Map(); // ip -> { fails, lock }
 // 맵(배경). 그림은 public/maps/<이름>-back.svg·-front.svg. 'forest' 말고는 같은 이름의 배너가 있다 (그 맵에서 10번 이기면 열림)
 const MAPS = ['forest', 'redcloud', 'moongeese', 'dusk', 'gold', 'sakura', 'rosechain', 'violet', 'cover', 'planet', 'crow', 'curtain', 'butterfly',
-  'thicket', 'firefly', 'swamp', 'waterfall', 'ruins', 'shrine', 'sunset', 'skycity', 'henge', 'goldtree'];
+  'thicket', 'firefly', 'swamp', 'waterfall', 'ruins', 'shrine', 'sunset', 'skycity', 'henge', 'goldtree', 'bluesmoke', 'starsmoke', 'sunforest'];
 const players = new Map(); // token -> { id, token, name, room, ready, ws, timer, job, role, pkey(로그인한 프로필 key) }
 
 // 내 프로필 + 친구 목록(접속 여부, 들어가 있는 방). 친구의 key는 절대 내보내지 않는다
