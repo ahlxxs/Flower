@@ -18,7 +18,24 @@ const GRACE_MS = Number(process.env.GRACE_MS) || 10 * 60 * 1000; // 연결이 �
 const rooms = new Map();   // code -> { code, host, players: [player], started }
 // ponytail: 로그인 실패 횟수는 메모리에만 (서버 재시작 시 초기화). 서버를 여러 대로 늘리면 공용 저장소로
 const authTries = new Map(); // ip -> { fails, lock }
-const players = new Map(); // token -> { id, token, name, room, ready, ws, timer, job, role }
+const players = new Map(); // token -> { id, token, name, room, ready, ws, timer, job, role, pkey(로그인한 프로필 key) }
+
+// 내 프로필 + 친구 목록(접속 여부, 들어가 있는 방). 친구의 key는 절대 내보내지 않는다
+const onlineAs = key => [...players.values()].find(x => x.pkey === key && x.ws);
+function friendCard(key) {
+  const f = profiles.getByKey(key);
+  if (!f) return null;
+  const v = profiles.publicView(f), on = onlineAs(key), r = on && rooms.get(on.room);
+  return { nickname: v.nickname, emblem: v.emblem, color: v.color, title: v.title, lv: v.level.lv, online: !!on, room: r && !r.started ? r.code : '', playing: !!r?.started };
+}
+function ownView(prof) {
+  const cards = list => (list || []).map(friendCard).filter(Boolean);
+  return { ...profiles.ownView(prof), friends: cards(prof.friends), friendReqs: cards(prof.friendReqs), friendSent: cards(prof.friendSent) };
+}
+// 그 프로필로 접속해 있는 곳에 바뀐 내 프로필을 보낸다 (친구 신청을 받았을 때 등)
+function pushProfile(prof, extra = {}) {
+  for (const x of players.values()) if (x.pkey === prof.key && x.ws) send(x, { type: 'profile:me', profile: ownView(prof), ...extra });
+}
 // ponytail: 마왕군 수는 임시로 4명당 1명(최소 1명). 규칙이 정해지면 바꾼다.
 const demonCount = n => Math.max(1, Math.floor(n / 4));
 
@@ -135,7 +152,7 @@ function recordResults(room) {
     const gain = profiles.recordGame(p.pkey, { camp: s.role, win, survived: s.alive, job: s.job, hand: s.hand.length, soul: s.soul,
       sealWin: !!o.seal, heroDeaths: g.seats.filter(x => x.role === 'hero' && !x.eater && !x.alive).length });
     const prof = profiles.getByKey(p.pkey);
-    if (prof) send(p, { type: 'profile:me', profile: profiles.ownView(prof), gained: gain, newTitles: newTitles(prof, before) });
+    if (prof) send(p, { type: 'profile:me', profile: ownView(prof), gained: gain, newTitles: newTitles(prof, before) });
   }
 }
 
@@ -190,7 +207,8 @@ new WebSocketServer({ server: http }).on('connection', (ws, req) => {
     // ---------- 프로필 ----------
     if (msg.type === 'profile:me') {
       const prof = profiles.getByKey(msg.key);
-      return send(me, { type: 'profile:me', profile: prof && profiles.ownView(prof) });
+      me.pkey = prof?.key || null; // 이 연결은 이 프로필로 접속 중 (친구 목록의 "접속 중")
+      return send(me, { type: 'profile:me', profile: prof && ownView(prof) });
     }
     // ---------- 로그인 / 회원가입 ----------
     if (msg.type === 'auth:login' || msg.type === 'auth:signup') {
@@ -203,22 +221,33 @@ new WebSocketServer({ server: http }).on('connection', (ws, req) => {
         return send(me, { type: 'auth:error', message: res.error });
       }
       authTries.delete(ip);
-      return send(me, { type: 'auth:ok', key: res.profile.key, profile: profiles.ownView(res.profile), signup: msg.type === 'auth:signup' });
+      me.pkey = res.profile.key;
+      return send(me, { type: 'auth:ok', key: res.profile.key, profile: ownView(res.profile), signup: msg.type === 'auth:signup' });
     }
     if (msg.type === 'profile:save') {
       if (!profiles.getByKey(msg.key)) return send(me, { type: 'profile:error', message: '로그인하면 프로필을 고칠 수 있습니다.' });
       const res = profiles.save(msg.key, msg);
       if (res.error) return send(me, { type: 'profile:error', message: res.error });
-      return send(me, { type: 'profile:me', key: res.profile.key, profile: profiles.ownView(res.profile), saved: true });
+      return send(me, { type: 'profile:me', key: res.profile.key, profile: ownView(res.profile), saved: true });
     }
     if (msg.type === 'profile:title') { // 도감이나 기록부에서 칭호 달기
       const res = profiles.setTitle(msg.key, String(msg.id ?? ''));
       if (res.error) return send(me, { type: 'profile:error', message: res.error });
-      return send(me, { type: 'profile:me', profile: profiles.ownView(res.profile), titled: true });
+      return send(me, { type: 'profile:me', profile: ownView(res.profile), titled: true });
+    }
+    if (['friend:request', 'friend:accept', 'friend:decline', 'friend:remove'].includes(msg.type)) { // 친구
+      const nick = String(msg.nickname ?? ''), titled = x => new Set(x ? profiles.titlesOf(x).map(t => t.id) : []);
+      const mine = titled(profiles.getByKey(msg.key)), theirs = titled(profiles.getByName(nick)); // 친구 수 칭호(인맥·슈퍼스타) 알림용
+      const res = msg.type === 'friend:request' ? profiles.friendRequest(msg.key, nick)
+        : msg.type === 'friend:remove' ? profiles.friendRemove(msg.key, nick) : profiles.friendAnswer(msg.key, nick, msg.type === 'friend:accept');
+      if (res.error) return send(me, { type: 'profile:error', message: res.error, friend: true });
+      pushProfile(res.other, { friendNotice: res.notice, newTitles: newTitles(res.other, theirs) }); // 상대 화면도 바로 바뀐다
+      pushProfile(res.profile, { friendDone: msg.type, newTitles: newTitles(res.profile, mine) });
+      return;
     }
     if (msg.type === 'title:sparkle') { // 홈 화면 마법진이 겹치는 순간을 봄 (숨겨진 칭호)
       const prof = profiles.getByKey(msg.key);
-      if (prof && profiles.setFlag(msg.key, 'sparkle')) send(me, { type: 'profile:me', profile: profiles.ownView(prof), newTitles: ['반짝 반짝'] });
+      if (prof && profiles.setFlag(msg.key, 'sparkle')) send(me, { type: 'profile:me', profile: ownView(prof), newTitles: ['반짝 반짝'] });
       return;
     }
     if (msg.type === 'codex') return send(me, { type: 'codex', titles: profiles.codexOf(profiles.getByKey(msg.key)) }); // 게스트도 도감은 볼 수 있음

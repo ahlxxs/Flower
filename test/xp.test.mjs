@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 process.env.DATA_DIR = (await import('node:fs')).mkdtempSync((await import('node:os')).tmpdir() + '/arcana-xp-');
 delete process.env.DATABASE_URL;
-const { levelOf, xpNeed, save, recordGame, publicView, getByKey, titlesOf, codexOf, setTitle, setFlag, TITLES, signup, bannersOf, BANNERS } = await import('../profiles.js');
+const { getByName, levelOf, xpNeed, save, recordGame, publicView, getByKey, titlesOf, codexOf, setTitle, setFlag, TITLES, signup, bannersOf, BANNERS, friendRequest, friendAnswer, friendRemove } = await import('../profiles.js');
 let sum = 0; for (let lv = 1; lv < 20; lv++) sum += xpNeed(lv);
 assert.equal(sum, 2508);                                     // 20레벨까지 약 33판
 assert.equal(levelOf(0).lv, 1); assert.equal(levelOf(59).lv, 1); assert.equal(levelOf(60).lv, 2);
@@ -44,5 +44,18 @@ assert.ok(codexOf(adm).every(x => x.got) && codexOf(adm).find(x => x.id === 'spa
 save(adm.key, { nickname: '관리자', banner: 'planet', tbanner: 'crow' });
 assert.deepEqual([publicView(adm).banner, publicView(adm).tbanner], ['planet', 'crow']);
 assert.equal(setTitle(adm.key, 'legend').profile.title, 'legend');
-console.log('PASS 레벨·경험치·칭호·배너 점검 모두 통과');
+// 친구: 서로 신청하면 바로 친구, 10명이면 "인맥"
+const hub = save(null, { nickname: '마당발' }).profile;
+for (let i = 0; i < 10; i++) {
+  const f = save(null, { nickname: '친구' + i }).profile;
+  assert.ok(friendRequest(hub.key, '친구' + i).profile);
+  if (i === 0) { assert.ok(friendRequest(hub.key, '친구0').error); assert.ok(friendRequest(f.key, '마당발').profile); } // 중복 신청 거절, 맞신청이면 바로 친구
+  else assert.ok(friendAnswer(f.key, '마당발', true).profile);
+}
+assert.equal(getByKey(hub.key).friends.length, 10);
+assert.ok(titlesOf(getByKey(hub.key)).some(x => x.name === '인맥') && !titlesOf(getByKey(hub.key)).some(x => x.name === '슈퍼스타'));
+friendRemove(hub.key, '친구3');
+assert.equal(getByKey(hub.key).friends.length, 9); assert.ok(!getByName('친구3').friends.includes(hub.key));
+assert.ok(friendAnswer(hub.key, '친구5', true).error);                                    // 받은 신청 없이 수락 불가
+console.log('PASS 레벨·경험치·칭호·배너·친구 점검 모두 통과');
 process.exit(0);

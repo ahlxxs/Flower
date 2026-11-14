@@ -215,6 +215,46 @@ export function setTitle(key, id) {
   p.title = id; persist(p);
   return { profile: p };
 }
+/* ---------- 친구 ----------
+   서로 수락해야 친구가 된다. 저장: friends(친구), friendReqs(받은 신청), friendSent(보낸 신청) — 모두 상대 프로필 key 목록 (서버 안에서만 씀) */
+const MAX_FRIENDS = 100;
+const without = (list, k) => (list || []).filter(x => x !== k);
+function friendPair(key, nickname) {
+  const p = getByKey(key), o = getByName(nickname);
+  if (!p) return { error: '로그인하면 친구를 추가할 수 있습니다.' };
+  if (!o) return { error: '그런 닉네임의 모험가가 없습니다.' };
+  if (o === p) return { error: '자기 자신은 친구로 추가할 수 없습니다.' };
+  return { p, o };
+}
+export function friendRequest(key, nickname) {
+  const { p, o, error } = friendPair(key, nickname);
+  if (error) return { error };
+  if (p.friends?.includes(o.key)) return { error: '이미 친구입니다.' };
+  if (p.friendReqs?.includes(o.key)) return friendAnswer(key, nickname, true); // 상대도 나에게 신청했으면 바로 친구
+  if (o.friendReqs?.includes(p.key)) return { error: '이미 친구 신청을 보냈습니다.' };
+  if ((p.friends?.length || 0) >= MAX_FRIENDS) return { error: `친구는 ${MAX_FRIENDS}명까지입니다.` };
+  o.friendReqs = [...(o.friendReqs || []), p.key]; p.friendSent = [...(p.friendSent || []), o.key];
+  persist(p); persist(o);
+  return { profile: p, other: o, notice: `${p.nickname}님이 친구 신청을 보냈습니다.` };
+}
+export function friendAnswer(key, nickname, accept) {
+  const { p, o, error } = friendPair(key, nickname);
+  if (error) return { error };
+  if (!p.friendReqs?.includes(o.key)) return { error: '받은 친구 신청이 없습니다.' };
+  p.friendReqs = without(p.friendReqs, o.key); o.friendSent = without(o.friendSent, p.key);
+  if (accept) { p.friends = [...without(p.friends, o.key), o.key]; o.friends = [...without(o.friends, p.key), p.key]; }
+  persist(p); persist(o);
+  return { profile: p, other: o, notice: accept ? `${p.nickname}님과 친구가 되었습니다.` : '' };
+}
+// 친구 끊기 / 보낸 신청 취소
+export function friendRemove(key, nickname) {
+  const { p, o, error } = friendPair(key, nickname);
+  if (error) return { error };
+  p.friends = without(p.friends, o.key); o.friends = without(o.friends, p.key);
+  p.friendSent = without(p.friendSent, o.key); o.friendReqs = without(o.friendReqs, p.key);
+  persist(p); persist(o);
+  return { profile: p, other: o };
+}
 export function login({ login, password }) {
   login = String(login ?? '').trim().toLowerCase();
   const p = byKey.get(byLogin.get(login));

@@ -50,6 +50,7 @@ header nav { display: flex; gap: clamp(0.875rem, 3vw, 2.25rem); }
 .mi:hover::after, .mi:focus-visible::after { scale: 1 1; } .mi:focus-visible { outline: none; }
 .hero { align-self: center; justify-self: center; display: grid; justify-items: center; text-align: center; padding: 0 clamp(1.125rem, 4vw, 2.75rem) 4vh; }
 .hero h1 { margin: 0; width: clamp(17.5rem, 60vw, 45rem); line-height: 0; }
+.hero h1, .hero h1 *, .brand { -webkit-user-select: none; user-select: none; -webkit-user-drag: none; } /* 로고는 드래그로 선택되지 않게 */
 .hero h1 svg { width: 100%; height: auto; overflow: visible; }
 .word { font-family: var(--didone); font-weight: 500; font-size: 190px; letter-spacing: -4px; /* SVG 좌표 단위 */ fill: url(#shine); }
 .orbit { fill: var(--text); } .orbit-back { fill: none; stroke: var(--text); stroke-width: 2.5; opacity: .8; }
@@ -712,6 +713,23 @@ input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--in
 .lp-art { position: absolute; z-index: -1; left: -2rem; right: -2rem; top: -2.5rem; height: 13rem; opacity: .22; pointer-events: none;
   -webkit-mask-image: linear-gradient(#000 40%, transparent); mask-image: linear-gradient(#000 40%, transparent); }
 .lp-art svg { width: 100%; height: 100%; display: block; }
+/* 친구 탭 */
+.lp-badge { display: inline-grid; place-items: center; min-width: 1.15rem; height: 1.15rem; margin-left: .3rem; padding: 0 .3rem; border-radius: 1rem; background: #b4502f; color: #fff; font: 600 .7rem/1 var(--sans); vertical-align: .15rem; }
+.f-add { display: grid; grid-template-columns: 1fr auto; gap: .5rem; } .f-add .lp-save { width: auto; margin: 0; padding: .55rem .9rem; letter-spacing: .05em; }
+.f-h { margin: 1rem 0 .5rem; font-family: var(--serif); font-weight: 800; font-size: .9rem; border-top: 1px solid #8a6d4566; padding-top: .8rem; }
+.f-h small { font-family: var(--sans); font-weight: 400; color: var(--ink-dim); }
+.f-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+.f-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .6rem; align-items: center; padding: .45rem .5rem; border: 1px solid #8a6d4544; background: #fff3; }
+.f-row .medal { width: 2.2rem; height: 2.2rem; border-width: 1px; } .f-row:not(.online) .medal { filter: grayscale(.8) brightness(.8); }
+.f-who { display: grid; min-width: 0; line-height: 1.35; } .f-who b { font-weight: 600; font-size: .88rem; overflow-wrap: anywhere; }
+.f-who small { font-size: .7rem; color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.f-st { font-size: .7rem; color: var(--ink-dim); } .f-st::before { content: ''; display: inline-block; width: .45rem; height: .45rem; border-radius: 50%; margin-right: .3rem; background: #9a9080; }
+.f-st.on { color: #2f6a4f; } .f-st.on::before { background: #3fae74; box-shadow: 0 0 .3rem #3fae74; }
+.f-acts { display: flex; gap: .25rem; } .f-acts button { font: inherit; font-size: .72rem; padding: .3rem .5rem; border: 1px solid #8a6d4588; background: none; color: var(--ink); cursor: pointer; }
+.f-acts button:hover { background: var(--leather); color: var(--parch); } .f-acts button.sure { background: #9b3c1f; color: #fff; border-color: #9b3c1f; }
+.f-acts [data-fact="accept"], .f-acts [data-fact="join"] { background: var(--leather); color: var(--amber); }
+.lp-sec .lp-friend { font-style: normal; font-size: .78rem; color: var(--bronze-hi); margin-right: .8rem; }
+.lp-sec [data-befriend] { margin-right: .8rem; padding: .15rem .6rem !important; border: 1px solid currentColor !important; }
 /* 로그인 창 */
 #loginDlg { width: min(100%, 24rem); }
 .login-sub { margin: 0 0 1rem; text-align: center; font-size: .85rem; color: var(--fog); line-height: 1.6; }
@@ -1214,6 +1232,7 @@ input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--in
         <span class="lp-ribbon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21V8M12 12c-3 0-5-2-5-5 3 0 5 2 5 5zm0 3c3 0 5-2 5-5-3 0-5 2-5 5z"/></svg></span>
         <div class="lp-tabs" role="tablist">
           <button role="tab" type="button" data-ptab="mine" aria-controls="ptab-mine">꾸미기</button>
+          <button role="tab" type="button" data-ptab="friends" aria-controls="ptab-friends">친구<span class="lp-badge" id="fBadge" hidden></span></button>
           <button role="tab" type="button" data-ptab="find" aria-controls="ptab-find">모험가 찾기</button>
         </div>
         <section id="ptab-mine" role="tabpanel">
@@ -1234,6 +1253,12 @@ input:checked + .o-tb { border-color: var(--ink); box-shadow: 0 0 0 1px var(--in
             <p class="pnote" id="pKeyNote"></p>
             <button class="lp-link" type="button" id="logoutBtn">로그아웃</button>
           </form>
+        </section>
+        <section id="ptab-friends" role="tabpanel" hidden>
+          <div id="fGuest" class="lp-guest" hidden><p>로그인하면 친구를 추가하고<br>친구가 어디에 있는지 볼 수 있습니다.</p></div>
+          <form id="fForm" class="f-add"><input class="lp-in-field" id="fName" maxlength="12" placeholder="친구의 닉네임" aria-label="친구의 닉네임" autocomplete="off"><button class="lp-save" id="fAdd">친구 신청</button></form>
+          <p class="pmsg" id="fMsg" role="status"></p>
+          <div id="fLists"></div>
         </section>
         <section id="ptab-find" role="tabpanel" hidden>
           <input class="lp-in-field" id="pSearch" type="search" placeholder="닉네임으로 찾기" aria-label="닉네임으로 찾기" autocomplete="off">
@@ -2334,7 +2359,7 @@ function recordHTML(p, mine) {
   const pips = c => { const r = (st.recent || []).filter(x => x[0] === c).slice(-12);
     return r.length ? r.map(x => `<i class="${x[1] === '1' ? 'w' : ''}"></i>`).join('') : '<em>아직 기록이 없습니다.</em>'; };
   const head = mine ? '<span>모험가 기록</span>'
-    : `<span>${esc(p.nickname)}의 기록</span>${myProfile || !p.guest ? `<button type="button" data-mine>${myProfile ? '내 기록 보기' : '돌아가기'}</button>` : ''}`;
+    : `<span>${esc(p.nickname)}의 기록</span>${friendBtn(p)}${myProfile || !p.guest ? `<button type="button" data-mine>${myProfile ? '내 기록 보기' : '돌아가기'}</button>` : ''}`;
   if (p.guest) return `<h3 class="lp-sec"><i>I</i>${head}</h3>
     <div class="lp-rec c-silver"><div class="lp-panel lp-main"><h1 class="lp-name">${esc(p.nickname)}</h1>
     <p class="lp-sub"><b>게스트</b> · 기록부가 없는 모험가</p><p class="lp-intro none">로그인하지 않은 모험가는 전적과 경험치가 남지 않습니다.</p></div></div>`;
@@ -2418,7 +2443,8 @@ $('pForm').onsubmit = e => {
 };
 function showPTab(name) {
   document.querySelectorAll('[data-ptab]').forEach(t => t.setAttribute('aria-selected', t.dataset.ptab === name));
-  $('ptab-mine').hidden = name !== 'mine'; $('ptab-find').hidden = name !== 'find';
+  $('ptab-mine').hidden = name !== 'mine'; $('ptab-find').hidden = name !== 'find'; $('ptab-friends').hidden = name !== 'friends';
+  if (name === 'friends') { $('fMsg').textContent = ''; renderFriends(); if (myProfile) send({ type: 'profile:me', key: profileKey() }); } // 접속 상태를 새로 받아 온다
   if (name === 'find') $('pSearch').focus();
 }
 document.querySelectorAll('[data-ptab]').forEach(t => t.onclick = () => showPTab(t.dataset.ptab));
@@ -2432,7 +2458,51 @@ function openProfile(p, tab) {
   fillProfileForm(); showRecord(); showPTab(tab || (myProfile ? 'mine' : 'find'));
   bookOpen(dlg);
 }
-$('pRecord').addEventListener('click', e => { if (e.target.closest('[data-mine]')) { viewing = null; showRecord(); } });
+$('pRecord').addEventListener('click', e => {
+  if (e.target.closest('[data-mine]')) { viewing = null; showRecord(); }
+  const f = e.target.closest('[data-befriend]'); if (f) { f.disabled = true; send({ type: 'friend:request', key: profileKey(), nickname: f.dataset.befriend }); }
+});
+/* ---------- 친구: 닉네임으로 신청 → 상대가 수락하면 서로 친구. 친구가 접속 중인지, 어느 방에 있는지 보인다 ---------- */
+const isFriend = n => myProfile?.friends?.some(f => f.nickname === n);
+function friendBtn(p) { // 다른 사람 기록 위의 "친구 신청" (게스트·나·이미 친구면 없음)
+  if (!myProfile || p.guest || p.nickname === myProfile.nickname) return '';
+  if (isFriend(p.nickname)) return '<em class="lp-friend">✦ 친구</em>';
+  if (myProfile.friendSent?.some(f => f.nickname === p.nickname)) return '<em class="lp-friend">신청 보냄</em>';
+  return `<button type="button" data-befriend="${esc(p.nickname)}">친구 신청</button>`;
+}
+function friendRow(f, acts) {
+  const where = !f.online ? '<span class="f-st">오프라인</span>' : f.playing ? '<span class="f-st on">게임 중</span>'
+    : f.room ? `<span class="f-st on">방 ${esc(f.room)}</span>` : '<span class="f-st on">접속 중</span>';
+  return `<li class="f-row${f.online ? ' online' : ''}">${medal(f.emblem, f.color)}<span class="f-who"><b>${esc(f.nickname)}</b><small>Lv.${f.lv} · ${esc(f.title)}</small>${where}</span>
+    <span class="f-acts">${acts.map(([act, label]) => `<button type="button" data-fact="${act}" data-nick="${esc(f.nickname)}"${act === 'join' ? ` data-room="${esc(f.room)}"` : ''}>${label}</button>`).join('')}</span></li>`;
+}
+function renderFriends() {
+  const me = myProfile, reqs = me?.friendReqs || [];
+  $('fBadge').hidden = !reqs.length; $('fBadge').textContent = reqs.length;
+  $('fGuest').hidden = !!me; $('fForm').hidden = !me;
+  if (!me) return void ($('fLists').innerHTML = '');
+  const list = (title, items, acts, empty) => `<h4 class="f-h">${title}${items.length ? ` <small>${items.length}</small>` : ''}</h4>` +
+    (items.length ? `<ul class="f-list">${items.map(f => friendRow(f, acts(f))).join('')}</ul>` : empty ? `<p class="pempty">${empty}</p>` : '');
+  const friends = [...(me.friends || [])].sort((a, b) => b.online - a.online || a.nickname.localeCompare(b.nickname));
+  $('fLists').innerHTML = (reqs.length ? list('받은 신청', reqs, () => [['accept', '수락'], ['decline', '거절']]) : '')
+    + list('친구', friends, f => [['view', '기록'], ...(f.room && !room ? [['join', '참가']] : []), ['remove', '삭제']], '아직 친구가 없습니다. 위에 닉네임을 넣어 신청해 보세요.')
+    + (me.friendSent?.length ? list('보낸 신청', me.friendSent, () => [['remove', '취소']]) : '');
+}
+$('fForm').onsubmit = e => {
+  e.preventDefault();
+  const n = $('fName').value.trim(); if (!n) return;
+  $('fMsg').textContent = '신청하는 중…'; $('fMsg').className = 'pmsg';
+  send({ type: 'friend:request', key: profileKey(), nickname: n });
+};
+$('fLists').onclick = e => {
+  const b = e.target.closest('[data-fact]'); if (!b) return;
+  const n = b.dataset.nick, act = b.dataset.fact;
+  if (act === 'view') return send({ type: 'profile:view', nickname: n });
+  if (act === 'join') { $('profile').close(); $('code').value = b.dataset.room; return open('join'); }
+  if (act === 'remove' && !b.classList.contains('sure')) { b.classList.add('sure'); b.textContent = '정말?'; return; } // 한 번 더 눌러야 삭제
+  b.disabled = true;
+  send({ type: 'friend:' + act, key: profileKey(), nickname: n });
+};
 $('pLogin').onclick = () => { $('profile').close(); openLogin('login'); };
 let searchT;
 $('pSearch').oninput = () => {
@@ -2510,10 +2580,10 @@ $('hmSettings').onclick = () => openSettings();
 document.querySelectorAll('.home-menu button').forEach(b => b.addEventListener('pointerdown', () => { b.classList.add('on'); setTimeout(() => b.classList.remove('on'), 600); }));
 $('pCodex').onclick = () => { $('profile').close(); openCodex(); };
 $('cxTitles').onclick = e => { const b = e.target.closest('[data-wear]'); if (b) { b.disabled = true; send({ type: 'profile:title', key: profileKey(), id: b.dataset.wear }); } };
-function titleToast(names) { // 칭호를 새로 얻으면 위쪽에 잠깐 알림
-  if (!names?.length) return;
+function titleToast(names) { if (names?.length) toast(`✦ 칭호 획득: ${names.join(', ')}`); } // 칭호를 새로 얻으면
+function toast(text) { // 화면 위쪽에 잠깐 알림
   const el = $('titleToast');
-  el.textContent = `✦ 칭호 획득: ${names.join(', ')}`;
+  el.textContent = text;
   try { el.hidePopover(); el.showPopover(); } catch {}
   sfx('chime');
   clearTimeout(el.t); el.t = setTimeout(() => { try { el.hidePopover(); } catch {} }, 3600);
@@ -2583,9 +2653,14 @@ function onProfileMessage(msg) {
     if ($('profile').open && !viewing) showRecord();
     if ($('codex').open) renderCodex();
     titleToast(msg.newTitles);
+    renderFriends();
+    if (msg.friendNotice) toast('✦ ' + msg.friendNotice);
+    if (msg.friendDone) { $('fMsg').textContent = { 'friend:request': '친구 신청을 보냈습니다.', 'friend:accept': '친구가 되었습니다.', 'friend:decline': '신청을 거절했습니다.', 'friend:remove': '목록에서 지웠습니다.' }[msg.friendDone]; $('fMsg').className = 'pmsg good'; $('fName').value = ''; }
+    if (msg.friendDone && $('profile').open && viewing) showRecord();
     if (msg.titled && $('profile').open) fillProfileForm();
     if (msg.saved) { fillProfileForm(); $('pMsg').textContent = '저장했습니다.'; $('pMsg').className = 'pmsg good'; }
   }
+  if (msg.type === 'profile:error' && msg.friend) { $('fMsg').textContent = msg.message; $('fMsg').className = 'pmsg bad'; renderFriends(); if (viewing) showRecord(); return; }
   if (msg.type === 'profile:error') { $('pMsg').textContent = msg.message; $('pMsg').className = 'pmsg bad'; if ($('codex').open) renderCodex(); }
   if (msg.type === 'profile:list' && msg.q === $('pSearch').value) {
     $('pResults').innerHTML = msg.results.map(p => `<li><button type="button" data-name="${esc(p.nickname)}" class="c-${p.color}">${medal(p.emblem, p.color)}
