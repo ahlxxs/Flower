@@ -1493,6 +1493,7 @@ function playLogo() {
 }
 /* ---------- 맵: 홈에서는 번갈아 보이고, 방에서는 방장이 고른 맵이 대기실과 게임에 이어진다 ---------- */
 // 맵 이름 = 같은 이름의 배너. 그림은 /maps/<이름>-back.svg(마법진 뒤)와 -front.svg(앞), tools/make_maps.py로 만든다
+const MAP_V = '__MAP_V__'; // 맵 그림의 판. 그림을 다시 그리면 바뀌어서, 브라우저에 저장된 예전 그림을 쓰지 않는다
 const MAPS = { forest: '깊은 숲', redcloud: '붉은 상운', moongeese: '달과 기러기', dusk: '노을 궁궐', gold: '금빛 운해', sakura: '벚꽃 물방울', rosechain: '장미 사슬',
   violet: '천상의 제비꽃', cover: '아르카나 표지', planet: '행성 고리', crow: '붉은 까마귀', curtain: '진홍 무대', butterfly: '나비 격자',
   thicket: '분홍 덤불', firefly: '반딧불 숲', swamp: '보랏빛 늪', waterfall: '분홍 폭포', ruins: '부유 폐허', shrine: '잠든 수호상', sunset: '노을 성',
@@ -1508,7 +1509,7 @@ function setMap(m) { // 새 그림을 다 받으면 천천히 나타나고, 그 
       requestAnimationFrame(() => { img.classList.add('on'); old.forEach(o => o.classList.remove('on')); });
       setTimeout(() => old.forEach(o => o.remove()), 1900);
     };
-    img.src = `/maps/${m}-${part}.svg`; box.append(img);
+    img.src = `/maps/${m}-${part}.svg?v=${MAP_V}`; box.append(img);
   }
 }
 setMap('forest');
@@ -2249,7 +2250,7 @@ function renderLobby() {
   const host = room.players.find(p => p.host)?.id === room.you;
   if ($('mapPick').dataset.sig !== room.map + host) { // 바뀔 때만 다시 그린다 (미리보기 그림 깜빡임 방지)
     $('mapPick').dataset.sig = room.map + host;
-    $('mapPick').innerHTML = Object.entries(MAPS).map(([k, m]) => `<button type="button" role="radio" class="mp" data-map="${k}" aria-checked="${room.map === k}"${host ? '' : ' disabled'}><img src="/maps/${k}-back.svg" alt="" loading="lazy" decoding="async">${m}</button>`).join('');
+    $('mapPick').innerHTML = Object.entries(MAPS).map(([k, m]) => `<button type="button" role="radio" class="mp" data-map="${k}" aria-checked="${room.map === k}"${host ? '' : ' disabled'}><img src="/maps/${k}-back.svg?v=${MAP_V}" alt="" loading="lazy" decoding="async">${m}</button>`).join('');
     $('mapPick').querySelector('[aria-checked="true"]')?.scrollIntoView({ block: 'nearest' });
   }
   $('mapNote').textContent = host ? '방장이 고른 맵이 게임까지 이어집니다.' : '맵은 방장이 고릅니다.';
@@ -2391,7 +2392,7 @@ const BANNERS = {
     right: `<circle cx="24" cy="26" r="9" fill="#2b2350" stroke="#f2c6ee" stroke-width="1.4"/><path d="M24 19v14M17 26h14" stroke="#f2c6ee" stroke-width="1.2"/>${twinkle(36, 10, 4, '#f2c6ee')}` },
 };
 const bannerHTML = (id, inner) => { const b = BANNERS[id] || BANNERS.none, sv = (cls, d, vb) => d ? `<svg class="bn-${cls}" viewBox="${vb}" aria-hidden="true">${d}</svg>` : '';
-  const bg = b.photo ? `<span class="bn-photo" style="background-image:${b.edge ? b.edge + ',' : ''}url(/maps/${id}-front.svg),url(/maps/${id}-back.svg);background-position:${b.edge ? '0 0,' : ''}${b.pos || 'center 70%'}${b.size ? `;background-size:${b.edge ? '100% 100%,' : ''}${b.size};background-repeat:no-repeat;background-color:${b.fill}` : ''}"></span>`
+  const bg = b.photo ? `<span class="bn-photo" style="background-image:${b.edge ? b.edge + ',' : ''}url(/maps/${id}-front.svg?v=${MAP_V}),url(/maps/${id}-back.svg?v=${MAP_V});background-position:${b.edge ? '0 0,' : ''}${b.pos || 'center 70%'}${b.size ? `;background-size:${b.edge ? '100% 100%,' : ''}${b.size};background-repeat:no-repeat;background-color:${b.fill}` : ''}"></span>`
     : b.bg ? `<svg class="bn-bg" viewBox="0 0 400 64" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${b.bg}</svg>` : '';
   return `<div class="pbanner pb-${BANNERS[id] ? id : 'none'}">${bg}${sv('l', b.left, '0 0 40 40')}${sv('r', b.right, '0 0 40 40')}${sv('t', b.top, '0 0 40 16')}${sv('h', b.hang, '0 0 200 50')}${inner}</div>`; };
 // 칭호 배너: 칭호 글자를 감싸는 작은 띠. 왼쪽에 작은 장식 하나
@@ -2520,7 +2521,7 @@ function showRecord() {
     p = { ...myProfile, ...v, photo: myProfile.customAvatar, nickname: v.nickname || myProfile.nickname, title: t?.name || myProfile.title };
   }
   if (!p) p = { guest: true, nickname: $('name').value.trim() || '나그네' };
-  const bn = !p.guest && BANNERS[p.banner] ? p.banner : 'none', art = BANNERS[bn].photo ? `<image href="/maps/${bn}-back.svg" width="400" height="225" preserveAspectRatio="xMidYMid slice"/>` : BANNERS[bn].bg || BANNERS[bn].hang;
+  const bn = !p.guest && BANNERS[p.banner] ? p.banner : 'none', art = BANNERS[bn].photo ? `<image href="/maps/${bn}-back.svg?v=${MAP_V}" width="400" height="225" preserveAspectRatio="xMidYMid slice"/>` : BANNERS[bn].bg || BANNERS[bn].hang;
   $('profile').dataset.bn = bn; // 배너 테마가 기록부 전체에 퍼진다 (CSS .lp-dlg[data-bn])
   $('pRecord').innerHTML = (art ? `<div class="lp-art" aria-hidden="true"><svg viewBox="${BANNERS[bn].photo ? '0 0 400 225' : BANNERS[bn].bg ? '0 0 400 64' : '0 0 200 50'}" preserveAspectRatio="xMidYMin slice">${art}</svg></div>` : '') + recordHTML(p, !viewing);
 }

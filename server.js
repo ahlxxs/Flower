@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, stat, readdir } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { randomBytes, randomInt } from 'node:crypto';
 import { WebSocketServer } from 'ws';
@@ -45,10 +45,18 @@ function pushProfile(prof, extra = {}) {
 // ponytail: 마왕군 수는 임시로 4명당 1명(최소 1명). 규칙이 정해지면 바꾼다.
 const demonCount = n => Math.max(1, Math.floor(n / 4));
 
+// 맵 그림의 판 번호: public/maps에서 가장 최근에 바뀐 시각. 화면 속 맵 주소에 ?v=로 붙는다
+let mapV;
+async function mapVersion() {
+  if (mapV) return mapV;
+  const dir = new URL('./public/maps/', import.meta.url);
+  const times = await Promise.all((await readdir(dir)).map(f => stat(new URL(f, dir)).then(s => s.mtimeMs)));
+  return (mapV = Math.floor(Math.max(0, ...times)).toString(36));
+}
 const http = createServer(async (req, res) => {
   // 정적 파일: 배경 음악 /audio/이름.mp3, 카드 그림 /cards/이름.jpg, 아이콘 /favicon.svg·/brand/이름.svg 등
   // (아이폰 사파리는 Range 요청을 지원해야 음악이 재생된다)
-  const asset = req.url.match(/^\/((?:audio|cards|brand|maps)\/)?([\w-]+\.(mp3|jpg|png|svg))$/);
+  const asset = req.url.match(/^\/((?:audio|cards|brand|maps)\/)?([\w-]+\.(mp3|jpg|png|svg))(?:\?v=\w+)?$/); // ?v=판 번호는 무시
   if (asset) {
     const file = new URL(`./public/${asset[1] || ''}${asset[2]}`, import.meta.url);
     const size = await stat(file).then(s => s.size, () => 0);
@@ -58,7 +66,7 @@ const http = createServer(async (req, res) => {
     const mtime = fresh ? (await stat(file)).mtime : null;
     if (fresh && req.headers['if-modified-since'] && new Date(req.headers['if-modified-since']) >= new Date(mtime.toUTCString())) { res.writeHead(304); return res.end(); }
     const head = { 'content-type': { mp3: 'audio/mpeg', jpg: 'image/jpeg', png: 'image/png', svg: 'image/svg+xml' }[asset[3]], 'accept-ranges': 'bytes',
-      'cache-control': fresh ? 'no-cache' : 'public, max-age=86400', ...(fresh ? { 'last-modified': mtime.toUTCString() } : {}) };
+      'cache-control': /\?v=/.test(req.url) ? 'public, max-age=31536000, immutable' : fresh ? 'no-cache' : 'public, max-age=86400', ...(fresh ? { 'last-modified': mtime.toUTCString() } : {}) };
     const m = (req.headers.range || '').match(/bytes=(\d*)-(\d*)/);
     if (!m) { res.writeHead(200, { ...head, 'content-length': size }); return createReadStream(file).pipe(res); }
     const start = m[1] ? +m[1] : size - +m[2], end = m[1] && m[2] ? Math.min(+m[2], size - 1) : size - 1;
@@ -83,7 +91,7 @@ const http = createServer(async (req, res) => {
   }
   // 한 페이지짜리 앱: 모든 경로에 index.html (초대 링크는 /?room=ABCDE)
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); // 새로 올린 화면이 바로 보이게
-  res.end(await readFile(new URL('./public/index.html', import.meta.url)));
+  res.end((await readFile(new URL('./public/index.html', import.meta.url), 'utf8')).replace('__MAP_V__', await mapVersion()));
 });
 
 const id = n => randomBytes(n).toString('hex');
